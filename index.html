@@ -731,6 +731,21 @@ body {
   </div>
 </div>
 
+<!-- ── ACCESS DENIED SCREEN ── -->
+<div id="access-screen" style="display:none;min-height:100vh;background:var(--navy);align-items:center;justify-content:center;padding:24px;flex-direction:column;gap:0">
+  <div style="background:var(--white);border-radius:16px;padding:44px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="width:52px;height:52px;background:var(--red-b);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px">🔒</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px">Access not authorised</div>
+    <div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:24px">Your account is not registered on Ekhaya Connect. Contact the COO to request access.</div>
+    <div style="background:var(--paper);border-radius:8px;padding:14px 16px;margin-bottom:24px;text-align:left">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Logged in as</div>
+      <div style="font-size:13px;color:var(--ink)" id="denied-email">—</div>
+    </div>
+    <div style="font-size:12px;color:var(--mid);margin-bottom:16px">COO: Jacques Bornman · 082 822 6406</div>
+    <button onclick="doSignOut()" style="width:100%;padding:12px;background:none;border:1.5px solid var(--rule);border-radius:8px;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;font-family:'Inter',sans-serif">Sign out</button>
+  </div>
+</div>
+
 <!-- ── APP SHELL ── -->
 <div id="app">
 
@@ -1090,12 +1105,20 @@ onAuthStateChanged(auth, async user => {
   currentUser = user;
   if (user) {
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    await loadUserProfile(user);
-    initPortal(user);
+    const hasAccess = await loadUserProfile(user);
+    if (hasAccess) {
+      document.getElementById('access-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      initPortal(user);
+    } else {
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('denied-email').textContent = user.email;
+      document.getElementById('access-screen').style.display = 'flex';
+    }
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
+    document.getElementById('access-screen').style.display = 'none';
   }
 });
 
@@ -1123,12 +1146,22 @@ function showAuthError(msg) {
 
 // ── LOAD PROFILE ──────────────────────────────────────────────────────────
 async function loadUserProfile(user) {
-  // Try to find employee record by email
+  // Query employees collection for matching email
   try {
-    // Search by UID first
-    const snap = await getDoc(doc(db, 'employees', 'EMP' + '0008'));
-    // For now use auth display name — employee linking in next iteration
-  } catch(e) { /* silent */ }
+    const { getDocs: gd, collection: col, query: q, where: w } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const empSnap = await gd(q(col(db, 'employees'), w('email', '==', user.email)));
+    if (!empSnap.empty) {
+      employeeDoc = empSnap.docs[0].data();
+      return true;
+    }
+    // COO always has access regardless
+    if (COO_EMAILS.includes(user.email)) return true;
+    return false;
+  } catch(e) {
+    // If rules block the query, check if COO
+    if (COO_EMAILS.includes(user.email)) return true;
+    return false;
+  }
 }
 
 // ── INIT PORTAL ───────────────────────────────────────────────────────────
@@ -1151,8 +1184,9 @@ function initPortal(user) {
   document.getElementById('profile-avatar').textContent = initials;
   document.getElementById('profile-name').textContent = displayName;
   document.getElementById('profile-email').textContent = user.email;
-  document.getElementById('profile-role').textContent = isCOO ? 'Chief Operations Officer' : 'Staff';
-  document.getElementById('profile-dept').textContent = isCOO ? 'Management' : '—';
+  document.getElementById('profile-role').textContent = isCOO ? 'Chief Operations Officer' : (employeeDoc?.position || 'Staff');
+  document.getElementById('profile-dept').textContent = isCOO ? 'Management' : (employeeDoc?.department || '—');
+  document.getElementById('profile-facility').textContent = employeeDoc?.facility === 'KRC' ? 'KURUMAN RENAL CLINIC' : 'HOSPITAL AT EKHAYA';
 
   // Show management nav for COO
   if (isCOO) {

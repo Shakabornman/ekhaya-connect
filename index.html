@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1F3A5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ekhaya Connect</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:     #1F3A5F;
+  --navy-d:   #162c4a;
+  --navy-l:   #2a4f7a;
+  --gold:     #C8A24B;
+  --gold-l:   #f0d98a;
+  --ink:      #1a1c22;
+  --mid:      #6b7280;
+  --rule:     #e2e0da;
+  --paper:    #f7f6f3;
+  --white:    #ffffff;
+  --green:    #3B6D11;
+  --green-b:  #EAF3DE;
+  --amber:    #BA7517;
+  --amber-b:  #FAEEDA;
+  --red:      #A32D2D;
+  --red-b:    #FCEBEB;
+  --teal:     #1A4A35;
+  --radius:   10px;
+  --shadow:   0 1px 4px rgba(0,0,0,0.08);
+  --shadow-m: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  min-height: 100vh;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background pattern */
+#auth-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(200,162,75,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.auth-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 44px 36px 36px;
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.auth-mark {
+  width: 52px;
+  height: 52px;
+  background: var(--navy);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.auth-mark svg { width: 28px; height: 28px; }
+
+.auth-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.auth-tagline {
+  font-size: 13px;
+  color: var(--mid);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-google:hover { border-color: var(--navy); box-shadow: var(--shadow); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  font-size: 11px;
+  color: var(--mid);
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.auth-field {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+  margin-bottom: 10px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s;
+}
+.auth-field:focus { border-color: var(--navy); }
+
+.btn-signin {
+  width: 100%;
+  padding: 13px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.btn-signin:hover { background: var(--navy-d); }
+
+.auth-error {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 10px;
+  text-align: center;
+  display: none;
+}
+
+.auth-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--mid);
+}
+
+/* ── APP SHELL ── */
+#app { display: none; min-height: 100vh; flex-direction: column; }
+
+/* TOP NAV */
+.topnav {
+  background: var(--navy);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topnav-mark {
+  width: 32px;
+  height: 32px;
+  background: rgba(200,162,75,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topnav-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.topnav-name span {
+  color: var(--gold);
+}
+
+.topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+.nav-link.active { color: var(--white); background: rgba(255,255,255,0.12); }
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px 4px 4px;
+  border-radius: 20px;
+  transition: background 0.15s;
+}
+.user-chip:hover { background: rgba(255,255,255,0.08); }
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.user-name-nav {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+/* MOBILE NAV */
+.mobile-nav {
+  display: none;
+  background: var(--navy-d);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 16px;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mobile-nav-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+}
+.mobile-nav-link.active { color: var(--white); background: rgba(255,255,255,0.12); }
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px;
+  background: none;
+  border: none;
+}
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* MAIN CONTENT */
+.app-main {
+  flex: 1;
+  padding: 28px 24px 48px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* HOME PAGE */
+.home-greeting {
+  margin-bottom: 28px;
+}
+
+.home-greeting .time-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mid);
+  margin-bottom: 4px;
+}
+
+.home-greeting h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+}
+
+.home-greeting .sub {
+  font-size: 13px;
+  color: var(--mid);
+  margin-top: 2px;
+}
+
+/* NOTICE BOARD */
+.notice-board {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-l) 100%);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.notice-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(200,162,75,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.notice-content { flex: 1; }
+
+.notice-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.notice-text {
+  font-size: 14px;
+  color: var(--white);
+  line-height: 1.5;
+}
+
+.notice-date {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 6px;
+}
+
+/* SECTION HEADERS */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+
+/* TOOL GRID */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.tool-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: block;
+}
+
+.tool-card:hover {
+  border-color: var(--navy);
+  box-shadow: var(--shadow-m);
+  transform: translateY(-2px);
+}
+
+.tool-card.coo-only {
+  border-left: 3px solid var(--gold);
+}
+
+.tool-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.tool-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.tool-desc {
+  font-size: 11px;
+  color: var(--mid);
+  line-height: 1.4;
+}
+
+.tool-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+/* INFO PAGE */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.info-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.info-card-head {
+  background: var(--paper);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-card-head h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.info-card-body { padding: 14px 18px; }
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.info-item:last-child { border-bottom: none; }
+.info-item:hover { color: var(--navy); }
+.info-item .item-icon { font-size: 14px; flex-shrink: 0; }
+.info-item .item-sub { font-size: 11px; color: var(--mid); }
+
+/* COMING SOON BADGE */
+.coming-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--mid);
+  border: 1px solid var(--rule);
+  margin-left: auto;
+}
+
+/* PROFILE PAGE */
+.profile-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-width: 480px;
+}
+
+.profile-head {
+  background: var(--navy);
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.profile-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.profile-role {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+
+.profile-body { padding: 20px 24px; }
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  gap: 12px;
+}
+.profile-row:last-child { border-bottom: none; }
+.profile-label { font-size: 11px; font-weight: 600; color: var(--mid); width: 100px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.06em; }
+.profile-value { font-size: 13px; color: var(--ink); }
+
+.btn-signout-main {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: none;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mid);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.btn-signout-main:hover { border-color: var(--red); color: var(--red); }
+
+/* FOOTER */
+.app-footer {
+  background: var(--white);
+  border-top: 1px solid var(--rule);
+  padding: 16px 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--mid);
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--ink);
+  color: var(--white);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+  z-index: 200;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .mobile-nav { display: flex; }
+  .app-main { padding: 20px 16px 40px; }
+  .tool-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-greeting h2 { font-size: 20px; }
+  .notice-board { flex-direction: column; gap: 10px; }
+  .info-grid { grid-template-columns: 1fr; }
+  .user-name-nav { display: none; }
+  .topnav { padding: 0 16px; }
+}
+
+@media (min-width: 641px) {
+  .mobile-nav { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-mark">
+      <svg viewBox="0 0 28 28" fill="none">
+        <path d="M14 3L4 8v6c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L14 3z" fill="#C8A24B" opacity="0.3"/>
+        <path d="M14 3L4 8v6c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L14 3z" stroke="#C8A24B" stroke-width="1.5" fill="none"/>
+        <path d="M10 14l3 3 5-5" stroke="#C8A24B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="auth-name">Ekhaya <span style="color:var(--gold)">Connect</span></div>
+    <div class="auth-tagline">Your hospital. Your home. Your tools.</div>
+
+    <button class="btn-google" onclick="signInGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+      </svg>
+      Sign in with Google
+    </button>
+
+    <div class="auth-divider">or</div>
+
+    <input class="auth-field" type="email" id="auth-email" placeholder="Email address" autocomplete="email">
+    <input class="auth-field" type="password" id="auth-password" placeholder="Password" autocomplete="current-password">
+    <button class="btn-signin" onclick="signInEmail()">Sign in</button>
+    <div class="auth-error" id="auth-error"></div>
+
+    <div class="auth-footer">
+      HOSPITAL AT EKHAYA · Vuma Development Solutions
+    </div>
+  </div>
+</div>
+
+<!-- ── APP SHELL ── -->
+<div id="app">
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <div class="topnav-mark">
+        <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+          <path d="M14 3L4 8v6c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L14 3z" fill="#C8A24B" opacity="0.4"/>
+          <path d="M10 14l3 3 5-5" stroke="#C8A24B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="topnav-name">Ekhaya <span>Connect</span></div>
+    </div>
+
+    <div class="topnav-right">
+      <div class="nav-links">
+        <button class="nav-link active" onclick="showPage('home')">Home</button>
+        <button class="nav-link" onclick="showPage('tools')">My Tools</button>
+        <button class="nav-link" onclick="showPage('info')">Information</button>
+        <button class="nav-link coo-nav" onclick="showPage('management')" style="display:none">Management</button>
+      </div>
+
+      <div class="user-chip" onclick="showPage('profile')">
+        <div class="user-avatar" id="nav-avatar">—</div>
+        <span class="user-name-nav" id="nav-name">—</span>
+      </div>
+
+      <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobile-nav" style="display:none">
+    <button class="mobile-nav-link active" onclick="showPage('home');toggleMobileNav()">🏠 Home</button>
+    <button class="mobile-nav-link" onclick="showPage('tools');toggleMobileNav()">🔧 My Tools</button>
+    <button class="mobile-nav-link" onclick="showPage('info');toggleMobileNav()">📋 Information</button>
+    <button class="mobile-nav-link coo-mobile" onclick="showPage('management');toggleMobileNav()" style="display:none">⚙️ Management</button>
+    <button class="mobile-nav-link" onclick="showPage('profile');toggleMobileNav()">👤 Profile</button>
+  </div>
+
+  <main class="app-main">
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <div class="home-greeting">
+        <div class="time-label" id="time-label">Good morning</div>
+        <h2 id="greeting-name">Welcome to Ekhaya Connect</h2>
+        <div class="sub" id="greeting-sub">HOSPITAL AT EKHAYA · Kimberley</div>
+      </div>
+
+      <!-- NOTICE BOARD -->
+      <div class="notice-board">
+        <div class="notice-icon">📢</div>
+        <div class="notice-content">
+          <div class="notice-label">Notice Board</div>
+          <div class="notice-text" id="notice-text">Welcome to Ekhaya Connect — your hospital portal is now live. Bookmark this page on your phone for quick access to all your tools and information.</div>
+          <div class="notice-date" id="notice-date">Posted by COO · June 2026</div>
+        </div>
+      </div>
+
+      <!-- QUICK TOOLS -->
+      <div class="section-header">
+        <div class="section-title">Quick Access</div>
+      </div>
+
+      <div class="tool-grid" id="quick-tools">
+        <!-- Populated by JS based on role -->
+      </div>
+
+      <!-- HOSPITAL INFO STRIP -->
+      <div class="section-header">
+        <div class="section-title">Hospital at Ekhaya</div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Location</div>
+          <div style="font-size:13px;color:var(--ink)">Browning Street, Kimberley<br>Northern Cape</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Emergency</div>
+          <div style="font-size:13px;color:var(--ink)">Nursing Station<br>Internal ext. 1</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">COO</div>
+          <div style="font-size:13px;color:var(--ink)">J. Jacques Bornman<br>+27 82 822 6406</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Bed Capacity</div>
+          <div style="font-size:13px;color:var(--ink)">27 beds<br>Psychiatric & Medical</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLS PAGE -->
+    <div class="page" id="page-tools">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">My Tools</div>
+        <div style="font-size:13px;color:var(--mid)">All your daily tools in one place</div>
+      </div>
+
+      <div class="section-header"><div class="section-title">Reporting</div></div>
+      <div class="tool-grid" id="reporting-tools"></div>
+
+      <div class="section-header" id="clinical-section" style="display:none"><div class="section-title">Clinical</div></div>
+      <div class="tool-grid" id="clinical-tools"></div>
+
+      <div class="section-header" id="management-section" style="display:none"><div class="section-title">Management</div></div>
+      <div class="tool-grid" id="management-tools"></div>
+    </div>
+
+    <!-- INFORMATION PAGE -->
+    <div class="page" id="page-info">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Information</div>
+        <div style="font-size:13px;color:var(--mid)">Policies, contacts, and reference material</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">📋</span>
+            <h3>Policies & Procedures</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">📄</span>
+              <div><div>HR Policies</div><div class="item-sub">Leave, discipline, conduct</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">📄</span>
+              <div><div>Clinical SOPs</div><div class="item-sub">Nursing, medication, infection control</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">📄</span>
+              <div><div>Operational Policies</div><div class="item-sub">Kitchen, security, support services</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">📞</span>
+            <h3>Key Contacts</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>COO — J. Jacques Bornman</div><div class="item-sub">+27 82 822 6406</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>HR — Amalia Phentela</div><div class="item-sub">HR & Finance Manager</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🏥</span>
+              <div><div>Nursing Station</div><div class="item-sub">Internal ext. 1</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🚨</span>
+              <div><div>Emergency Services</div><div class="item-sub">10111 · 10177</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">🏥</span>
+            <h3>Hospital Information</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">📍</span>
+              <div><div>Physical Address</div><div class="item-sub">Browning Street, Kimberley, Northern Cape</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🛏</span>
+              <div><div>Bed Capacity</div><div class="item-sub">27 beds — Psychiatric & Medical</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">⏰</span>
+              <div><div>Operating Hours</div><div class="item-sub">24 hours · 7 days a week</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">📚</span>
+            <h3>Staff Resources</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">📖</span>
+              <div><div>Employee Handbook</div><div class="item-sub">Your rights and responsibilities</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🏖</span>
+              <div><div>Leave Calendar 2026</div><div class="item-sub">Public holidays and leave schedule</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">💊</span>
+              <div><div>Drug Formulary</div><div class="item-sub">Approved medication list</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGEMENT PAGE (COO/CEO only) -->
+    <div class="page" id="page-management">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Management</div>
+        <div style="font-size:13px;color:var(--mid)">COO and CEO access only</div>
+      </div>
+
+      <div class="section-header"><div class="section-title">Dashboards</div></div>
+      <div class="tool-grid">
+        <a href="https://shakabornman.github.io/hae-scorecard/dashboard.html" target="_blank" class="tool-card coo-only">
+          <div class="tool-icon" style="background:#EBF1F7">📊</div>
+          <div class="tool-name">CEO Scorecard</div>
+          <div class="tool-desc">Weekly department performance dashboard</div>
+        </a>
+        <div class="tool-card coo-only" onclick="showToast('HR Dashboard coming soon')">
+          <div class="tool-icon" style="background:#E6F4EE">👥</div>
+          <div class="tool-name">HR Overview</div>
+          <div class="tool-desc">Staff records and HR metrics</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card coo-only" onclick="showToast('Risk Dashboard coming soon')">
+          <div class="tool-icon" style="background:#FEF3C7">⚠️</div>
+          <div class="tool-name">Risk Register</div>
+          <div class="tool-desc">Live risk register and escalations</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+      </div>
+
+      <div class="section-header"><div class="section-title">Administration</div></div>
+      <div class="tool-grid">
+        <a href="https://shakabornman.github.io/hae-hr-portal" target="_blank" class="tool-card coo-only">
+          <div class="tool-icon" style="background:#E6F4EE">👤</div>
+          <div class="tool-name">HR Portal</div>
+          <div class="tool-desc">Employee records, onboarding, documents</div>
+        </a>
+        <div class="tool-card coo-only" onclick="showToast('Policy manager coming soon')">
+          <div class="tool-icon" style="background:#F0EAF8">📋</div>
+          <div class="tool-name">Policy Manager</div>
+          <div class="tool-desc">Manage and publish policies</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card coo-only" onclick="window.open('https://manualrollup-gldcmcru2q-ew.a.run.app','_blank')">
+          <div class="tool-icon" style="background:#FEF3C7">🔄</div>
+          <div class="tool-name">Force Rollup</div>
+          <div class="tool-desc">Manually trigger scorecard rollup</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">My Profile</div>
+        <div style="font-size:13px;color:var(--mid)">Your account details</div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-head">
+          <div class="profile-avatar" id="profile-avatar">—</div>
+          <div>
+            <div class="profile-name" id="profile-name">—</div>
+            <div class="profile-role" id="profile-role">Staff</div>
+          </div>
+        </div>
+        <div class="profile-body">
+          <div class="profile-row">
+            <span class="profile-label">Email</span>
+            <span class="profile-value" id="profile-email">—</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-label">Department</span>
+            <span class="profile-value" id="profile-dept">—</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-label">Facility</span>
+            <span class="profile-value" id="profile-facility">HOSPITAL AT EKHAYA</span>
+          </div>
+          <button class="btn-signout-main" onclick="doSignOut()">Sign out</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="app-footer">
+    HOSPITAL AT EKHAYA · Vuma Development Solutions (Pty) Ltd · Ekhaya Connect v1.0
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider,
+         signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain:        "hae-vuma-92fca.firebaseapp.com",
+  projectId:         "hae-vuma-92fca",
+  storageBucket:     "hae-vuma-92fca.firebasestorage.app",
+  messagingSenderId: "1052424261313",
+  appId:             "1:1052424261313:web:a4bebe68d6f9ba14fa0e40"
+};
+
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+// COO email — management nav visible to this user
+const COO_EMAILS = ['shakabornman@gmail.com'];
+
+let currentUser = null;
+let employeeDoc = null;
+
+// ── AUTH ──────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    await loadUserProfile(user);
+    initPortal(user);
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+window.signInGoogle = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch(e) { showAuthError('Sign in failed. Try again.'); }
+};
+
+window.signInEmail = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  if (!email || !pass) { showAuthError('Enter your email and password.'); return; }
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e) { showAuthError('Invalid email or password.'); }
+};
+
+window.doSignOut = async () => {
+  await signOut(auth);
+};
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+// ── LOAD PROFILE ──────────────────────────────────────────────────────────
+async function loadUserProfile(user) {
+  // Try to find employee record by email
+  try {
+    // Search by UID first
+    const snap = await getDoc(doc(db, 'employees', 'EMP' + '0008'));
+    // For now use auth display name — employee linking in next iteration
+  } catch(e) { /* silent */ }
+}
+
+// ── INIT PORTAL ───────────────────────────────────────────────────────────
+function initPortal(user) {
+  const isCOO = COO_EMAILS.includes(user.email);
+  const displayName = user.displayName || user.email?.split('@')[0] || 'Staff';
+  const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('time-label').textContent = greeting;
+  document.getElementById('greeting-name').textContent = `${greeting}, ${displayName.split(' ')[0]}`;
+
+  // Nav
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-name').textContent = displayName.split(' ')[0];
+
+  // Profile
+  document.getElementById('profile-avatar').textContent = initials;
+  document.getElementById('profile-name').textContent = displayName;
+  document.getElementById('profile-email').textContent = user.email;
+  document.getElementById('profile-role').textContent = isCOO ? 'Chief Operations Officer' : 'Staff';
+  document.getElementById('profile-dept').textContent = isCOO ? 'Management' : '—';
+
+  // Show management nav for COO
+  if (isCOO) {
+    document.querySelectorAll('.coo-nav').forEach(el => el.style.display = 'block');
+    document.querySelectorAll('.coo-mobile').forEach(el => el.style.display = 'block');
+  }
+
+  // Build tool grids
+  buildToolGrids(isCOO);
+}
+
+// ── TOOL DEFINITIONS ──────────────────────────────────────────────────────
+function buildToolGrids(isCOO) {
+  // Quick access on home — most used tools
+  const quickTools = [
+    { icon:'📊', color:'#EBF1F7', name:'Scorecard Form', desc:'Submit your daily report', url: getScoreCardUrl(currentUser?.email), badge:null },
+    { icon:'⚠️', color:'#FEF3C7', name:'Report a Risk', desc:'Log a risk or incident', url:'#risk', badge:'Coming soon' },
+    { icon:'📋', color:'#F0EAF8', name:'Policies', desc:'Find procedures and policies', page:'info', badge:null },
+    { icon:'👤', color:'#E6F4EE', name:'My Profile', desc:'Your account and details', page:'profile', badge:null },
+  ];
+  renderTools('quick-tools', quickTools);
+
+  // Reporting tools
+  const reportingTools = [
+    { icon:'🔒', color:'#EBF1F7', name:'Security', desc:'Shift checklist', url:'https://shakabornman.github.io/hae-scorecard/security.html' },
+    { icon:'🍽', color:'#E6F4EE', name:'Support Services', desc:'Daily kitchen & cleaning', url:'https://shakabornman.github.io/hae-scorecard/support.html' },
+    { icon:'🏥', color:'#F0EAF8', name:'Case Management', desc:'Admissions & discharges', url:'https://shakabornman.github.io/hae-scorecard/casem.html' },
+    { icon:'💰', color:'#EBF1F7', name:'Billing', desc:'Daily billing checklist', url:'https://shakabornman.github.io/hae-scorecard/billing.html' },
+    { icon:'📣', color:'#FFF3E0', name:'Marketing', desc:'Activity report', url:'https://shakabornman.github.io/hae-scorecard/marketing.html' },
+    { icon:'💳', color:'#E6F4EE', name:'Finance', desc:'Daily finance checklist', url:'https://shakabornman.github.io/hae-scorecard/finance.html' },
+    { icon:'💉', color:'#FEF2F2', name:'Nursing', desc:'Daily nursing checklist', url:'https://shakabornman.github.io/hae-scorecard/nursing.html' },
+  ];
+  renderTools('reporting-tools', reportingTools);
+
+  // Clinical tools
+  const clinicalTools = [
+    { icon:'📝', color:'#F0EAF8', name:'Motivation Letters', desc:'Medical aid motivation generator', url:'https://shakabornman.github.io/hae-motivation-tool/', badge:null },
+  ];
+  if (clinicalTools.length) {
+    document.getElementById('clinical-section').style.display = 'flex';
+    renderTools('clinical-tools', clinicalTools);
+  }
+
+  // Management tools (COO only)
+  if (isCOO) {
+    document.getElementById('management-section').style.display = 'flex';
+    const mgmtTools = [
+      { icon:'📊', color:'#EBF1F7', name:'CEO Dashboard', desc:'Weekly scorecard dashboard', url:'https://shakabornman.github.io/hae-scorecard/dashboard.html' },
+      { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
+    ];
+    renderTools('management-tools', mgmtTools);
+  }
+}
+
+function getScoreCardUrl(email) {
+  // Map email to department form — extend as staff accounts are created
+  const map = {
+    'shakabornman@gmail.com': 'https://shakabornman.github.io/hae-scorecard/dashboard.html',
+  };
+  return map[email] || 'https://shakabornman.github.io/hae-scorecard/security.html';
+}
+
+function renderTools(containerId, tools) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = tools.map(t => {
+    const el = t.url && t.url !== '#risk'
+      ? `<a href="${t.url}" target="${t.url.startsWith('http')?'_blank':'_self'}" class="tool-card">`
+      : `<div class="tool-card" onclick="${t.page ? `showPage('${t.page}')` : `showToast('${t.name} coming soon')`}">`;
+    const close = t.url && t.url !== '#risk' ? '</a>' : '</div>';
+    const badge = t.badge ? `<span class="tool-badge" style="background:var(--paper);color:var(--mid)">${t.badge}</span>` : '';
+    return `${el}
+      <div class="tool-icon" style="background:${t.color}">${t.icon}</div>
+      <div class="tool-name">${t.name}</div>
+      <div class="tool-desc">${t.desc}</div>
+      ${badge}
+    ${close}`;
+  }).join('');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+window.showPage = function(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
+
+  const page = document.getElementById('page-'+pageId);
+  if (page) page.classList.add('active');
+
+  // Highlight correct nav link
+  document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
+    if (l.getAttribute('onclick')?.includes(`'${pageId}'`)) l.classList.add('active');
+  });
+
+  window.scrollTo(0, 0);
+};
+
+window.toggleMobileNav = function() {
+  const nav = document.getElementById('mobile-nav');
+  nav.style.display = nav.style.display === 'none' ? 'flex' : 'none';
+};
+
+// ── GREETING TIME ─────────────────────────────────────────────────────────
+function updateGreeting() {
+  const hour = new Date().getHours();
+  const label = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const el = document.getElementById('time-label');
+  if (el) el.textContent = label;
+}
+setInterval(updateGreeting, 60000);
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+};
+
+</script>
+</body>
+</html>

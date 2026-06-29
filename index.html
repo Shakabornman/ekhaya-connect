@@ -1095,7 +1095,7 @@ const db   = getFirestore(app);
 const auth = getAuth(app);
 
 // COO email — management nav visible to this user
-const COO_EMAILS = ['shakabornman@gmail.com', 'phentela@vumads.co.za'];
+// COO access determined by Firebase employee role — no emails in code
 
 let currentUser = null;
 let employeeDoc = null;
@@ -1155,18 +1155,18 @@ async function loadUserProfile(user) {
       return true;
     }
     // COO always has access regardless
-    if (COO_EMAILS.includes(user.email)) return true;
+    // access granted via employee record match
     return false;
   } catch(e) {
     // If rules block the query, check if COO
-    if (COO_EMAILS.includes(user.email)) return true;
+    // access granted via employee record match
     return false;
   }
 }
 
 // ── INIT PORTAL ───────────────────────────────────────────────────────────
 function initPortal(user) {
-  const isCOO = COO_EMAILS.includes(user.email);
+  const isCOO = employeeDoc?.role === 'COO' || employeeDoc?.position?.toLowerCase().includes('coo');
   const displayName = user.displayName || user.email?.split('@')[0] || 'Staff';
   const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
 
@@ -1242,10 +1242,18 @@ function buildToolGrids(isCOO) {
 }
 
 function getScoreCardUrl(email) {
-  // Map email to department form — extend as staff accounts are created
-  const map = {
-    'shakabornman@gmail.com': 'https://shakabornman.github.io/hae-scorecard/dashboard.html',
+  // Department link comes from employee record department field
+  const deptMap = {
+    'nursing':   'https://shakabornman.github.io/hae-scorecard/nursing.html',
+    'billing':   'https://shakabornman.github.io/hae-scorecard/billing.html',
+    'casem':     'https://shakabornman.github.io/hae-scorecard/casem.html',
+    'finance':   'https://shakabornman.github.io/hae-scorecard/finance.html',
+    'marketing': 'https://shakabornman.github.io/hae-scorecard/marketing.html',
+    'support':   'https://shakabornman.github.io/hae-scorecard/support.html',
+    'security':  'https://shakabornman.github.io/hae-scorecard/hae-security-form.html',
   };
+  const dept = (employeeDoc?.department || '').toLowerCase();
+  const map = deptMap;
   return map[email] || 'https://shakabornman.github.io/hae-scorecard/security.html';
 }
 

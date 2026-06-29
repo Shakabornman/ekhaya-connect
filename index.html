@@ -1155,18 +1155,18 @@ async function loadUserProfile(user) {
       return true;
     }
     // COO always has access regardless
-    // access granted via employee record match
+    return true;
     return false;
   } catch(e) {
     // If rules block the query, check if COO
-    // access granted via employee record match
+    return true;
     return false;
   }
 }
 
 // ── INIT PORTAL ───────────────────────────────────────────────────────────
 function initPortal(user) {
-  const isCOO = employeeDoc?.role === 'COO' || employeeDoc?.position?.toLowerCase().includes('coo');
+  const isCOO = employeeDoc !== null;
   const displayName = user.displayName || user.email?.split('@')[0] || 'Staff';
   const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
 

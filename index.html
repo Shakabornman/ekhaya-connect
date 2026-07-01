@@ -1122,24 +1122,17 @@ onAuthStateChanged(auth, async user => {
   if (user) {
     const allowed = await checkAccess(user);
     if (!allowed) {
-      await signOut(auth);
-      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('denied-email').textContent = user.email;
+      document.getElementById('access-screen').style.display = 'flex';
       document.getElementById('app').style.display = 'none';
-      document.getElementById('access-screen').style.display = 'none';
-      showAuthError('Access not authorised. Contact the COO.');
       return;
     }
     document.getElementById('auth-screen').style.display = 'none';
-    const hasAccess = await loadUserProfile(user);
-    if (hasAccess) {
-      document.getElementById('access-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-      initPortal(user);
-    } else {
-      document.getElementById('app').style.display = 'none';
-      document.getElementById('denied-email').textContent = user.email;
-      document.getElementById('access-screen').style.display = 'flex';
-    }
+    document.getElementById('access-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    await loadUserProfile(user);
+    initPortal(user);
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';

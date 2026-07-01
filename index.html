@@ -3,811 +3,1084 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HAE Staff Records — HR Portal</title>
+<meta name="theme-color" content="#1F3A5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ekhaya Connect</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-
-  :root {
-    --navy:   #1E3A5F;
-    --teal:   #1A4A35;
-    --steel:  #4A7FA5;
-    --paper:  #F7F6F3;
-    --white:  #FFFFFF;
-    --ink:    #1A1C22;
-    --mid:    #6B7280;
-    --rule:   #E2E0DA;
-    --green:  #2EAA6F;
-    --amber:  #D97706;
-    --red:    #C0392B;
-    --light-navy: #EBF1F7;
-    --light-teal: #E6F4EE;
-    --light-red:  #FEF2F2;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    font-size: 14px;
-    line-height: 1.5;
-    min-height: 100vh;
-  }
-
-  /* ── LOGIN SCREEN ── */
-  #login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--navy);
-    padding: 24px;
-  }
-
-  .login-card {
-    background: var(--white);
-    border-radius: 12px;
-    padding: 48px 40px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  }
-
-  .login-logo {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--mid);
-    margin-bottom: 6px;
-  }
-
-  .login-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 6px;
-  }
-
-  .login-sub {
-    font-size: 13px;
-    color: var(--mid);
-    margin-bottom: 36px;
-  }
-
-  .btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    padding: 14px 20px;
-    background: var(--white);
-    border: 1.5px solid var(--rule);
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink);
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-bottom: 12px;
-  }
-
-  .btn-google:hover { background: var(--paper); border-color: var(--steel); }
-
-  .btn-email-toggle {
-    font-size: 13px;
-    color: var(--steel);
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: underline;
-    margin-top: 4px;
-  }
-
-  .email-login { display: none; margin-top: 20px; text-align: left; }
-  .email-login.show { display: block; }
-
-  .field-group { margin-bottom: 16px; }
-  .field-group label { display: block; font-size: 12px; font-weight: 600; color: var(--mid); margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .field-group input, .field-group select, .field-group textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1.5px solid var(--rule);
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    color: var(--ink);
-    background: var(--white);
-    transition: border-color 0.15s;
-    outline: none;
-  }
-  .field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color: var(--steel); }
-
-  .btn-primary {
-    width: 100%;
-    padding: 12px;
-    background: var(--navy);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-    margin-top: 4px;
-  }
-  .btn-primary:hover { background: #162d4a; }
-
-  .login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
-
-  /* ── APP SHELL ── */
-  #app { display: none; min-height: 100vh; }
-
-  /* HEADER */
-  .app-header {
-    background: var(--navy);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .app-header-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .app-brand {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--white);
-    letter-spacing: 0.04em;
-  }
-
-  .app-brand span {
-    color: #7EB8D9;
-    font-weight: 500;
-    margin-left: 6px;
-    font-size: 12px;
-  }
-
-  .header-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .user-name { font-size: 12px; color: #9CA3AF; }
-
-  .btn-signout {
-    font-size: 11px;
-    color: #6B7280;
-    background: none;
-    border: 1px solid #374151;
-    border-radius: 4px;
-    padding: 4px 10px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.15s;
-  }
-  .btn-signout:hover { color: var(--white); border-color: #6B7280; }
-
-  /* TAB NAV */
-  .tab-nav {
-    background: var(--white);
-    border-bottom: 1px solid var(--rule);
-    display: flex;
-    padding: 0 24px;
-  }
-
-  .tab-btn {
-    padding: 14px 20px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--mid);
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .tab-btn:hover { color: var(--ink); }
-  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
-
-  /* MAIN CONTENT */
-  .app-main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 32px 24px 60px;
-  }
-
-  /* PANELS */
-  .panel { display: none; }
-  .panel.active { display: block; }
-
-  /* SEARCH */
-  .search-wrap {
-    position: relative;
-    margin-bottom: 24px;
-  }
-
-  .search-wrap input {
-    width: 100%;
-    padding: 12px 16px 12px 44px;
-    border: 1.5px solid var(--rule);
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
-    background: var(--white);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .search-wrap input:focus { border-color: var(--steel); }
-
-  .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--mid);
-    pointer-events: none;
-  }
-
-  /* EMPLOYEE LIST */
-  .emp-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .emp-row {
-    background: var(--white);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: all 0.15s;
-    gap: 12px;
-  }
-
-  .emp-row:hover { border-color: var(--steel); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-
-  .emp-info { flex: 1; min-width: 0; }
-
-  .emp-name {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink);
-    margin-bottom: 2px;
-  }
-
-  .emp-meta {
-    font-size: 12px;
-    color: var(--mid);
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .badge {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 3px;
-    white-space: nowrap;
-  }
-
-  .badge-hae  { background: var(--light-navy); color: var(--navy); }
-  .badge-krc  { background: var(--light-teal); color: var(--teal); }
-  .badge-vuma { background: #FEF3C7; color: #92400E; }
-  .badge-warn { background: #FEF3C7; color: #92400E; }
-  .badge-ok   { background: var(--light-teal); color: var(--teal); }
-  .badge-inactive { background: var(--light-red); color: var(--red); }
-
-  .missing-count {
-    font-size: 11px;
-    color: var(--amber);
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  /* EDIT PANEL */
-  .edit-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .btn-back {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--steel);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    padding: 0;
-    flex-shrink: 0;
-    margin-top: 3px;
-  }
-
-  .btn-back:hover { color: var(--navy); }
-
-  .edit-emp-name {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 4px;
-  }
-
-  .edit-emp-meta { font-size: 13px; color: var(--mid); }
-
-  /* SECTION CARDS */
-  .section-card {
-    background: var(--white);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    margin-bottom: 16px;
-    overflow: hidden;
-  }
-
-  .section-head {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--rule);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .section-head h3 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--mid);
-  }
-
-  .section-body { padding: 20px; }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .form-grid .full { grid-column: 1 / -1; }
-
-  /* READONLY FIELDS */
-  .readonly-field {
-    background: var(--paper);
-    border-color: var(--rule) !important;
-    color: var(--mid) !important;
-    cursor: not-allowed;
-  }
-
-  /* SAVE BAR */
-  .save-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--white);
-    border-top: 1px solid var(--rule);
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
-    z-index: 50;
-  }
-
-  .save-bar-left { font-size: 13px; color: var(--mid); }
-  .save-bar-left strong { color: var(--ink); }
-
-  .save-bar-right { display: flex; gap: 10px; }
-
-  .btn-cancel {
-    padding: 10px 20px;
-    background: none;
-    border: 1.5px solid var(--rule);
-    border-radius: 6px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--mid);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .btn-cancel:hover { border-color: var(--mid); color: var(--ink); }
-
-  .btn-save {
-    padding: 10px 24px;
-    background: var(--teal);
-    border: none;
-    border-radius: 6px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--white);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-
-  .btn-save:hover { background: #133a28; }
-  .btn-save:disabled { background: var(--mid); cursor: not-allowed; }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 80px;
-    right: 24px;
-    background: var(--ink);
-    color: var(--white);
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.2s;
-    pointer-events: none;
-    z-index: 200;
-  }
-
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.success { background: var(--teal); }
-  .toast.error   { background: var(--red); }
-
-  /* LOADING */
-  .loading {
-    text-align: center;
-    padding: 48px;
-    color: var(--mid);
-    font-size: 13px;
-  }
-
-  .spinner {
-    width: 24px; height: 24px;
-    border: 2px solid var(--rule);
-    border-top-color: var(--navy);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 12px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* EMPTY STATE */
-  .empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--mid);
-  }
-
-  .empty-icon { font-size: 32px; margin-bottom: 12px; }
-  .empty h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
-  .empty p { font-size: 13px; }
-
-  /* NEW EMPLOYEE */
-  .page-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 24px;
-  }
-
-  @media (max-width: 600px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .form-grid .full { grid-column: 1; }
-    .app-main { padding: 20px 16px 80px; }
-    .save-bar { padding: 12px 16px; }
-  }
-
-  /* ── DOCUMENT UPLOAD ── */
-  .upload-btn-main {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 18px; background: var(--navy); color: var(--white);
-    border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
-    cursor: pointer; margin-bottom: 16px; font-family: inherit;
-  }
-  .upload-btn-main:hover { background: #162c4a; }
-
-  .doc-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--rule); }
-  .doc-tab { padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--mid);
-    background: none; border: none; border-bottom: 2px solid transparent;
-    cursor: pointer; font-family: inherit; }
-  .doc-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
-
-  .doc-list { list-style: none; }
-  .doc-item { display: flex; align-items: center; gap: 12px; padding: 10px 0;
-    border-bottom: 1px solid var(--rule); font-size: 13px; }
-  .doc-item:last-child { border-bottom: none; }
-  .doc-icon { font-size: 20px; flex-shrink: 0; }
-  .doc-info { flex: 1; }
-  .doc-name { font-weight: 500; color: var(--ink); }
-  .doc-meta { font-size: 11px; color: var(--mid); margin-top: 2px; }
-  .doc-actions { display: flex; gap: 6px; }
-  .doc-btn { font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer;
-    font-family: inherit; font-weight: 600; border: 1px solid; }
-  .doc-btn-view { background: var(--light-navy); color: var(--navy); border-color: var(--navy); }
-  .doc-btn-del  { background: var(--light-red);  color: var(--red);  border-color: var(--red);  }
-
-  /* Upload modal */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(20,30,45,0.55);
-    display: none; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
-  .modal-overlay.show { display: flex; }
-  .modal-card { background: var(--white); border-radius: 12px; width: 100%; max-width: 520px;
-    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .modal-head { background: var(--navy); padding: 16px 20px; display: flex;
-    align-items: center; justify-content: space-between; }
-  .modal-title { font-size: 15px; font-weight: 700; color: var(--white); }
-  .modal-close { background: none; border: none; color: rgba(255,255,255,0.6);
-    font-size: 20px; cursor: pointer; }
-  .modal-body { padding: 20px; }
-  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--rule);
-    display: flex; justify-content: flex-end; gap: 8px; }
-
-  .upload-drop { border: 2px dashed var(--rule); border-radius: 8px; padding: 32px;
-    text-align: center; cursor: pointer; position: relative; transition: all 0.15s; }
-  .upload-drop:hover, .upload-drop.over { border-color: var(--navy); background: var(--light-navy); }
-  .upload-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .upload-drop-icon { font-size: 28px; margin-bottom: 8px; }
-  .upload-drop-text { font-size: 13px; color: var(--mid); }
-
-  .ai-suggestion { background: var(--light-teal); border: 1px solid #a7f3d0;
-    border-radius: 8px; padding: 12px 14px; margin: 12px 0; font-size: 13px; }
-  .ai-suggestion .ai-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
-  .ai-suggestion .ai-confidence { font-size: 11px; color: var(--mid); margin-top: 4px; }
-
-  .progress-bar { height: 4px; background: var(--rule); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--teal); border-radius: 2px;
-    width: 0%; transition: width 0.3s; }
-
-  .modal-field { margin-bottom: 14px; }
-  .modal-label { display: block; font-size: 12px; font-weight: 700; color: var(--mid);
-    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; }
-  .modal-select, .modal-input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--rule);
-    border-radius: 6px; font-size: 13px; color: var(--ink); background: var(--white);
-    outline: none; font-family: inherit; }
-  .modal-select:focus, .modal-input:focus { border-color: var(--navy); }
+:root {
+  --navy:     #1F3A5F;
+  --navy-d:   #162c4a;
+  --navy-l:   #2a4f7a;
+  --gold:     #C8A24B;
+  --gold-l:   #f0d98a;
+  --ink:      #1a1c22;
+  --mid:      #6b7280;
+  --rule:     #e2e0da;
+  --paper:    #f7f6f3;
+  --white:    #ffffff;
+  --green:    #3B6D11;
+  --green-b:  #EAF3DE;
+  --amber:    #BA7517;
+  --amber-b:  #FAEEDA;
+  --red:      #A32D2D;
+  --red-b:    #FCEBEB;
+  --teal:     #1A4A35;
+  --radius:   10px;
+  --shadow:   0 1px 4px rgba(0,0,0,0.08);
+  --shadow-m: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  min-height: 100vh;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background pattern */
+#auth-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(200,162,75,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.auth-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 44px 36px 36px;
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.auth-mark {
+  width: 52px;
+  height: 52px;
+  background: var(--navy);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.auth-mark svg { width: 28px; height: 28px; }
+
+.auth-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.auth-tagline {
+  font-size: 13px;
+  color: var(--mid);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-google:hover { border-color: var(--navy); box-shadow: var(--shadow); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  font-size: 11px;
+  color: var(--mid);
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.auth-field {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+  margin-bottom: 10px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s;
+}
+.auth-field:focus { border-color: var(--navy); }
+
+.btn-signin {
+  width: 100%;
+  padding: 13px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.btn-signin:hover { background: var(--navy-d); }
+
+.auth-error {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 10px;
+  text-align: center;
+  display: none;
+}
+
+.auth-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--mid);
+}
+
+/* ── APP SHELL ── */
+#app { display: none; min-height: 100vh; flex-direction: column; }
+
+/* TOP NAV */
+.topnav {
+  background: var(--navy);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topnav-mark {
+  width: 32px;
+  height: 32px;
+  background: rgba(200,162,75,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topnav-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.topnav-name span {
+  color: var(--gold);
+}
+
+.topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+.nav-link.active { color: var(--white); background: rgba(255,255,255,0.12); }
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px 4px 4px;
+  border-radius: 20px;
+  transition: background 0.15s;
+}
+.user-chip:hover { background: rgba(255,255,255,0.08); }
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.user-name-nav {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+/* MOBILE NAV */
+.mobile-nav {
+  display: none;
+  background: var(--navy-d);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 16px;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mobile-nav-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+}
+.mobile-nav-link.active { color: var(--white); background: rgba(255,255,255,0.12); }
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px;
+  background: none;
+  border: none;
+}
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* MAIN CONTENT */
+.app-main {
+  flex: 1;
+  padding: 28px 24px 48px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* HOME PAGE */
+.home-greeting {
+  margin-bottom: 28px;
+}
+
+.home-greeting .time-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mid);
+  margin-bottom: 4px;
+}
+
+.home-greeting h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+}
+
+.home-greeting .sub {
+  font-size: 13px;
+  color: var(--mid);
+  margin-top: 2px;
+}
+
+/* NOTICE BOARD */
+.notice-board {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-l) 100%);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.notice-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(200,162,75,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.notice-content { flex: 1; }
+
+.notice-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.notice-text {
+  font-size: 14px;
+  color: var(--white);
+  line-height: 1.5;
+}
+
+.notice-date {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 6px;
+}
+
+/* SECTION HEADERS */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+
+/* TOOL GRID */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.tool-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: block;
+}
+
+.tool-card:hover {
+  border-color: var(--navy);
+  box-shadow: var(--shadow-m);
+  transform: translateY(-2px);
+}
+
+.tool-card.coo-only {
+  border-left: 3px solid var(--gold);
+}
+
+.tool-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.tool-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.tool-desc {
+  font-size: 11px;
+  color: var(--mid);
+  line-height: 1.4;
+}
+
+.tool-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+/* INFO PAGE */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.info-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.info-card-head {
+  background: var(--paper);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-card-head h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.info-card-body { padding: 14px 18px; }
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.info-item:last-child { border-bottom: none; }
+.info-item:hover { color: var(--navy); }
+.info-item .item-icon { font-size: 14px; flex-shrink: 0; }
+.info-item .item-sub { font-size: 11px; color: var(--mid); }
+
+/* COMING SOON BADGE */
+.coming-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--mid);
+  border: 1px solid var(--rule);
+  margin-left: auto;
+}
+
+/* PROFILE PAGE */
+.profile-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-width: 480px;
+}
+
+.profile-head {
+  background: var(--navy);
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.profile-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.profile-role {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+
+.profile-body { padding: 20px 24px; }
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  gap: 12px;
+}
+.profile-row:last-child { border-bottom: none; }
+.profile-label { font-size: 11px; font-weight: 600; color: var(--mid); width: 100px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.06em; }
+.profile-value { font-size: 13px; color: var(--ink); }
+
+.btn-signout-main {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: none;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mid);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.btn-signout-main:hover { border-color: var(--red); color: var(--red); }
+
+/* FOOTER */
+.app-footer {
+  background: var(--white);
+  border-top: 1px solid var(--rule);
+  padding: 16px 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--mid);
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--ink);
+  color: var(--white);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+  z-index: 200;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .mobile-nav { display: flex; }
+  .app-main { padding: 20px 16px 40px; }
+  .tool-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-greeting h2 { font-size: 20px; }
+  .notice-board { flex-direction: column; gap: 10px; }
+  .info-grid { grid-template-columns: 1fr; }
+  .user-name-nav { display: none; }
+  .topnav { padding: 0 16px; }
+}
+
+@media (min-width: 641px) {
+  .mobile-nav { display: none !important; }
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">Hospital at Ekhaya</div>
-    <div class="login-title">HR Staff Portal</div>
-    <div class="login-sub">Authorised HR personnel only</div>
+<!-- ── AUTH SCREEN ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-mark">
+      <svg viewBox="0 0 28 28" fill="none">
+        <path d="M14 3L4 8v6c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L14 3z" fill="#C8A24B" opacity="0.3"/>
+        <path d="M14 3L4 8v6c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L14 3z" stroke="#C8A24B" stroke-width="1.5" fill="none"/>
+        <path d="M10 14l3 3 5-5" stroke="#C8A24B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="auth-name">Ekhaya <span style="color:var(--gold)">Connect</span></div>
+    <div class="auth-tagline">Your hospital. Your home. Your tools.</div>
 
     <button class="btn-google" onclick="signInGoogle()">
-      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+      </svg>
       Sign in with Google
     </button>
 
-    <button class="btn-email-toggle" onclick="toggleEmailLogin()">Sign in with email instead</button>
+    <div class="auth-divider">or</div>
 
-    <div class="email-login" id="email-login">
-      <div class="field-group">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="your@email.com">
-      </div>
-      <div class="field-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••">
-      </div>
-      <button class="btn-primary" onclick="signInEmail()">Sign In</button>
+    <input class="auth-field" type="email" id="auth-email" placeholder="Email address" autocomplete="email">
+    <input class="auth-field" type="password" id="auth-password" placeholder="Password" autocomplete="current-password">
+    <button class="btn-signin" onclick="signInEmail()">Sign in</button>
+    <div class="auth-error" id="auth-error"></div>
+
+    <div class="auth-footer">
+      HOSPITAL AT EKHAYA · Vuma Development Solutions
     </div>
-
-    <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
-<!-- ═══════════════ APP SHELL ═══════════════ -->
-<div id="app">
-  <header class="app-header">
-    <div class="app-header-left">
-      <div class="app-brand">HOSPITAL AT EKHAYA <span>HR Portal</span></div>
+<!-- ── ACCESS DENIED SCREEN ── -->
+<div id="access-screen" style="display:none;min-height:100vh;background:var(--navy);align-items:center;justify-content:center;padding:24px;flex-direction:column;gap:0">
+  <div style="background:var(--white);border-radius:16px;padding:44px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="width:52px;height:52px;background:var(--red-b);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px">🔒</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px">Access not authorised</div>
+    <div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:24px">Your account is not registered on Ekhaya Connect. Contact the COO to request access.</div>
+    <div style="background:var(--paper);border-radius:8px;padding:14px 16px;margin-bottom:24px;text-align:left">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Logged in as</div>
+      <div style="font-size:13px;color:var(--ink)" id="denied-email">—</div>
     </div>
-    <div class="header-user">
-      <span class="user-name" id="user-name-display"></span>
-      <button class="btn-signout" onclick="signOut()">Sign out</button>
-    </div>
-  </header>
+    <div style="font-size:12px;color:var(--mid);margin-bottom:16px">COO: Jacques Bornman · 082 822 6406</div>
+    <button onclick="doSignOut()" style="width:100%;padding:12px;background:none;border:1.5px solid var(--rule);border-radius:8px;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;font-family:'Inter',sans-serif">Sign out</button>
+  </div>
+</div>
 
-  <nav class="tab-nav">
-    <button class="tab-btn active" onclick="showTab('search')">Staff Records</button>
-    <button class="tab-btn" onclick="showTab('new')">New Employee</button>
+<!-- ── APP SHELL ── -->
+<div id="app">
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <div class="topnav-mark">
+        <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+          <path d="M14 3L4 8v6c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L14 3z" fill="#C8A24B" opacity="0.4"/>
+          <path d="M10 14l3 3 5-5" stroke="#C8A24B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="topnav-name">Ekhaya <span>Connect</span></div>
+    </div>
+
+    <div class="topnav-right">
+      <div class="nav-links">
+        <button class="nav-link active" onclick="showPage('home')">Home</button>
+        <button class="nav-link" onclick="showPage('tools')">My Tools</button>
+        <button class="nav-link" onclick="showPage('info')">Information</button>
+        <button class="nav-link coo-nav" onclick="showPage('management')" style="display:none">Management</button>
+      </div>
+
+      <div class="user-chip" onclick="showPage('profile')">
+        <div class="user-avatar" id="nav-avatar">—</div>
+        <span class="user-name-nav" id="nav-name">—</span>
+      </div>
+
+      <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </nav>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobile-nav" style="display:none">
+    <button class="mobile-nav-link active" onclick="showPage('home');toggleMobileNav()">🏠 Home</button>
+    <button class="mobile-nav-link" onclick="showPage('tools');toggleMobileNav()">🔧 My Tools</button>
+    <button class="mobile-nav-link" onclick="showPage('info');toggleMobileNav()">📋 Information</button>
+    <button class="mobile-nav-link coo-mobile" onclick="showPage('management');toggleMobileNav()" style="display:none">⚙️ Management</button>
+    <button class="mobile-nav-link" onclick="showPage('profile');toggleMobileNav()">👤 Profile</button>
+  </div>
 
   <main class="app-main">
 
-    <!-- SEARCH PANEL -->
-    <div class="panel active" id="panel-search">
-      <button class="upload-btn-main" onclick="openUploadModal(null)">
-        📎 Upload Document
-      </button>
-      <div class="search-wrap">
-        <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="search-input" placeholder="Search by name, employee number, or position…" oninput="filterEmployees()">
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <div class="home-greeting">
+        <div class="time-label" id="time-label">Good morning</div>
+        <h2 id="greeting-name">Welcome to Ekhaya Connect</h2>
+        <div class="sub" id="greeting-sub">HOSPITAL AT EKHAYA · Kimberley</div>
       </div>
-      <div id="emp-list-container">
-        <div class="loading"><div class="spinner"></div>Loading staff records…</div>
-      </div>
-    </div>
 
-    <!-- EDIT PANEL -->
-    <div class="panel" id="panel-edit">
-      <div class="edit-header">
-        <button class="btn-back" onclick="backToList()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          All staff
-        </button>
+      <!-- NOTICE BOARD -->
+      <div class="notice-board">
+        <div class="notice-icon">📢</div>
+        <div class="notice-content">
+          <div class="notice-label">Notice Board</div>
+          <div class="notice-text" id="notice-text">Welcome to Ekhaya Connect — your hospital portal is now live. Bookmark this page on your phone for quick access to all your tools and information.</div>
+          <div class="notice-date" id="notice-date">Posted by COO · June 2026</div>
+        </div>
+      </div>
+
+      <!-- QUICK TOOLS -->
+      <div class="section-header">
+        <div class="section-title">Quick Access</div>
+      </div>
+
+      <div class="tool-grid" id="quick-tools">
+        <!-- Populated by JS based on role -->
+      </div>
+
+      <!-- HOSPITAL INFO STRIP -->
+      <div class="section-header">
+        <div class="section-title">Hospital at Ekhaya</div>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px">
         <div>
-          <div class="edit-emp-name" id="edit-emp-name">—</div>
-          <div class="edit-emp-meta" id="edit-emp-meta">—</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Address</div>
+          <div style="font-size:13px;color:var(--ink)">Cnr Montlahla &amp; Motopo St<br>Galeshewe, Kimberley, 8345</div>
         </div>
-      </div>
-
-      <div class="doc-tabs">
-        <button class="doc-tab active" onclick="switchDocTab('details', this)">Details</button>
-        <button class="doc-tab" onclick="switchDocTab('documents', this)">Documents <span id="doc-count-badge" style="font-size:11px;background:var(--rule);padding:1px 6px;border-radius:8px;margin-left:4px">0</span></button>
-      </div>
-
-      <div id="edit-form-body"></div>
-
-      <div id="documents-panel" style="display:none">
-        <button class="upload-btn-main" onclick="openUploadModal(currentDocId)">
-          📎 Upload Document
-        </button>
-        <div id="doc-list-container">
-          <div class="loading"><div class="spinner"></div>Loading documents…</div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Hospital Tel</div>
+          <div style="font-size:13px;color:var(--ink)">053 050 0500<br>Emergency: 061 522 0536</div>
         </div>
-      </div>
-
-      <div style="height:70px"></div>
-
-      <div class="save-bar">
-        <div class="save-bar-left">Editing <strong id="save-bar-name">—</strong></div>
-        <div class="save-bar-right">
-          <button class="btn-cancel" onclick="backToList()">Cancel</button>
-          <button class="btn-save" onclick="saveEmployee()" id="btn-save">Save changes</button>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">CEO</div>
+          <div style="font-size:13px;color:var(--ink)">Karel Phentela<br>084 621 7877</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);margin-bottom:4px">COO</div>
+          <div style="font-size:13px;color:var(--ink)">J. Jacques Bornman<br>082 822 6406</div>
         </div>
       </div>
     </div>
 
-    <!-- NEW EMPLOYEE PANEL -->
-    <div class="panel" id="panel-new">
-      <div class="page-title">Add New Employee</div>
-      <div id="new-form-body"></div>
-      <div style="height:70px"></div>
-      <div class="save-bar">
-        <div class="save-bar-left">New employee record</div>
-        <div class="save-bar-right">
-          <button class="btn-cancel" onclick="showTab('search')">Cancel</button>
-          <button class="btn-save" onclick="saveNewEmployee()" id="btn-save-new">Create record</button>
+    <!-- TOOLS PAGE -->
+    <div class="page" id="page-tools">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">My Tools</div>
+        <div style="font-size:13px;color:var(--mid)">All your daily tools in one place</div>
+      </div>
+
+      <div class="section-header"><div class="section-title">Reporting</div></div>
+      <div class="tool-grid" id="reporting-tools"></div>
+
+      <div class="section-header" id="clinical-section" style="display:none"><div class="section-title">Clinical</div></div>
+      <div class="tool-grid" id="clinical-tools"></div>
+
+      <div class="section-header" id="management-section" style="display:none"><div class="section-title">Management</div></div>
+      <div class="tool-grid" id="management-tools"></div>
+    </div>
+
+    <!-- INFORMATION PAGE -->
+    <div class="page" id="page-info">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Information</div>
+        <div style="font-size:13px;color:var(--mid)">Policies, contacts, and reference material</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">📋</span>
+            <h3>Policies & Procedures</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">📄</span>
+              <div><div>HR Policies</div><div class="item-sub">Leave, discipline, conduct</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">📄</span>
+              <div><div>Clinical SOPs</div><div class="item-sub">Nursing, medication, infection control</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">📄</span>
+              <div><div>Operational Policies</div><div class="item-sub">Kitchen, security, support services</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">📞</span>
+            <h3>Management Contacts</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>CEO — Karel Phentela</div><div class="item-sub">084 621 7877</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>COO — J. Jacques Bornman</div><div class="item-sub">082 822 6406</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>HR & Finance — Amalia Phentela</div><div class="item-sub">079 531 5110</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>Admin Manager — Mercia Mbayimbayi</div><div class="item-sub">073 541 9120</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>Nursing Manager — Sr Jenny Madlala</div><div class="item-sub">079 692 4276</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">👤</span>
+              <div><div>Support Manager — Joy Phentela</div><div class="item-sub">082 937 1562</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">🏥</span>
+            <h3>Hospital Information</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">📍</span>
+              <div><div>Physical Address</div><div class="item-sub">Cnr Montlahla &amp; Motopo St, Galeshewe, Kimberley, 8345</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">📞</span>
+              <div><div>Hospital Tel</div><div class="item-sub">053 050 0500</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🚨</span>
+              <div><div>Emergency Line</div><div class="item-sub">061 522 0536</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">📣</span>
+              <div><div>Marketing</div><div class="item-sub">067 628 7272</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🛏</span>
+              <div><div>Bed Capacity</div><div class="item-sub">27 beds — Psychiatric &amp; Medical</div></div>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">⏰</span>
+              <div><div>Operating Hours</div><div class="item-sub">24 hours · 7 days a week</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-head">
+            <span style="font-size:16px">📚</span>
+            <h3>Staff Resources</h3>
+          </div>
+          <div class="info-card-body">
+            <div class="info-item">
+              <span class="item-icon">📖</span>
+              <div><div>Employee Handbook</div><div class="item-sub">Your rights and responsibilities</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">🏖</span>
+              <div><div>Leave Calendar 2026</div><div class="item-sub">Public holidays and leave schedule</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+            <div class="info-item">
+              <span class="item-icon">💊</span>
+              <div><div>Drug Formulary</div><div class="item-sub">Approved medication list</div></div>
+              <span class="coming-soon">Soon</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGEMENT PAGE (COO/CEO only) -->
+    <div class="page" id="page-management">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Management</div>
+        <div style="font-size:13px;color:var(--mid)">COO and CEO access only</div>
+      </div>
+
+      <div class="section-header"><div class="section-title">Dashboards</div></div>
+      <div class="tool-grid">
+        <a href="https://shakabornman.github.io/hae-scorecard/dashboard.html" target="_blank" class="tool-card coo-only">
+          <div class="tool-icon" style="background:#EBF1F7">📊</div>
+          <div class="tool-name">CEO Scorecard</div>
+          <div class="tool-desc">Weekly department performance dashboard</div>
+        </a>
+        <div class="tool-card coo-only" onclick="showToast('HR Dashboard coming soon')">
+          <div class="tool-icon" style="background:#E6F4EE">👥</div>
+          <div class="tool-name">HR Overview</div>
+          <div class="tool-desc">Staff records and HR metrics</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card coo-only" onclick="showToast('Risk Dashboard coming soon')">
+          <div class="tool-icon" style="background:#FEF3C7">⚠️</div>
+          <div class="tool-name">Risk Register</div>
+          <div class="tool-desc">Live risk register and escalations</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+      </div>
+
+      <div class="section-header"><div class="section-title">Administration</div></div>
+      <div class="tool-grid">
+        <a href="https://shakabornman.github.io/hae-hr-portal" target="_blank" class="tool-card coo-only">
+          <div class="tool-icon" style="background:#E6F4EE">👤</div>
+          <div class="tool-name">HR Portal</div>
+          <div class="tool-desc">Employee records, onboarding, documents</div>
+        </a>
+        <div class="tool-card coo-only" onclick="showToast('Policy manager coming soon')">
+          <div class="tool-icon" style="background:#F0EAF8">📋</div>
+          <div class="tool-name">Policy Manager</div>
+          <div class="tool-desc">Manage and publish policies</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card coo-only" onclick="window.open('https://manualrollup-gldcmcru2q-ew.a.run.app','_blank')">
+          <div class="tool-icon" style="background:#FEF3C7">🔄</div>
+          <div class="tool-name">Force Rollup</div>
+          <div class="tool-desc">Manually trigger scorecard rollup</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+      <div style="margin-bottom:24px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">My Profile</div>
+        <div style="font-size:13px;color:var(--mid)">Your account details</div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-head">
+          <div class="profile-avatar" id="profile-avatar">—</div>
+          <div>
+            <div class="profile-name" id="profile-name">—</div>
+            <div class="profile-role" id="profile-role">Staff</div>
+          </div>
+        </div>
+        <div class="profile-body">
+          <div class="profile-row">
+            <span class="profile-label">Email</span>
+            <span class="profile-value" id="profile-email">—</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-label">Department</span>
+            <span class="profile-value" id="profile-dept">—</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-label">Facility</span>
+            <span class="profile-value" id="profile-facility">HOSPITAL AT EKHAYA</span>
+          </div>
+          <button class="btn-signout-main" onclick="doSignOut()">Sign out</button>
         </div>
       </div>
     </div>
 
   </main>
+
+  <footer class="app-footer">
+    HOSPITAL AT EKHAYA · Vuma Development Solutions (Pty) Ltd · Ekhaya Connect v1.0
+  </footer>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- UPLOAD MODAL -->
-<div class="modal-overlay" id="upload-modal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <div class="modal-title">Upload Document</div>
-      <button class="modal-close" onclick="closeUploadModal()">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- Step 1: Drop zone -->
-      <div id="upload-step-1">
-        <div class="upload-drop" id="upload-drop">
-          <input type="file" id="upload-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            onchange="handleUploadFile(this.files[0])">
-          <div class="upload-drop-icon">📄</div>
-          <div class="upload-drop-text">Drop document here or click to browse<br>
-            <small>PDF · JPG · PNG · DOC · DOCX</small></div>
-        </div>
-      </div>
-
-      <!-- Step 2: AI reading -->
-      <div id="upload-step-2" style="display:none">
-        <div style="text-align:center;padding:24px">
-          <div class="spinner" style="margin:0 auto 12px"></div>
-          <div style="font-size:13px;color:var(--mid)">AI reading document…</div>
-        </div>
-      </div>
-
-      <!-- Step 3: Confirm -->
-      <div id="upload-step-3" style="display:none">
-        <div class="ai-suggestion" id="ai-suggestion-box">
-          <div class="ai-label">AI Suggestion</div>
-          <div id="ai-suggestion-text"></div>
-          <div class="ai-confidence" id="ai-confidence-text"></div>
-        </div>
-
-        <div class="modal-field">
-          <label class="modal-label">Employee <span style="color:var(--red)">*</span></label>
-          <select class="modal-select" id="upload-emp-select"></select>
-        </div>
-
-        <div class="modal-field">
-          <label class="modal-label">Document Type <span style="color:var(--red)">*</span></label>
-          <select class="modal-select" id="upload-type-select">
-            <option value="">— select type —</option>
-          </select>
-        </div>
-
-        <div class="modal-field">
-          <label class="modal-label">Note (optional)</label>
-          <input type="text" class="modal-input" id="upload-note" placeholder="e.g. SANC renewal 2026">
-        </div>
-
-        <div id="upload-progress" style="display:none">
-          <div style="font-size:12px;color:var(--mid);margin-bottom:4px">Uploading…</div>
-          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-        </div>
-      </div>
-
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeUploadModal()">Cancel</button>
-      <button class="btn-save" id="btn-upload-confirm" onclick="confirmUpload()" style="display:none">
-        Save Document
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase SDK -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getFirestore, collection, getDocs, query, where, doc, updateDoc, setDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider,
+         signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-// ── YOUR FIREBASE CONFIG ──────────────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
   authDomain:        "hae-vuma-92fca.firebaseapp.com",
@@ -817,29 +1090,15 @@ const firebaseConfig = {
   appId:             "1:1052424261313:web:a4bebe68d6f9ba14fa0e40"
 };
 
-const app      = initializeApp(firebaseConfig);
-const auth     = getAuth(app);
-const db       = getFirestore(app);
-const storage  = getStorage(app);
-const provider = new GoogleAuthProvider();
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
 
-// ── DOCUMENT TYPES ────────────────────────────────────────────────────────
-const DOC_TYPES = [
-  'ID Document',
-  'CV / Resume',
-  'Qualifications / Certificates',
-  'SANC Registration',
-  'Professional Indemnity',
-  'Medical Certificate / Fitness to Work',
-  'Reference Letters',
-  'Signed Employment Contract',
-  'Other'
-];
+// COO email — management nav visible to this user
+// COO access determined by Firebase employee role — no emails in code
 
-// ── STATE ─────────────────────────────────────────────────────────────────
-let allEmployees  = [];
-let currentDocId  = null;
-let currentEmpDoc = null;
+let currentUser = null;
+let employeeDoc = null;
 
 
 // ── ACCESS CONTROL ─────────────────────────────────────────────────────────
@@ -858,942 +1117,226 @@ async function checkAccess(user) {
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────
-window.signInGoogle = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    showLoginError(e.message);
-  }
-};
-
-window.signInEmail = async () => {
-  const email = document.getElementById('login-email').value;
-  const pass  = document.getElementById('login-password').value;
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch (e) {
-    showLoginError("Invalid email or password.");
-  }
-};
-
-window.signOut = async () => {
-  await fbSignOut(auth);
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-  allEmployees = [];
-};
-
-window.toggleEmailLogin = () => {
-  document.getElementById('email-login').classList.toggle('show');
-};
-
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
   if (user) {
     const allowed = await checkAccess(user);
     if (!allowed) {
-      await fbSignOut(auth);
-      showLoginError('Access not authorised. Contact the COO.');
+      await signOut(auth);
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('access-screen').style.display = 'none';
+      showAuthError('Access not authorised. Contact the COO.');
       return;
     }
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('user-name-display').textContent = user.displayName || user.email;
-    await loadEmployees();
+    document.getElementById('auth-screen').style.display = 'none';
+    const hasAccess = await loadUserProfile(user);
+    if (hasAccess) {
+      document.getElementById('access-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      initPortal(user);
+    } else {
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('denied-email').textContent = user.email;
+      document.getElementById('access-screen').style.display = 'flex';
+    }
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('access-screen').style.display = 'none';
   }
 });
 
-// ── LOAD EMPLOYEES ────────────────────────────────────────────────────────
-// Track document counts per employee
-let docCountMap = {};
-
-async function loadDocCounts() {
-  try {
-    const snap = await getDocs(collection(db, 'hr_documents'));
-    docCountMap = {};
-    snap.docs.forEach(d => {
-      const empId = d.data().employeeDocId;
-      if (empId) docCountMap[empId] = (docCountMap[empId] || 0) + 1;
-    });
-  } catch(e) {
-    console.warn('Could not load doc counts:', e.message);
-  }
-}
-
-async function loadEmployees() {
-  try {
-    const snap = await getDocs(collection(db, 'employees'));
-    allEmployees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    allEmployees.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
-    await loadDocCounts();
-    renderList(allEmployees);
-  } catch (e) {
-    document.getElementById('emp-list-container').innerHTML =
-      `<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load records</h3><p>${e.message}</p></div>`;
-  }
-}
-
-// ── RENDER LIST ───────────────────────────────────────────────────────────
-function renderList(employees) {
-  const container = document.getElementById('emp-list-container');
-  if (!employees.length) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No results</h3><p>Try a different search term.</p></div>`;
-    return;
-  }
-
-  const facilityBadge = f => {
-    const map = { HAE: 'badge-hae', KRC: 'badge-krc', Vuma: 'badge-vuma' };
-    return `<span class="badge ${map[f] || 'badge-hae'}">${f || 'HAE'}</span>`;
-  };
-
-  const html = `<div class="emp-list">${employees.map(emp => {
-    const missing  = (emp.missingFields || []).length;
-    const inactive = emp.active === false;
-    const statusBadge = inactive
-      ? `<span class="badge badge-inactive">Resigned</span>`
-      : missing > 0
-        ? `<span class="missing-count">⚠ ${missing} field${missing > 1 ? 's' : ''} missing</span>`
-        : `<span class="badge badge-ok">Complete</span>`;
-
-    const docCount = docCountMap[emp.id] || 0;
-    const docBadge = docCount > 0
-      ? `<span style="font-size:11px;background:#e6f4ee;color:#1A4A35;border:1px solid #a7f3d0;padding:1px 7px;border-radius:8px;font-weight:600">📎 ${docCount} doc${docCount>1?'s':''}</span>`
-      : `<span style="font-size:11px;background:var(--paper);color:var(--mid);border:1px solid var(--rule);padding:1px 7px;border-radius:8px">No docs</span>`;
-
-    return `<div class="emp-row" onclick="openEmployee('${emp.id}')">
-      <div class="emp-info">
-        <div class="emp-name">${emp.fullName || '—'}</div>
-        <div class="emp-meta">
-          <span>${emp.employeeNumber || ''}</span>
-          <span>${emp.position || '—'}</span>
-          ${facilityBadge(emp.facility)}
-        </div>
-      </div>
-      ${statusBadge}
-        ${docBadge}
-      <svg width="16" height="16" fill="none" stroke="#9CA3AF" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-    </div>`;
-  }).join('')}</div>`;
-
-  container.innerHTML = html;
-}
-
-// ── FILTER ────────────────────────────────────────────────────────────────
-window.filterEmployees = () => {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  if (!q) { renderList(allEmployees); return; }
-  const filtered = allEmployees.filter(e =>
-    (e.fullName || '').toLowerCase().includes(q) ||
-    (e.employeeNumber || '').toLowerCase().includes(q) ||
-    (e.position || '').toLowerCase().includes(q) ||
-    (e.department || '').toLowerCase().includes(q)
-  );
-  renderList(filtered);
+window.signInGoogle = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch(e) { showAuthError('Sign in failed. Try again.'); }
 };
 
-// ── OPEN EMPLOYEE ─────────────────────────────────────────────────────────
-window.openEmployee = (docId) => {
-  currentDocId  = docId;
-  currentEmpDoc = allEmployees.find(e => e.id === docId) || {};
-  const emp     = currentEmpDoc;
+window.signInEmail = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  if (!email || !pass) { showAuthError('Enter your email and password.'); return; }
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e) { showAuthError('Invalid email or password.'); }
+};
 
-  document.getElementById('edit-emp-name').textContent = emp.fullName || '—';
-  document.getElementById('edit-emp-meta').textContent =
-    `${emp.employeeNumber || ''} · ${emp.position || ''} · ${emp.facility || ''}`;
-  document.getElementById('save-bar-name').textContent = emp.fullName || '—';
+window.doSignOut = async () => {
+  await signOut(auth);
+};
 
-  document.getElementById('edit-form-body').innerHTML = buildEditForm(emp);
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+}
 
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-edit').classList.add('active');
+// ── LOAD PROFILE ──────────────────────────────────────────────────────────
+async function loadUserProfile(user) {
+  // Query employees collection for matching email
+  try {
+    const { getDocs: gd, collection: col, query: q, where: w } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const empSnap = await gd(q(col(db, 'employees'), w('email', '==', user.email)));
+    if (!empSnap.empty) {
+      employeeDoc = empSnap.docs[0].data();
+      return true;
+    }
+    // COO always has access regardless
+    return true;
+    return false;
+  } catch(e) {
+    // If rules block the query, check if COO
+    return true;
+    return false;
+  }
+}
+
+// ── INIT PORTAL ───────────────────────────────────────────────────────────
+function initPortal(user) {
+  const isCOO = employeeDoc !== null;
+  const displayName = user.displayName || user.email?.split('@')[0] || 'Staff';
+  const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('time-label').textContent = greeting;
+  document.getElementById('greeting-name').textContent = `${greeting}, ${displayName.split(' ')[0]}`;
+
+  // Nav
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-name').textContent = displayName.split(' ')[0];
+
+  // Profile
+  document.getElementById('profile-avatar').textContent = initials;
+  document.getElementById('profile-name').textContent = displayName;
+  document.getElementById('profile-email').textContent = user.email;
+  document.getElementById('profile-role').textContent = isCOO ? 'Chief Operations Officer' : (employeeDoc?.position || 'Staff');
+  document.getElementById('profile-dept').textContent = isCOO ? 'Management' : (employeeDoc?.department || '—');
+  document.getElementById('profile-facility').textContent = employeeDoc?.facility === 'KRC' ? 'KURUMAN RENAL CLINIC' : 'HOSPITAL AT EKHAYA';
+
+  // Show management nav for COO
+  if (isCOO) {
+    document.querySelectorAll('.coo-nav').forEach(el => el.style.display = 'block');
+    document.querySelectorAll('.coo-mobile').forEach(el => el.style.display = 'block');
+  }
+
+  // Build tool grids
+  buildToolGrids(isCOO);
+}
+
+// ── TOOL DEFINITIONS ──────────────────────────────────────────────────────
+function buildToolGrids(isCOO) {
+  // Quick access on home — most used tools
+  const quickTools = [
+    { icon:'📊', color:'#EBF1F7', name:'Scorecard Form', desc:'Submit your daily report', url: getScoreCardUrl(currentUser?.email), badge:null },
+    { icon:'⚠️', color:'#FEF3C7', name:'Report a Risk', desc:'Log a risk or incident', url:'#risk', badge:'Coming soon' },
+    { icon:'📋', color:'#F0EAF8', name:'Policies', desc:'Find procedures and policies', page:'info', badge:null },
+    { icon:'👤', color:'#E6F4EE', name:'My Profile', desc:'Your account and details', page:'profile', badge:null },
+  ];
+  renderTools('quick-tools', quickTools);
+
+  // Reporting tools
+  const reportingTools = [
+    { icon:'🔒', color:'#EBF1F7', name:'Security', desc:'Shift checklist', url:'https://shakabornman.github.io/hae-scorecard/security.html' },
+    { icon:'🍽', color:'#E6F4EE', name:'Support Services', desc:'Daily kitchen & cleaning', url:'https://shakabornman.github.io/hae-scorecard/support.html' },
+    { icon:'🏥', color:'#F0EAF8', name:'Case Management', desc:'Admissions & discharges', url:'https://shakabornman.github.io/hae-scorecard/casem.html' },
+    { icon:'💰', color:'#EBF1F7', name:'Billing', desc:'Daily billing checklist', url:'https://shakabornman.github.io/hae-scorecard/billing.html' },
+    { icon:'📣', color:'#FFF3E0', name:'Marketing', desc:'Activity report', url:'https://shakabornman.github.io/hae-scorecard/marketing.html' },
+    { icon:'💳', color:'#E6F4EE', name:'Finance', desc:'Daily finance checklist', url:'https://shakabornman.github.io/hae-scorecard/finance.html' },
+    { icon:'💉', color:'#FEF2F2', name:'Nursing', desc:'Daily nursing checklist', url:'https://shakabornman.github.io/hae-scorecard/nursing.html' },
+  ];
+  renderTools('reporting-tools', reportingTools);
+
+  // Clinical tools
+  const clinicalTools = [
+    { icon:'📝', color:'#F0EAF8', name:'Motivation Letters', desc:'Medical aid motivation generator', url:'https://shakabornman.github.io/hae-motivation-tool/', badge:null },
+  ];
+  if (clinicalTools.length) {
+    document.getElementById('clinical-section').style.display = 'flex';
+    renderTools('clinical-tools', clinicalTools);
+  }
+
+  // Management tools (COO only)
+  if (isCOO) {
+    document.getElementById('management-section').style.display = 'flex';
+    const mgmtTools = [
+      { icon:'📊', color:'#EBF1F7', name:'CEO Dashboard', desc:'Weekly scorecard dashboard', url:'https://shakabornman.github.io/hae-scorecard/dashboard.html' },
+      { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
+    ];
+    renderTools('management-tools', mgmtTools);
+  }
+}
+
+function getScoreCardUrl(email) {
+  // Department link comes from employee record department field
+  const deptMap = {
+    'nursing':   'https://shakabornman.github.io/hae-scorecard/nursing.html',
+    'billing':   'https://shakabornman.github.io/hae-scorecard/billing.html',
+    'casem':     'https://shakabornman.github.io/hae-scorecard/casem.html',
+    'finance':   'https://shakabornman.github.io/hae-scorecard/finance.html',
+    'marketing': 'https://shakabornman.github.io/hae-scorecard/marketing.html',
+    'support':   'https://shakabornman.github.io/hae-scorecard/support.html',
+    'security':  'https://shakabornman.github.io/hae-scorecard/hae-security-form.html',
+  };
+  const dept = (employeeDoc?.department || '').toLowerCase();
+  const map = deptMap;
+  return map[email] || 'https://shakabornman.github.io/hae-scorecard/security.html';
+}
+
+function renderTools(containerId, tools) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = tools.map(t => {
+    const el = t.url && t.url !== '#risk'
+      ? `<a href="${t.url}" target="${t.url.startsWith('http')?'_blank':'_self'}" class="tool-card">`
+      : `<div class="tool-card" onclick="${t.page ? `showPage('${t.page}')` : `showToast('${t.name} coming soon')`}">`;
+    const close = t.url && t.url !== '#risk' ? '</a>' : '</div>';
+    const badge = t.badge ? `<span class="tool-badge" style="background:var(--paper);color:var(--mid)">${t.badge}</span>` : '';
+    return `${el}
+      <div class="tool-icon" style="background:${t.color}">${t.icon}</div>
+      <div class="tool-name">${t.name}</div>
+      <div class="tool-desc">${t.desc}</div>
+      ${badge}
+    ${close}`;
+  }).join('');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+window.showPage = function(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
+
+  const page = document.getElementById('page-'+pageId);
+  if (page) page.classList.add('active');
+
+  // Highlight correct nav link
+  document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
+    if (l.getAttribute('onclick')?.includes(`'${pageId}'`)) l.classList.add('active');
+  });
+
   window.scrollTo(0, 0);
 };
 
-// ── BUILD EDIT FORM ───────────────────────────────────────────────────────
-function buildEditForm(emp) {
-  const ro = (val) => `<input class="readonly-field" value="${val || '—'}" readonly>`;
-  const inp = (id, val, type='text') =>
-    `<input id="f_${id}" type="${type}" value="${val || ''}">`;
-  const sel = (id, val, opts) =>
-    `<select id="f_${id}">${opts.map(o =>
-      `<option value="${o}" ${o === val ? 'selected' : ''}>${o || '— select —'}</option>`
-    ).join('')}</select>`;
+window.toggleMobileNav = function() {
+  const nav = document.getElementById('mobile-nav');
+  nav.style.display = nav.style.display === 'none' ? 'flex' : 'none';
+};
 
-  const missing = emp.missingFields || [];
-  const missingHtml = missing.length
-    ? `<div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#92400E;">
-        <strong>⚠ Missing fields:</strong> ${missing.join(', ')}
-       </div>`
-    : `<div style="background:var(--light-teal);border:1px solid #A7F3D0;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--teal);">
-        ✓ This record is complete
-       </div>`;
-
-  const bank = emp.banking || {};
-  const addr = emp.residentialAddress || {};
-  const reg  = emp.professionalRegistration || {};
-
-  return `
-    ${missingHtml}
-
-    <div class="section-card">
-      <div class="section-head"><h3>Identity</h3><span style="font-size:11px;color:var(--mid)">Employee No. and ID Number are locked</span></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Full Name (Surname, First)</label>${inp('fullName', emp.fullName)}</div>
-          <div class="field-group"><label>Employee No. — locked</label>${ro(emp.employeeNumber)}</div>
-          <div class="field-group"><label>ID Number — locked</label>${ro(emp.idNumber)}</div>
-          <div class="field-group"><label>Date of Birth</label>${inp('dateOfBirth', emp.dateOfBirth, 'date')}</div>
-          <div class="field-group"><label>Position / Job Title</label>${inp('position', emp.position)}</div>
-          <div class="field-group"><label>Facility</label>${sel('facility', emp.facility, ['HAE','KRC','Vuma'])}</div>
-          <div class="field-group"><label>Pay Point</label>${sel('payPoint', emp.payPoint, ['H@E','KRC','Vuma'])}</div>
-          <div class="field-group"><label>Start Date</label>${inp('startDate', emp.startDate, 'date')}</div>
-          <div class="field-group"><label>End Date (resigned)</label>${inp('endDate', emp.endDate, 'date')}</div>
-          <div class="field-group"><label>Status</label>${sel('active', emp.active ? 'Active' : 'Resigned', ['Active','Resigned'])}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Complete These Fields</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group">
-            <label>Gender</label>
-            ${sel('gender', emp.gender, ['', 'Male', 'Female', 'Other'])}
-          </div>
-          <div class="field-group">
-            <label>Equity Group</label>
-            ${sel('equityGroup', emp.equityGroup, ['', 'African', 'Coloured', 'Indian', 'White', 'Prefer not to say'])}
-          </div>
-          <div class="field-group">
-            <label>Department</label>
-            ${sel('department', emp.department, ['', 'Nursing', 'Administration', 'Support Services', 'Security', 'Management', 'Maintenance', 'Pharmacy', 'Kitchen', 'Finance', 'HR', 'Consulting'])}
-          </div>
-          <div class="field-group">
-            <label>Contract Type</label>
-            ${sel('contractType', emp.contractType, ['', 'Permanent', 'Fixed-Term', 'Part-Time', 'Locum', 'Agency'])}
-          </div>
-          <div class="field-group">
-            <label>Email</label>
-            ${inp('email', emp.email, 'email')}
-          </div>
-          <div class="field-group">
-            <label>Cellphone</label>
-            ${inp('cellphone', emp.cellphone)}
-          </div>
-          <div class="field-group">
-            <label>Disability</label>
-            ${sel('disability', emp.disability, ['', 'None', 'Yes — see file'])}
-          </div>
-          <div class="field-group">
-            <label>Direct Manager</label>
-            ${inp('managerId', emp.managerId)}
-          </div>
-        </div>
-        <div class="form-grid" style="margin-top:12px">
-          <div class="field-group">
-            <label>POPIA Consent</label>
-            ${sel('popiaConsent', emp.popiaConsent ? 'Yes' : 'No', ['No', 'Yes'])}
-          </div>
-          <div class="field-group">
-            <label>Background Check Consent</label>
-            ${sel('backgroundCheckConsent', emp.backgroundCheckConsent ? 'Yes' : 'No', ['No', 'Yes'])}
-          </div>
-          <div class="field-group">
-            <label>Consent Date</label>
-            ${inp('consentDate', emp.consentDate, 'date')}
-          </div>
-          <div class="field-group">
-            <label>HR Onboarding Complete</label>
-            ${sel('hrOnboardingComplete', emp.hrOnboardingComplete ? 'Yes' : 'No', ['No', 'Yes'])}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Professional Registration</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group">
-            <label>Registration Body</label>
-            ${sel('reg_body', reg.body, ['', 'SANC', 'HPCSA', 'SAPC', 'SARB', 'None / N/A'])}
-          </div>
-          <div class="field-group">
-            <label>Registration Number</label>
-            ${inp('reg_number', reg.registrationNumber)}
-          </div>
-          <div class="field-group">
-            <label>Registration Category</label>
-            ${inp('reg_category', reg.category)}
-          </div>
-          <div class="field-group">
-            <label>Expiry Date</label>
-            ${inp('reg_expiry', reg.expiryDate, 'date')}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Banking Details</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Bank</label>${sel('bank_bank', bank.bank, ['','Capitec Bank','ABSA Bank','Standard Bank','First National Bank','Nedbank','GoTyme Bank','Other'])}</div>
-          <div class="field-group"><label>Account Number</label>${inp('bank_accountNumber', bank.accountNumber)}</div>
-          <div class="field-group"><label>Branch Code</label>${inp('bank_branchCode', bank.branchCode)}</div>
-          <div class="field-group"><label>Account Type</label>${sel('bank_accountType', bank.accountType, ['Current (Cheque)','Savings'])}</div>
-          <div class="field-group"><label>Holder Relationship</label>${sel('bank_holderRelationship', bank.holderRelationship, ['Own','Other'])}</div>
-          <div class="field-group"><label>Holder Name (if not own)</label>${inp('bank_holderName', bank.holderName)}</div>
-          <div class="field-group"><label>Payment Method</label>${sel('paymentMethod', emp.paymentMethod, ['EFT','Cash'])}</div>
-          <div class="field-group"><label>Income Tax Number</label>${inp('incomeTaxNumber', emp.incomeTaxNumber)}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Residential Address</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Street Number</label>${inp('addr_streetNo', addr.streetNo)}</div>
-          <div class="field-group"><label>Street Name</label>${inp('addr_street', addr.street)}</div>
-          <div class="field-group"><label>Suburb</label>${inp('addr_suburb', addr.suburb)}</div>
-          <div class="field-group"><label>City</label>${inp('addr_city', addr.city)}</div>
-          <div class="field-group"><label>Postal Code</label>${inp('addr_code', addr.code)}</div>
-          <div class="field-group"><label>Country</label>${inp('addr_country', addr.country || 'South Africa')}</div>
-        </div>
-      </div>
-    </div>`;
+// ── GREETING TIME ─────────────────────────────────────────────────────────
+function updateGreeting() {
+  const hour = new Date().getHours();
+  const label = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const el = document.getElementById('time-label');
+  if (el) el.textContent = label;
 }
-
-// ── SAVE EMPLOYEE ─────────────────────────────────────────────────────────
-window.saveEmployee = async () => {
-  const btn = document.getElementById('btn-save');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-
-  try {
-    const get = (id) => {
-      const el = document.getElementById(`f_${id}`);
-      return el ? el.value.trim() : '';
-    };
-    const bool = (id) => get(id) === 'Yes';
-
-    const updates = {
-      // Identity
-      fullName:           get('fullName'),
-      lastName:           get('fullName').split(',')[0].trim(),
-      firstName:          get('fullName').includes(',') ? get('fullName').split(',')[1].trim() : '',
-      dateOfBirth:        get('dateOfBirth'),
-      position:           get('position'),
-      facility:           get('facility'),
-      payPoint:           get('payPoint'),
-      startDate:          get('startDate'),
-      endDate:            get('endDate'),
-      active:             get('active') === 'Active',
-      // HR fields
-      gender:             get('gender'),
-      equityGroup:        get('equityGroup'),
-      department:         get('department'),
-      contractType:       get('contractType'),
-      email:              get('email'),
-      cellphone:          get('cellphone'),
-      disability:         get('disability'),
-      managerId:          get('managerId'),
-      popiaConsent:       bool('popiaConsent'),
-      backgroundCheckConsent: bool('backgroundCheckConsent'),
-      consentDate:        get('consentDate'),
-      hrOnboardingComplete: bool('hrOnboardingComplete'),
-      // Professional registration
-      professionalRegistration: {
-        body:               get('reg_body'),
-        registrationNumber: get('reg_number'),
-        category:           get('reg_category'),
-        expiryDate:         get('reg_expiry'),
-      },
-      // Banking
-      paymentMethod:      get('paymentMethod'),
-      incomeTaxNumber:    get('incomeTaxNumber'),
-      banking: {
-        bank:               get('bank_bank'),
-        accountNumber:      get('bank_accountNumber'),
-        branchCode:         get('bank_branchCode'),
-        accountType:        get('bank_accountType'),
-        holderRelationship: get('bank_holderRelationship'),
-        holderName:         get('bank_holderName'),
-      },
-      // Address
-      residentialAddress: {
-        streetNo: get('addr_streetNo'),
-        street:   get('addr_street'),
-        suburb:   get('addr_suburb'),
-        city:     get('addr_city'),
-        code:     get('addr_code'),
-        country:  get('addr_country') || 'South Africa',
-      },
-      updatedAt: new Date().toISOString(),
-      updatedBy: auth.currentUser?.email || 'unknown',
-    };
-
-    // Recalculate missing fields
-    const missing = [];
-    if (!updates.gender)       missing.push('gender');
-    if (!updates.equityGroup)  missing.push('equityGroup');
-    if (!updates.contractType) missing.push('contractType');
-    if (!updates.department)   missing.push('department');
-    if (!updates.email)        missing.push('email');
-    if (!updates.cellphone)    missing.push('cellphone');
-    if (!updates.popiaConsent) missing.push('popiaConsent');
-    if (!updates.professionalRegistration.body &&
-        ['Registered Nurse','Enrolled Nurse','Enrolled Nurse Auxiliary','Nursing Manager'].includes(currentEmpDoc?.position))
-      missing.push('professionalRegistration');
-    updates.missingFields = missing;
-
-    await updateDoc(doc(db, 'employees', currentDocId), updates);
-
-    // Update local cache
-    const idx = allEmployees.findIndex(e => e.id === currentDocId);
-    if (idx >= 0) allEmployees[idx] = { ...allEmployees[idx], ...updates };
-
-    showToast('Record saved', 'success');
-    setTimeout(() => backToList(), 800);
-
-  } catch (e) {
-    showToast('Save failed: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save changes';
-  }
-};
-
-// ── NEW EMPLOYEE FORM ─────────────────────────────────────────────────────
-function buildNewForm() {
-  const inp = (id, type='text', placeholder='') =>
-    `<input id="n_${id}" type="${type}" placeholder="${placeholder}">`;
-  const sel = (id, opts) =>
-    `<select id="n_${id}">${opts.map(o => `<option value="${o}">${o || '— select —'}</option>`).join('')}</select>`;
-
-  return `
-    <div class="section-card">
-      <div class="section-head"><h3>Identity</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Employee Number *</label>${inp('employeeNumber','text','e.g. 0051')}</div>
-          <div class="field-group"><label>Full Name (Surname, First) *</label>${inp('fullName','text','e.g. Smith, John')}</div>
-          <div class="field-group"><label>ID Number *</label>${inp('idNumber')}</div>
-          <div class="field-group"><label>Date of Birth</label>${inp('dateOfBirth','date')}</div>
-          <div class="field-group"><label>Gender</label>${sel('gender',['','Male','Female','Other'])}</div>
-          <div class="field-group"><label>Equity Group</label>${sel('equityGroup',['','African','Coloured','Indian','White','Prefer not to say'])}</div>
-          <div class="field-group"><label>Nationality</label>${inp('nationality','text','South African')}</div>
-          <div class="field-group"><label>Disability</label>${sel('disability',['','None','Yes — see file'])}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Contact</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Email *</label>${inp('email','email')}</div>
-          <div class="field-group"><label>Cellphone</label>${inp('cellphone')}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Employment</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Facility *</label>${sel('facility',['','HAE','KRC','Vuma'])}</div>
-          <div class="field-group"><label>Pay Point</label>${sel('payPoint',['','H@E','KRC','Vuma'])}</div>
-          <div class="field-group"><label>Department</label>${sel('department',['','Nursing','Administration','Support Services','Security','Management','Maintenance','Pharmacy','Kitchen','Finance','HR','Consulting'])}</div>
-          <div class="field-group"><label>Position / Job Title *</label>${inp('position')}</div>
-          <div class="field-group"><label>Contract Type</label>${sel('contractType',['','Permanent','Fixed-Term','Part-Time','Locum','Agency'])}</div>
-          <div class="field-group"><label>Start Date *</label>${inp('startDate','date')}</div>
-          <div class="field-group"><label>Payment Method</label>${sel('paymentMethod',['EFT','Cash'])}</div>
-          <div class="field-group"><label>Direct Manager</label>${inp('managerId')}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Professional Registration</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Registration Body</label>${sel('reg_body',['','SANC','HPCSA','SAPC','SARB','None / N/A'])}</div>
-          <div class="field-group"><label>Registration Number</label>${inp('reg_number')}</div>
-          <div class="field-group"><label>Category</label>${inp('reg_category')}</div>
-          <div class="field-group"><label>Expiry Date</label>${inp('reg_expiry','date')}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Banking</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>Bank</label>${sel('bank',['','Capitec Bank','ABSA Bank','Standard Bank','First National Bank','Nedbank','GoTyme Bank','Other'])}</div>
-          <div class="field-group"><label>Account Number</label>${inp('accountNumber')}</div>
-          <div class="field-group"><label>Branch Code</label>${inp('branchCode')}</div>
-          <div class="field-group"><label>Account Type</label>${sel('accountType',['Current (Cheque)','Savings'])}</div>
-          <div class="field-group"><label>Holder Relationship</label>${sel('holderRelationship',['Own','Other'])}</div>
-          <div class="field-group"><label>Holder Name (if not own)</label>${inp('holderName')}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head"><h3>Consent</h3></div>
-      <div class="section-body">
-        <div class="form-grid">
-          <div class="field-group"><label>POPIA Consent</label>${sel('popiaConsent',['No','Yes'])}</div>
-          <div class="field-group"><label>Background Check Consent</label>${sel('backgroundCheckConsent',['No','Yes'])}</div>
-          <div class="field-group"><label>Consent Date</label>${inp('consentDate','date')}</div>
-        </div>
-      </div>
-    </div>`;
-}
-
-window.saveNewEmployee = async () => {
-  const btn = document.getElementById('btn-save-new');
-  btn.disabled = true;
-  btn.textContent = 'Creating…';
-
-  const get = (id) => {
-    const el = document.getElementById(`n_${id}`);
-    return el ? el.value.trim() : '';
-  };
-  const bool = (id) => get(id) === 'Yes';
-
-  const empNum  = get('employeeNumber');
-  const name    = get('fullName');
-  const idNum   = get('idNumber');
-  const start   = get('startDate');
-  const facility = get('facility');
-  const position = get('position');
-
-  if (!empNum || !name || !idNum || !start || !facility || !position) {
-    showToast('Fill in all required fields (*)', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Create record';
-    return;
-  }
-
-  const docId = `EMP${empNum.padStart(4,'0')}`;
-
-  const newDoc = {
-    employeeNumber: empNum,
-    fullName:       name,
-    lastName:       name.split(',')[0].trim(),
-    firstName:      name.includes(',') ? name.split(',')[1].trim() : '',
-    idNumber:       idNum,
-    dateOfBirth:    get('dateOfBirth'),
-    gender:         get('gender'),
-    equityGroup:    get('equityGroup'),
-    disability:     get('disability'),
-    nationality:    get('nationality') || 'South African',
-    email:          get('email'),
-    cellphone:      get('cellphone'),
-    facility:       facility,
-    payPoint:       get('payPoint'),
-    department:     get('department'),
-    position:       position,
-    contractType:   get('contractType'),
-    startDate:      start,
-    endDate:        '',
-    active:         true,
-    managerId:      get('managerId'),
-    accessLevel:    'authenticated',
-    paymentMethod:  get('paymentMethod'),
-    banking: {
-      bank:               get('bank'),
-      accountNumber:      get('accountNumber'),
-      branchCode:         get('branchCode'),
-      accountType:        get('accountType'),
-      holderRelationship: get('holderRelationship'),
-      holderName:         get('holderName'),
-    },
-    professionalRegistration: {
-      body:               get('reg_body'),
-      registrationNumber: get('reg_number'),
-      category:           get('reg_category'),
-      expiryDate:         get('reg_expiry'),
-    },
-    popiaConsent:           bool('popiaConsent'),
-    backgroundCheckConsent: bool('backgroundCheckConsent'),
-    consentDate:            get('consentDate'),
-    qualifications:         [],
-    employmentHistory:      [],
-    references:             [],
-    notes:                  [],
-    hrOnboardingComplete:   false,
-    documentsUploaded:      false,
-    missingFields:          [],
-    importedFromSimplepay:  false,
-    createdAt:              new Date().toISOString(),
-    updatedAt:              new Date().toISOString(),
-    createdBy:              auth.currentUser?.email || 'unknown',
-  };
-
-  try {
-    await setDoc(doc(db, 'employees', docId), newDoc);
-    allEmployees.push({ id: docId, ...newDoc });
-    allEmployees.sort((a,b) => (a.fullName||'').localeCompare(b.fullName||''));
-    showToast(`${name} added successfully`, 'success');
-    setTimeout(() => showTab('search'), 800);
-  } catch (e) {
-    showToast('Failed to create record: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Create record';
-  }
-};
-
-// ── NAVIGATION ────────────────────────────────────────────────────────────
-window.showTab = (tab) => {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-  if (tab === 'search') {
-    document.getElementById('panel-search').classList.add('active');
-    document.querySelectorAll('.tab-btn')[0].classList.add('active');
-    renderList(allEmployees);
-  } else if (tab === 'new') {
-    document.getElementById('panel-new').classList.add('active');
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-    document.getElementById('new-form-body').innerHTML = buildNewForm();
-  }
-  window.scrollTo(0,0);
-};
-
-window.backToList = () => {
-  currentDocId = null;
-  currentEmpDoc = null;
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-search').classList.add('active');
-  document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  renderList(allEmployees);
-  window.scrollTo(0,0);
-};
+setInterval(updateGreeting, 60000);
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
-window.showToast = (msg, type = '') => {
+window.showToast = function(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast ${type} show`;
-  setTimeout(() => { t.className = 'toast'; }, 3000);
+  t.textContent = msg; t.className = 'toast show';
+  setTimeout(() => { t.className = 'toast'; }, 2500);
 };
-
-
-// ── DOCUMENT TAB ──────────────────────────────────────────────────────────
-window.switchDocTab = function(tab, btn) {
-  document.querySelectorAll('.doc-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('edit-form-body').style.display = tab === 'details' ? 'block' : 'none';
-  document.getElementById('documents-panel').style.display = tab === 'documents' ? 'block' : 'none';
-  if (tab === 'documents' && currentDocId) loadDocuments(currentDocId);
-};
-
-// ── LOAD DOCUMENTS FOR EMPLOYEE ───────────────────────────────────────────
-async function loadDocuments(empDocId) {
-  const container = document.getElementById('doc-list-container');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-  try {
-    const { collection: col, query: q, where: w, getDocs: gd, orderBy } =
-      await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const snap = await gd(q(col(db, 'hr_documents'), w('employeeDocId', '==', empDocId)));
-    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (b.uploadedAt || '').localeCompare(a.uploadedAt || ''));
-
-    // Update badge
-    document.getElementById('doc-count-badge').textContent = docs.length;
-
-    if (!docs.length) {
-      container.innerHTML = '<div class="empty"><div class="empty-icon">📂</div><h3>No documents yet</h3><p>Use the Upload button to add documents.</p></div>';
-      return;
-    }
-
-    const typeIcon = t => {
-      const m = {'ID Document':'🪪','CV / Resume':'📄','Qualifications / Certificates':'🎓',
-        'SANC Registration':'🏥','Professional Indemnity':'🛡️',
-        'Medical Certificate / Fitness to Work':'💊','Reference Letters':'✉️',
-        'Signed Employment Contract':'📝','Other':'📎'};
-      return m[t] || '📎';
-    };
-
-    container.innerHTML = `<ul class="doc-list">${docs.map(d => `
-      <li class="doc-item">
-        <div class="doc-icon">${typeIcon(d.documentType)}</div>
-        <div class="doc-info">
-          <div class="doc-name">${d.documentType}</div>
-          <div class="doc-meta">${d.fileName} · ${d.note || ''} · ${d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('en-ZA') : '—'}</div>
-        </div>
-        <div class="doc-actions">
-          <button class="doc-btn doc-btn-view" onclick="viewDoc('${d.downloadUrl}')">View</button>
-          <button class="doc-btn doc-btn-del" onclick="deleteDoc('${d.id}', '${d.storagePath}')">Delete</button>
-        </div>
-      </li>`).join('')}</ul>`;
-  } catch(e) {
-    container.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Error</h3><p>${e.message}</p></div>`;
-  }
-}
-
-window.viewDoc = url => window.open(url, '_blank');
-
-window.deleteDoc = async (docId, storagePath) => {
-  if (!confirm('Delete this document? This cannot be undone.')) return;
-  try {
-    const { doc: d, deleteDoc: dd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const { ref: r, deleteObject: del } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
-    await del(r(storage, storagePath));
-    await dd(d(db, 'hr_documents', docId));
-    showToast('Document deleted', 'success');
-    if (currentDocId) loadDocuments(currentDocId);
-  } catch(e) {
-    showToast('Delete failed: ' + e.message, 'error');
-  }
-};
-
-// ── UPLOAD MODAL ──────────────────────────────────────────────────────────
-let uploadFile    = null;
-let uploadEmpId   = null;
-let aiSuggestion  = null;
-
-window.openUploadModal = function(empDocId) {
-  uploadFile   = null;
-  aiSuggestion = null;
-  uploadEmpId  = empDocId;
-
-  // Populate employee dropdown
-  const empSel = document.getElementById('upload-emp-select');
-  empSel.innerHTML = '<option value="">— select employee —</option>' +
-    allEmployees.map(e => `<option value="${e.id}" ${e.id === empDocId ? 'selected' : ''}>${e.fullName} (${e.employeeNumber || '?'})</option>`).join('');
-
-  // Populate doc type dropdown
-  const typeSel = document.getElementById('upload-type-select');
-  typeSel.innerHTML = '<option value="">— select type —</option>' +
-    DOC_TYPES.map(t => `<option>${t}</option>`).join('');
-
-  // Reset steps
-  document.getElementById('upload-step-1').style.display = 'block';
-  document.getElementById('upload-step-2').style.display = 'none';
-  document.getElementById('upload-step-3').style.display = 'none';
-  document.getElementById('btn-upload-confirm').style.display = 'none';
-  document.getElementById('upload-note').value = '';
-  document.getElementById('upload-progress').style.display = 'none';
-  document.getElementById('upload-file-input').value = '';
-
-  document.getElementById('upload-modal').classList.add('show');
-};
-
-window.closeUploadModal = () => {
-  document.getElementById('upload-modal').classList.remove('show');
-};
-
-window.handleUploadFile = async function(file) {
-  if (!file) return;
-  uploadFile = file;
-
-  document.getElementById('upload-step-1').style.display = 'none';
-  document.getElementById('upload-step-2').style.display = 'block';
-
-  try {
-    const result = await readDocumentWithAI(file);
-    aiSuggestion = result;
-
-    // Show AI suggestion
-    const suggBox = document.getElementById('ai-suggestion-box');
-    document.getElementById('ai-suggestion-text').textContent =
-      `Employee: ${result.name || 'Unknown'} · Document type: ${result.documentType || 'Unknown'}`;
-    document.getElementById('ai-confidence-text').textContent =
-      `Confidence: ${result.confidence || 'Medium'} — please verify before saving`;
-
-    // Pre-select employee if matched
-    if (result.matchedEmpId) {
-      document.getElementById('upload-emp-select').value = result.matchedEmpId;
-    }
-    // Pre-select doc type
-    if (result.documentType) {
-      const sel = document.getElementById('upload-type-select');
-      for (let o of sel.options) {
-        if (o.text.toLowerCase().includes(result.documentType.toLowerCase())) {
-          sel.value = o.value || o.text;
-          break;
-        }
-      }
-    }
-  } catch(e) {
-    // AI failed — still allow manual selection
-    document.getElementById('ai-suggestion-box').style.display = 'none';
-    console.warn('AI read failed:', e.message);
-  }
-
-  document.getElementById('upload-step-2').style.display = 'none';
-  document.getElementById('upload-step-3').style.display = 'block';
-  document.getElementById('btn-upload-confirm').style.display = 'inline-block';
-};
-
-async function readDocumentWithAI(file) {
-  const base64 = await fileToBase64(file);
-  const isPDF  = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
-  const mediaType = isPDF ? 'application/pdf' : (file.type || 'image/jpeg');
-
-  const empList = allEmployees.map(e => `${e.fullName} (${e.employeeNumber})`).join(', ');
-
-  const prompt = `You are reading a scanned employment document for HOSPITAL AT EKHAYA.
-
-Identify:
-1. The person's full name (if visible)
-2. The document type — one of: ID Document, CV / Resume, Qualifications / Certificates, SANC Registration, Professional Indemnity, Medical Certificate / Fitness to Work, Reference Letters, Signed Employment Contract, Other
-3. Any registration numbers, ID numbers, or certificate numbers visible
-4. Your confidence level: High, Medium, or Low
-
-Known employees: ${empList}
-
-Return ONLY valid JSON, no other text:
-{
-  "name": "full name as written or null",
-  "documentType": "document type from the list above",
-  "referenceNumber": "any ID/reg/certificate number or null",
-  "confidence": "High or Medium or Low",
-  "notes": "any other relevant detail"
-}`;
-
-  const response = await fetch('https://hae-motivation-proxy.shakabornman.workers.dev', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: isPDF ? 'document' : 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: prompt }
-        ]
-      }]
-    })
-  });
-
-  const data = await response.json();
-  const text = (data.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim();
-  const result = JSON.parse(text);
-
-  // Try to match name to employee
-  if (result.name) {
-    const nameLower = result.name.toLowerCase();
-    const matched = allEmployees.find(e =>
-      (e.fullName || '').toLowerCase().includes(nameLower.split(' ')[0]) ||
-      nameLower.includes((e.lastName || e.fullName || '').toLowerCase().split(',')[0])
-    );
-    if (matched) result.matchedEmpId = matched.id;
-  }
-
-  return result;
-}
-
-function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload  = () => res(r.result.split(',')[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-}
-
-// ── CONFIRM UPLOAD ─────────────────────────────────────────────────────────
-window.confirmUpload = async function() {
-  const empId   = document.getElementById('upload-emp-select').value;
-  const docType = document.getElementById('upload-type-select').value;
-  const note    = document.getElementById('upload-note').value.trim();
-
-  if (!empId)   { showToast('Select an employee', 'error'); return; }
-  if (!docType) { showToast('Select document type', 'error'); return; }
-  if (!uploadFile) { showToast('No file selected', 'error'); return; }
-
-  const btn = document.getElementById('btn-upload-confirm');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
-  try {
-    const emp = allEmployees.find(e => e.id === empId);
-    const empNo = emp?.employeeNumber || empId;
-    const timestamp = new Date().toISOString();
-    const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `hr-documents/${empNo}/${docType.replace(/[^a-zA-Z0-9]/g,'_')}/${Date.now()}_${safeName}`;
-
-    // Upload to Firebase Storage
-    const { ref: r, uploadBytesResumable: ubr, getDownloadURL: gdl } =
-      await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
-
-    const storageRef = r(storage, storagePath);
-    const progress   = document.getElementById('upload-progress');
-    const fill       = document.getElementById('progress-fill');
-    progress.style.display = 'block';
-
-    await new Promise((resolve, reject) => {
-      const task = ubr(storageRef, uploadFile);
-      task.on('state_changed',
-        snap => {
-          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-          fill.style.width = pct + '%';
-        },
-        reject,
-        resolve
-      );
-    });
-
-    const downloadUrl = await gdl(storageRef);
-
-    // Save Firestore record
-    const { collection: col, addDoc: ad } =
-      await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-
-    await ad(col(db, 'hr_documents'), {
-      employeeDocId:  empId,
-      employeeNumber: empNo,
-      employeeName:   emp?.fullName || '',
-      documentType:   docType,
-      fileName:       uploadFile.name,
-      storagePath,
-      downloadUrl,
-      note,
-      uploadedBy:     auth.currentUser?.email || '',
-      uploadedAt:     timestamp,
-      aiSuggestion:   aiSuggestion || null,
-    });
-
-    showToast('Document saved', 'success');
-    closeUploadModal();
-
-    // Refresh doc list if in documents tab
-    if (currentDocId === empId) loadDocuments(empId);
-
-  } catch(e) {
-    showToast('Upload failed: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save Document';
-  }
-};
-
-// Drag and drop for upload zone
-document.addEventListener('DOMContentLoaded', () => {
-  const zone = document.getElementById('upload-drop');
-  if (!zone) return;
-  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('over');
-    const file = e.dataTransfer.files[0];
-    if (file) handleUploadFile(file);
-  });
-});
 
 </script>
 </body>

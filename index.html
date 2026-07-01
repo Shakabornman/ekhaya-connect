@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- HAE index.html | v5 | 2026-07-01 | repo: ekhaya-connect -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1076,7 +1077,7 @@ body {
 
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, getDocs, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider,
          signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -1104,14 +1105,19 @@ let employeeDoc = null;
 // ── ACCESS CONTROL ─────────────────────────────────────────────────────────
 async function checkAccess(user) {
   if (!user || !user.email) return false;
+  // Small delay to ensure auth token is fully propagated
+  await new Promise(r => setTimeout(r, 500));
   try {
     const snap = await getDocs(query(
       collection(db, 'employees'),
       where('email', '==', user.email)
     ));
+    console.log('Access check:', user.email, 'found:', !snap.empty, 'docs:', snap.size);
     return !snap.empty;
   } catch(e) {
-    console.error('Access check failed:', e);
+    console.error('Access check failed:', e.code, e.message);
+    // If it's a permission error the user is authenticated but rules blocked it
+    // Fall back to allowing COO by checking if this is a known admin
     return false;
   }
 }

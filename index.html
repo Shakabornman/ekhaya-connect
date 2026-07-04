@@ -58,7 +58,6 @@ body {
   overflow: hidden;
 }
 
-/* Subtle background pattern */
 #auth-screen::before {
   content: '';
   position: absolute;
@@ -1095,8 +1094,7 @@ const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
 
-// COO email — management nav visible to this user
-// COO access determined by Firebase employee role — no emails in code
+// Executive access determined by employees.accessLevel — no emails in code
 
 let currentUser = null;
 let employeeDoc = null;
@@ -1116,8 +1114,6 @@ async function checkAccess(user) {
     return !snap.empty;
   } catch(e) {
     console.error('Access check failed:', e.code, e.message);
-    // If it's a permission error the user is authenticated but rules blocked it
-    // Fall back to allowing COO by checking if this is a known admin
     return false;
   }
 }
@@ -1170,7 +1166,6 @@ function showAuthError(msg) {
 
 // ── LOAD PROFILE ──────────────────────────────────────────────────────────
 async function loadUserProfile(user) {
-  // Query employees collection for matching email
   try {
     const { getDocs: gd, collection: col, query: q, where: w } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const empSnap = await gd(q(col(db, 'employees'), w('email', '==', user.email)));
@@ -1178,53 +1173,43 @@ async function loadUserProfile(user) {
       employeeDoc = empSnap.docs[0].data();
       return true;
     }
-    // COO always has access regardless
     return true;
-    return false;
   } catch(e) {
-    // If rules block the query, check if COO
     return true;
-    return false;
   }
 }
 
 // ── INIT PORTAL ───────────────────────────────────────────────────────────
 function initPortal(user) {
-  const isCOO = employeeDoc !== null;
+  const isExecutive = employeeDoc?.accessLevel === 'executive';
   const displayName = user.displayName || user.email?.split('@')[0] || 'Staff';
   const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
 
-  // Greeting
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('time-label').textContent = greeting;
   document.getElementById('greeting-name').textContent = `${greeting}, ${displayName.split(' ')[0]}`;
 
-  // Nav
   document.getElementById('nav-avatar').textContent = initials;
   document.getElementById('nav-name').textContent = displayName.split(' ')[0];
 
-  // Profile
   document.getElementById('profile-avatar').textContent = initials;
   document.getElementById('profile-name').textContent = displayName;
   document.getElementById('profile-email').textContent = user.email;
-  document.getElementById('profile-role').textContent = isCOO ? 'Chief Operations Officer' : (employeeDoc?.position || 'Staff');
-  document.getElementById('profile-dept').textContent = isCOO ? 'Management' : (employeeDoc?.department || '—');
+  document.getElementById('profile-role').textContent = employeeDoc?.position || 'Staff';
+  document.getElementById('profile-dept').textContent = employeeDoc?.department || '—';
   document.getElementById('profile-facility').textContent = employeeDoc?.facility === 'KRC' ? 'KURUMAN RENAL CLINIC' : 'HOSPITAL AT EKHAYA';
 
-  // Show management nav for COO
-  if (isCOO) {
+  if (isExecutive) {
     document.querySelectorAll('.coo-nav').forEach(el => el.style.display = 'block');
     document.querySelectorAll('.coo-mobile').forEach(el => el.style.display = 'block');
   }
 
-  // Build tool grids
-  buildToolGrids(isCOO);
+  buildToolGrids(isExecutive);
 }
 
 // ── TOOL DEFINITIONS ──────────────────────────────────────────────────────
-function buildToolGrids(isCOO) {
-  // Quick access on home — most used tools
+function buildToolGrids(isExecutive) {
   const quickTools = [
     { icon:'📊', color:'#EBF1F7', name:'Scorecard Form', desc:'Submit your daily report', url: getScoreCardUrl(currentUser?.email), badge:null },
     { icon:'⚠️', color:'#FEF3C7', name:'Report a Risk', desc:'Log a risk or incident', url:'#risk', badge:'Coming soon' },
@@ -1233,7 +1218,6 @@ function buildToolGrids(isCOO) {
   ];
   renderTools('quick-tools', quickTools);
 
-  // Reporting tools
   const reportingTools = [
     { icon:'🔒', color:'#EBF1F7', name:'Security', desc:'Shift checklist', url:'https://shakabornman.github.io/hae-scorecard/security.html' },
     { icon:'🍽', color:'#E6F4EE', name:'Support Services', desc:'Daily kitchen & cleaning', url:'https://shakabornman.github.io/hae-scorecard/support.html' },
@@ -1245,7 +1229,6 @@ function buildToolGrids(isCOO) {
   ];
   renderTools('reporting-tools', reportingTools);
 
-  // Clinical tools
   const clinicalTools = [
     { icon:'📝', color:'#F0EAF8', name:'Motivation Letters', desc:'Medical aid motivation generator', url:'https://shakabornman.github.io/hae-motivation-tool/', badge:null },
   ];
@@ -1254,8 +1237,7 @@ function buildToolGrids(isCOO) {
     renderTools('clinical-tools', clinicalTools);
   }
 
-  // Management tools (COO only)
-  if (isCOO) {
+  if (isExecutive) {
     document.getElementById('management-section').style.display = 'flex';
     const mgmtTools = [
       { icon:'📊', color:'#EBF1F7', name:'CEO Dashboard', desc:'Weekly scorecard dashboard', url:'https://shakabornman.github.io/hae-scorecard/dashboard.html' },
@@ -1266,7 +1248,6 @@ function buildToolGrids(isCOO) {
 }
 
 function getScoreCardUrl(email) {
-  // Department link comes from employee record department field
   const deptMap = {
     'nursing':   'https://shakabornman.github.io/hae-scorecard/nursing.html',
     'billing':   'https://shakabornman.github.io/hae-scorecard/billing.html',
@@ -1308,7 +1289,6 @@ window.showPage = function(pageId) {
   const page = document.getElementById('page-'+pageId);
   if (page) page.classList.add('active');
 
-  // Highlight correct nav link
   document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
     if (l.getAttribute('onclick')?.includes(`'${pageId}'`)) l.classList.add('active');
   });

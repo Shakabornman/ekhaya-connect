@@ -1224,11 +1224,20 @@ async function loadUserProfile(user) {
 }
 
 // ── INIT PORTAL ───────────────────────────────────────────────────────────
+function getDisplayName(employeeDoc, user) {
+  // employees.fullName is stored as "Last, First Middle" — e.g. "Phentela, Karel Jan"
+  // There is no separate lastName field, despite what older docs describe.
+  if (employeeDoc?.fullName && employeeDoc.fullName.includes(',')) {
+    const [last, first] = employeeDoc.fullName.split(',').map(s => s.trim());
+    if (first && last) return `${first} ${last}`;
+  }
+  if (employeeDoc?.firstName) return employeeDoc.firstName;
+  return user.displayName || user.email?.split('@')[0] || 'Staff';
+}
+
 function initPortal(user) {
   const isExecutive = accessLevels.includes('executive');
-  const displayName = (employeeDoc?.firstName && employeeDoc?.lastName)
-    ? `${employeeDoc.firstName} ${employeeDoc.lastName}`
-    : (employeeDoc?.fullName || user.displayName || user.email?.split('@')[0] || 'Staff');
+  const displayName = getDisplayName(employeeDoc, user);
   const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
 
   const hour = new Date().getHours();

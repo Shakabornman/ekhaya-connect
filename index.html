@@ -1133,6 +1133,7 @@ const functions = getFunctions(app, 'europe-west1');
 
 let currentUser = null;
 let employeeDoc = null;
+let accessLevels = [];
 
 
 // ── ACCESS CONTROL ─────────────────────────────────────────────────────────
@@ -1168,6 +1169,7 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('access-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
+    await loadAccessControl(user);
     await loadUserProfile(user);
     initPortal(user);
   } else {
@@ -1200,24 +1202,33 @@ function showAuthError(msg) {
 }
 
 // ── LOAD PROFILE ──────────────────────────────────────────────────────────
+async function loadAccessControl(user) {
+  try {
+    const snap = await getDoc(doc(db, 'access_control', user.uid));
+    accessLevels = snap.exists() ? (snap.data().accessLevels || []) : [];
+  } catch (e) {
+    console.error('Access control lookup failed:', e.code, e.message);
+    accessLevels = [];
+  }
+}
+
 async function loadUserProfile(user) {
   try {
-    const { getDocs: gd, collection: col, query: q, where: w } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const empSnap = await gd(q(col(db, 'employees'), w('email', '==', user.email)));
+    const empSnap = await getDocs(query(collection(db, 'employees'), where('email', '==', user.email)));
     if (!empSnap.empty) {
       employeeDoc = empSnap.docs[0].data();
-      return true;
     }
-    return true;
-  } catch(e) {
-    return true;
+  } catch (e) {
+    console.error('Employee profile lookup failed:', e.code, e.message);
   }
 }
 
 // ── INIT PORTAL ───────────────────────────────────────────────────────────
 function initPortal(user) {
-  const isExecutive = employeeDoc?.accessLevel === 'executive';
-  const displayName = user.displayName || user.email?.split('@')[0] || 'Staff';
+  const isExecutive = accessLevels.includes('executive');
+  const displayName = (employeeDoc?.firstName && employeeDoc?.lastName)
+    ? `${employeeDoc.firstName} ${employeeDoc.lastName}`
+    : (employeeDoc?.fullName || user.displayName || user.email?.split('@')[0] || 'Staff');
   const initials = displayName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
 
   const hour = new Date().getHours();

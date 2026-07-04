@@ -868,26 +868,35 @@ body {
       </div>
 
       <div class="info-grid">
-        <div class="info-card">
+        <div class="info-card" style="grid-column: 1 / -1;">
           <div class="info-card-head">
             <span style="font-size:16px">📋</span>
             <h3>Policies & Procedures</h3>
           </div>
           <div class="info-card-body">
-            <div class="info-item">
-              <span class="item-icon">📄</span>
-              <div><div>HR Policies</div><div class="item-sub">Leave, discipline, conduct</div></div>
-              <span class="coming-soon">Soon</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+              <input type="text" id="pp-search" placeholder="Search by title or number..."
+                style="flex:2; min-width:160px; padding:8px 12px; border:1.5px solid var(--rule); border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; outline:none;">
+              <select id="pp-volume-filter"
+                style="flex:1; min-width:150px; padding:8px 12px; border:1.5px solid var(--rule); border-radius:8px; font-size:13px; font-family:'Inter',sans-serif;">
+                <option value="">All Volumes</option>
+                <option value="01-HR">HR</option>
+                <option value="02-Administration">Administration</option>
+                <option value="03-Clinical">Clinical</option>
+                <option value="04-Finance">Finance</option>
+                <option value="05-Nursing">Nursing</option>
+                <option value="06-Operations">Operations</option>
+                <option value="07-Security">Security</option>
+              </select>
+              <select id="pp-type-filter"
+                style="flex:1; min-width:110px; padding:8px 12px; border:1.5px solid var(--rule); border-radius:8px; font-size:13px; font-family:'Inter',sans-serif;">
+                <option value="">All Types</option>
+                <option value="Policy">Policies/SOPs</option>
+                <option value="Form">Forms</option>
+              </select>
             </div>
-            <div class="info-item">
-              <span class="item-icon">📄</span>
-              <div><div>Clinical SOPs</div><div class="item-sub">Nursing, medication, infection control</div></div>
-              <span class="coming-soon">Soon</span>
-            </div>
-            <div class="info-item">
-              <span class="item-icon">📄</span>
-              <div><div>Operational Policies</div><div class="item-sub">Kitchen, security, support services</div></div>
-              <span class="coming-soon">Soon</span>
+            <div id="pp-results" style="max-height:360px; overflow-y:auto;">
+              <div style="font-size:12px; color:var(--mid); padding:12px 0;">Loading policies…</div>
             </div>
           </div>
         </div>
@@ -1080,6 +1089,8 @@ import { getFirestore, doc, getDoc, getDocs, collection, query, where } from 'ht
 import { getAuth, signInWithPopup, GoogleAuthProvider,
          signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getStorage, ref as storageRef, getDownloadURL }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey:            "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
@@ -1093,6 +1104,7 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // Executive access determined by employees.accessLevel — no emails in code
 
@@ -1280,6 +1292,107 @@ function renderTools(containerId, tools) {
   }).join('');
 }
 
+// ── POLICIES & PROCEDURES BROWSER ────────────────────────────────────────
+let ppDocsCache = null;
+
+async function loadPPDocuments() {
+  if (ppDocsCache) return ppDocsCache;
+  try {
+    const snap = await getDocs(collection(db, 'pp_documents'));
+    ppDocsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.error('Failed to load P&P documents:', e);
+    ppDocsCache = [];
+  }
+  return ppDocsCache;
+}
+
+function renderPPResults() {
+  const searchEl = document.getElementById('pp-search');
+  const volumeEl = document.getElementById('pp-volume-filter');
+  const typeEl   = document.getElementById('pp-type-filter');
+  const container = document.getElementById('pp-results');
+  if (!searchEl || !volumeEl || !typeEl || !container || !ppDocsCache) return;
+
+  const searchTerm   = searchEl.value.trim().toLowerCase();
+  const volumeFilter = volumeEl.value;
+  const typeFilter   = typeEl.value;
+
+  let results = ppDocsCache.filter(d => {
+    if (volumeFilter && d.volumeCode !== volumeFilter) return false;
+    if (typeFilter && d.docType !== typeFilter) return false;
+    if (searchTerm) {
+      const haystack = `${d.title || ''} ${d.docNumber || ''}`.toLowerCase();
+      if (!haystack.includes(searchTerm)) return false;
+    }
+    return true;
+  });
+
+  results.sort((a, b) =>
+    (a.volumeCode || '').localeCompare(b.volumeCode || '') ||
+    (a.docNumber || '').localeCompare(b.docNumber || '')
+  );
+
+  container.innerHTML = '';
+
+  if (!results.length) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:12px;color:var(--mid);padding:12px 0;';
+    empty.textContent = 'No documents match your search.';
+    container.appendChild(empty);
+    return;
+  }
+
+  results.forEach(d => {
+    const item = document.createElement('div');
+    item.className = 'info-item';
+    item.style.cursor = 'pointer';
+
+    const icon = document.createElement('span');
+    icon.className = 'item-icon';
+    icon.textContent = d.docType === 'Form' ? '🗒' : '📄';
+
+    const textWrap = document.createElement('div');
+    const titleEl = document.createElement('div');
+    titleEl.textContent = d.title || d.docNumber || 'Untitled';
+    const subEl = document.createElement('div');
+    subEl.className = 'item-sub';
+    subEl.textContent = `${d.docNumber || ''} · ${d.volumeName || ''}`;
+    textWrap.appendChild(titleEl);
+    textWrap.appendChild(subEl);
+
+    item.appendChild(icon);
+    item.appendChild(textWrap);
+    item.addEventListener('click', () => openPPDocument(d));
+    container.appendChild(item);
+  });
+}
+
+async function openPPDocument(docData) {
+  if (!docData.storagePath) {
+    showToast('This document has no file attached.');
+    return;
+  }
+  try {
+    const url = await getDownloadURL(storageRef(storage, docData.storagePath));
+    window.open(url, '_blank');
+  } catch (e) {
+    console.error('Could not open document:', e);
+    showToast('Could not open this document. Contact the COO if this continues.');
+  }
+}
+
+function initPPBrowser() {
+  const searchEl = document.getElementById('pp-search');
+  const volumeEl = document.getElementById('pp-volume-filter');
+  const typeEl   = document.getElementById('pp-type-filter');
+  if (!searchEl) return;
+  searchEl.addEventListener('input', renderPPResults);
+  volumeEl.addEventListener('change', renderPPResults);
+  typeEl.addEventListener('change', renderPPResults);
+}
+initPPBrowser();
+
 // ── NAVIGATION ────────────────────────────────────────────────────────────
 window.showPage = function(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1292,6 +1405,11 @@ window.showPage = function(pageId) {
   document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
     if (l.getAttribute('onclick')?.includes(`'${pageId}'`)) l.classList.add('active');
   });
+
+  // Lazy-load the P&P list the first time the Information page is opened
+  if (pageId === 'info' && !ppDocsCache) {
+    loadPPDocuments().then(renderPPResults);
+  }
 
   window.scrollTo(0, 0);
 };

@@ -902,6 +902,22 @@ body {
             <div id="pp-results" style="max-height:360px; overflow-y:auto;">
               <div style="font-size:12px; color:var(--mid); padding:12px 0;">Loading policies…</div>
             </div>
+
+            <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--rule);">
+              <div style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--mid); margin-bottom:8px;">
+                Not sure what to search for? Ask a question
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="text" id="pp-ai-question" placeholder="e.g. what do I do if a patient refuses treatment?"
+                  style="flex:1; min-width:200px; padding:8px 12px; border:1.5px solid var(--rule); border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; outline:none;">
+                <button type="button" id="pp-ai-ask-btn"
+                  style="padding:8px 18px; border:none; border-radius:8px; font-size:13px; font-weight:600; color:var(--white); background:var(--navy); cursor:pointer; font-family:'Space Grotesk',sans-serif; white-space:nowrap;">
+                  Ask
+                </button>
+              </div>
+              <div id="pp-ai-status" style="font-size:11px; color:var(--mid); margin-top:6px;"></div>
+              <div id="pp-ai-results" style="margin-top:8px;"></div>
+            </div>
           </div>
         </div>
 
@@ -1095,6 +1111,8 @@ import { getAuth, signInWithPopup, GoogleAuthProvider,
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getStorage, ref as storageRef, getDownloadURL }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import { getFunctions, httpsCallable }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
   apiKey:            "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
@@ -1109,6 +1127,7 @@ const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
+const functions = getFunctions(app, 'europe-west1');
 
 // Executive access determined by employees.accessLevel — no emails in code
 
@@ -1386,11 +1405,81 @@ async function openPPDocument(docData) {
   }
 }
 
+async function askPPQuestion() {
+  const questionEl = document.getElementById('pp-ai-question');
+  const askBtn     = document.getElementById('pp-ai-ask-btn');
+  const statusEl   = document.getElementById('pp-ai-status');
+  const resultsEl  = document.getElementById('pp-ai-results');
+
+  const question = questionEl.value.trim();
+  if (!question) {
+    statusEl.textContent = 'Type a question first.';
+    return;
+  }
+
+  askBtn.disabled = true;
+  questionEl.disabled = true;
+  statusEl.textContent = 'Thinking…';
+  resultsEl.innerHTML = '';
+
+  try {
+    const ppSearchAI = httpsCallable(functions, 'ppSearchAI');
+    const res = await ppSearchAI({ question });
+    const matches = res.data?.matches || [];
+
+    if (!matches.length) {
+      statusEl.textContent = 'No matching policy found. Try the keyword search above, or rephrase your question.';
+    } else {
+      statusEl.textContent = `Found ${matches.length} matching document${matches.length > 1 ? 's' : ''}:`;
+      // Look up full metadata from the already-loaded pp_documents cache
+      const cache = ppDocsCache || [];
+      matches.forEach(docNumber => {
+        const doc = cache.find(d => d.docNumber === docNumber);
+        if (!doc) return;
+
+        const item = document.createElement('div');
+        item.className = 'info-item';
+        item.style.cursor = 'pointer';
+
+        const icon = document.createElement('span');
+        icon.className = 'item-icon';
+        icon.textContent = doc.docType === 'Form' ? '🗒' : '📄';
+
+        const textWrap = document.createElement('div');
+        const titleEl = document.createElement('div');
+        titleEl.textContent = doc.title || doc.docNumber;
+        const subEl = document.createElement('div');
+        subEl.className = 'item-sub';
+        subEl.textContent = `${doc.docNumber || ''} · ${doc.volumeName || ''}`;
+        textWrap.appendChild(titleEl);
+        textWrap.appendChild(subEl);
+
+        item.appendChild(icon);
+        item.appendChild(textWrap);
+        item.addEventListener('click', () => openPPDocument(doc));
+        resultsEl.appendChild(item);
+      });
+    }
+  } catch (e) {
+    if (e.code === 'functions/resource-exhausted') {
+      statusEl.textContent = e.message || 'Daily search limit reached. Try again tomorrow, or use the keyword search above.';
+    } else {
+      console.error('ppSearchAI call failed:', e);
+      statusEl.textContent = 'Search is temporarily unavailable. Try the keyword search above.';
+    }
+  } finally {
+    askBtn.disabled = false;
+    questionEl.disabled = false;
+  }
+}
+
 function initPPBrowser() {
   const searchEl = document.getElementById('pp-search');
   const volumeEl = document.getElementById('pp-volume-filter');
   const typeEl   = document.getElementById('pp-type-filter');
   const hrShortcut = document.getElementById('pp-hr-shortcut');
+  const askBtn   = document.getElementById('pp-ai-ask-btn');
+  const questionEl = document.getElementById('pp-ai-question');
   if (!searchEl) return;
   searchEl.addEventListener('input', renderPPResults);
   volumeEl.addEventListener('change', renderPPResults);
@@ -1401,6 +1490,14 @@ function initPPBrowser() {
       typeEl.value = '';
       volumeEl.value = '01-HR';
       renderPPResults();
+    });
+  }
+  if (askBtn) {
+    askBtn.addEventListener('click', askPPQuestion);
+  }
+  if (questionEl) {
+    questionEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') askPPQuestion();
     });
   }
 }

@@ -764,9 +764,9 @@ body {
     <div class="topnav-right">
       <div class="nav-links">
         <button class="nav-link active" onclick="showPage('home')">Home</button>
-        <button class="nav-link" onclick="showPage('tools')">My Tools</button>
+        <button class="nav-link tier-nav" onclick="showPage('tools')" style="display:none">Management</button>
         <button class="nav-link" onclick="showPage('info')">Information</button>
-        <button class="nav-link coo-nav" onclick="showPage('management')" style="display:none">Management</button>
+        <button class="nav-link coo-nav" onclick="showPage('management')" style="display:none">Executive</button>
       </div>
 
       <div class="user-chip" onclick="showPage('profile')">
@@ -783,9 +783,9 @@ body {
   <!-- MOBILE NAV -->
   <div class="mobile-nav" id="mobile-nav" style="display:none">
     <button class="mobile-nav-link active" onclick="showPage('home');toggleMobileNav()">🏠 Home</button>
-    <button class="mobile-nav-link" onclick="showPage('tools');toggleMobileNav()">🔧 My Tools</button>
+    <button class="mobile-nav-link tier-mobile" onclick="showPage('tools');toggleMobileNav()" style="display:none">🔧 Management</button>
     <button class="mobile-nav-link" onclick="showPage('info');toggleMobileNav()">📋 Information</button>
-    <button class="mobile-nav-link coo-mobile" onclick="showPage('management');toggleMobileNav()" style="display:none">⚙️ Management</button>
+    <button class="mobile-nav-link coo-mobile" onclick="showPage('management');toggleMobileNav()" style="display:none">⚙️ Executive</button>
     <button class="mobile-nav-link" onclick="showPage('profile');toggleMobileNav()">👤 Profile</button>
   </div>
 
@@ -846,7 +846,7 @@ body {
     <!-- TOOLS PAGE -->
     <div class="page" id="page-tools">
       <div style="margin-bottom:24px">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">My Tools</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Management</div>
         <div style="font-size:13px;color:var(--mid)">All your daily tools in one place</div>
       </div>
 
@@ -856,8 +856,11 @@ body {
       <div class="section-header" id="clinical-section" style="display:none"><div class="section-title">Clinical</div></div>
       <div class="tool-grid" id="clinical-tools"></div>
 
-      <div class="section-header" id="management-section" style="display:none"><div class="section-title">Management</div></div>
-      <div class="tool-grid" id="management-tools"></div>
+      <div class="section-header"><div class="section-title">Risk &amp; Stock</div></div>
+      <div class="tool-grid" id="risk-stock-tools"></div>
+
+      <div class="section-header" id="hr-section" style="display:none"><div class="section-title">HR</div></div>
+      <div class="tool-grid" id="hr-tools"></div>
     </div>
 
     <!-- INFORMATION PAGE -->
@@ -1013,10 +1016,10 @@ body {
       </div>
     </div>
 
-    <!-- MANAGEMENT PAGE (COO/CEO only) -->
+    <!-- EXECUTIVE PAGE (COO/CEO only) -->
     <div class="page" id="page-management">
       <div style="margin-bottom:24px">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Management</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Executive</div>
         <div style="font-size:13px;color:var(--mid)">COO and CEO access only</div>
       </div>
 
@@ -1033,21 +1036,15 @@ body {
           <div class="tool-desc">Staff records and HR metrics</div>
           <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
         </div>
-        <div class="tool-card coo-only" onclick="showToast('Risk Dashboard coming soon')">
+        <a href="https://shakabornman.github.io/hae-scorecard/risk-review.html" target="_blank" class="tool-card coo-only">
           <div class="tool-icon" style="background:#FEF3C7">⚠️</div>
           <div class="tool-name">Risk Register</div>
           <div class="tool-desc">Live risk register and escalations</div>
-          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
-        </div>
+        </a>
       </div>
 
       <div class="section-header"><div class="section-title">Administration</div></div>
       <div class="tool-grid">
-        <a href="https://shakabornman.github.io/hae-hr-portal" target="_blank" class="tool-card coo-only">
-          <div class="tool-icon" style="background:#E6F4EE">👤</div>
-          <div class="tool-name">HR Portal</div>
-          <div class="tool-desc">Employee records, onboarding, documents</div>
-        </a>
         <div class="tool-card coo-only" onclick="showToast('Policy manager coming soon')">
           <div class="tool-icon" style="background:#F0EAF8">📋</div>
           <div class="tool-name">Policy Manager</div>
@@ -1260,16 +1257,20 @@ function initPortal(user) {
     document.querySelectorAll('.coo-mobile').forEach(el => el.style.display = 'block');
   }
 
+  if (accessLevels.length > 0) {
+    document.querySelectorAll('.tier-nav').forEach(el => el.style.display = 'block');
+    document.querySelectorAll('.tier-mobile').forEach(el => el.style.display = 'block');
+  }
+
   buildToolGrids(isExecutive);
 }
 
 // ── TOOL DEFINITIONS ──────────────────────────────────────────────────────
 function buildToolGrids(isExecutive) {
   const quickTools = [
-    { icon:'📊', color:'#EBF1F7', name:'Scorecard Form', desc:'Submit your daily report', url: getScoreCardUrl(currentUser?.email), badge:null },
-    { icon:'⚠️', color:'#FEF3C7', name:'Report a Risk', desc:'Log a risk or incident', url:'#risk', badge:'Coming soon' },
     { icon:'📋', color:'#F0EAF8', name:'Policies', desc:'Find procedures and policies', page:'info', badge:null },
     { icon:'👤', color:'#E6F4EE', name:'My Profile', desc:'Your account and details', page:'profile', badge:null },
+    { icon:'🗓', color:'#FFF3E0', name:'Events & Calendar', desc:'Upcoming events and training', url:'#events', badge:'Coming soon' },
   ];
   renderTools('quick-tools', quickTools);
 
@@ -1292,13 +1293,22 @@ function buildToolGrids(isExecutive) {
     renderTools('clinical-tools', clinicalTools);
   }
 
-  if (isExecutive) {
-    document.getElementById('management-section').style.display = 'flex';
-    const mgmtTools = [
-      { icon:'📊', color:'#EBF1F7', name:'CEO Dashboard', desc:'Weekly scorecard dashboard', url:'https://shakabornman.github.io/hae-scorecard/dashboard.html' },
+  // Risk & Stock — visible to all tier-holders; the Management tab itself
+  // is already hidden from Staff, so no further gating needed here
+  const riskStockTools = [
+    { icon:'⚠️', color:'#FEF3C7', name:'Submit a Risk', desc:'Log a risk or incident', url:'https://shakabornman.github.io/hae-scorecard/risk-submit.html' },
+    { icon:'📦', color:'#E6F4EE', name:'Stock Orders', desc:'Submit a stock order', url:'#stockorders', badge:'Coming soon' },
+  ];
+  renderTools('risk-stock-tools', riskStockTools);
+
+  // HR — Executive or HR tier only
+  const isHR = accessLevels.includes('executive') || accessLevels.includes('hr');
+  if (isHR) {
+    document.getElementById('hr-section').style.display = 'flex';
+    const hrTools = [
       { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
     ];
-    renderTools('management-tools', mgmtTools);
+    renderTools('hr-tools', hrTools);
   }
 }
 
@@ -1321,10 +1331,11 @@ function renderTools(containerId, tools) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = tools.map(t => {
-    const el = t.url && t.url !== '#risk'
+    const isPlaceholder = !t.url || t.url.startsWith('#');
+    const el = !isPlaceholder
       ? `<a href="${t.url}" target="${t.url.startsWith('http')?'_blank':'_self'}" class="tool-card">`
       : `<div class="tool-card" onclick="${t.page ? `showPage('${t.page}')` : `showToast('${t.name} coming soon')`}">`;
-    const close = t.url && t.url !== '#risk' ? '</a>' : '</div>';
+    const close = !isPlaceholder ? '</a>' : '</div>';
     const badge = t.badge ? `<span class="tool-badge" style="background:var(--paper);color:var(--mid)">${t.badge}</span>` : '';
     return `${el}
       <div class="tool-icon" style="background:${t.color}">${t.icon}</div>

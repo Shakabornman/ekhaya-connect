@@ -764,8 +764,8 @@ body {
     <div class="topnav-right">
       <div class="nav-links">
         <button class="nav-link active" onclick="showPage('home')">Home</button>
-        <button class="nav-link tier-nav" onclick="showPage('tools')" style="display:none">Management</button>
         <button class="nav-link" onclick="showPage('info')">Information</button>
+        <button class="nav-link tier-nav" onclick="showPage('tools')" style="display:none">Management</button>
         <button class="nav-link coo-nav" onclick="showPage('management')" style="display:none">Executive</button>
       </div>
 
@@ -783,8 +783,8 @@ body {
   <!-- MOBILE NAV -->
   <div class="mobile-nav" id="mobile-nav" style="display:none">
     <button class="mobile-nav-link active" onclick="showPage('home');toggleMobileNav()">🏠 Home</button>
-    <button class="mobile-nav-link tier-mobile" onclick="showPage('tools');toggleMobileNav()" style="display:none">🔧 Management</button>
     <button class="mobile-nav-link" onclick="showPage('info');toggleMobileNav()">📋 Information</button>
+    <button class="mobile-nav-link tier-mobile" onclick="showPage('tools');toggleMobileNav()" style="display:none">🔧 Management</button>
     <button class="mobile-nav-link coo-mobile" onclick="showPage('management');toggleMobileNav()" style="display:none">⚙️ Executive</button>
     <button class="mobile-nav-link" onclick="showPage('profile');toggleMobileNav()">👤 Profile</button>
   </div>
@@ -1293,6 +1293,12 @@ function buildToolGrids(isExecutive) {
     renderTools('clinical-tools', clinicalTools);
   }
 
+  // TEMPORARY DEBUG — remove once HR section issue is diagnosed
+  console.log('DEBUG accessLevels:', JSON.stringify(accessLevels));
+  console.log('DEBUG hr-section element found:', !!document.getElementById('hr-section'));
+  console.log('DEBUG hr-tools element found:', !!document.getElementById('hr-tools'));
+  console.log('DEBUG page-tools element found:', !!document.getElementById('page-tools'));
+
   // Risk & Stock — visible to all tier-holders; the Management tab itself
   // is already hidden from Staff, so no further gating needed here
   const riskStockTools = [
@@ -1303,12 +1309,14 @@ function buildToolGrids(isExecutive) {
 
   // HR — Executive or HR tier only
   const isHR = accessLevels.includes('executive') || accessLevels.includes('hr');
+  console.log('DEBUG isHR:', isHR);
   if (isHR) {
     document.getElementById('hr-section').style.display = 'flex';
     const hrTools = [
       { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
     ];
     renderTools('hr-tools', hrTools);
+    console.log('DEBUG hr-tools innerHTML after render:', document.getElementById('hr-tools')?.innerHTML?.length, 'characters');
   }
 }
 

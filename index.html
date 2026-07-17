@@ -1293,12 +1293,6 @@ function buildToolGrids(isExecutive) {
     renderTools('clinical-tools', clinicalTools);
   }
 
-  // TEMPORARY DEBUG — remove once HR section issue is diagnosed
-  console.log('DEBUG accessLevels:', JSON.stringify(accessLevels));
-  console.log('DEBUG hr-section element found:', !!document.getElementById('hr-section'));
-  console.log('DEBUG hr-tools element found:', !!document.getElementById('hr-tools'));
-  console.log('DEBUG page-tools element found:', !!document.getElementById('page-tools'));
-
   // Risk & Stock — visible to all tier-holders; the Management tab itself
   // is already hidden from Staff, so no further gating needed here
   const riskStockTools = [
@@ -1309,30 +1303,13 @@ function buildToolGrids(isExecutive) {
 
   // HR — Executive or HR tier only
   const isHR = accessLevels.includes('executive') || accessLevels.includes('hr');
-  console.log('DEBUG isHR:', isHR);
   if (isHR) {
     document.getElementById('hr-section').style.display = 'flex';
     const hrTools = [
       { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
     ];
     renderTools('hr-tools', hrTools);
-    console.log('DEBUG hr-tools innerHTML after render:', document.getElementById('hr-tools')?.innerHTML?.length, 'characters');
   }
-}
-
-function getScoreCardUrl(email) {
-  const deptMap = {
-    'nursing':   'https://shakabornman.github.io/hae-scorecard/nursing.html',
-    'billing':   'https://shakabornman.github.io/hae-scorecard/billing.html',
-    'casem':     'https://shakabornman.github.io/hae-scorecard/casem.html',
-    'finance':   'https://shakabornman.github.io/hae-scorecard/finance.html',
-    'marketing': 'https://shakabornman.github.io/hae-scorecard/marketing.html',
-    'support':   'https://shakabornman.github.io/hae-scorecard/support.html',
-    'security':  'https://shakabornman.github.io/hae-scorecard/hae-security-form.html',
-  };
-  const dept = (employeeDoc?.department || '').toLowerCase();
-  const map = deptMap;
-  return map[email] || 'https://shakabornman.github.io/hae-scorecard/security.html';
 }
 
 function renderTools(containerId, tools) {

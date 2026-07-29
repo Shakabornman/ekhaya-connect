@@ -1016,45 +1016,106 @@ body {
       </div>
     </div>
 
-    <!-- EXECUTIVE PAGE (COO/CEO only) -->
+    <!-- EXECUTIVE PAGE (Executive tier; Board section also visible to board tier) -->
     <div class="page" id="page-management">
       <div style="margin-bottom:24px">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Executive</div>
-        <div style="font-size:13px;color:var(--mid)">COO and CEO access only</div>
+        <div style="font-size:13px;color:var(--mid)">Executive and Board access</div>
       </div>
 
-      <div class="section-header"><div class="section-title">Dashboards</div></div>
-      <div class="tool-grid">
-        <a href="https://shakabornman.github.io/hae-scorecard/dashboard.html" target="_blank" class="tool-card coo-only">
-          <div class="tool-icon" style="background:#EBF1F7">📊</div>
-          <div class="tool-name">CEO Scorecard</div>
-          <div class="tool-desc">Weekly department performance dashboard</div>
-        </a>
-        <div class="tool-card coo-only" onclick="showToast('HR Dashboard coming soon')">
-          <div class="tool-icon" style="background:#E6F4EE">👥</div>
-          <div class="tool-name">HR Overview</div>
-          <div class="tool-desc">Staff records and HR metrics</div>
-          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+      <div id="exec-only-sections" style="display:none">
+        <div class="section-header"><div class="section-title">Dashboards</div></div>
+        <div class="tool-grid">
+          <a href="https://shakabornman.github.io/hae-scorecard/dashboard.html" target="_blank" class="tool-card coo-only">
+            <div class="tool-icon" style="background:#EBF1F7">📊</div>
+            <div class="tool-name">CEO Scorecard</div>
+            <div class="tool-desc">Weekly department performance dashboard</div>
+          </a>
+          <div class="tool-card coo-only" onclick="showToast('HR Dashboard coming soon')">
+            <div class="tool-icon" style="background:#E6F4EE">👥</div>
+            <div class="tool-name">HR Overview</div>
+            <div class="tool-desc">Staff records and HR metrics</div>
+            <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+          </div>
+          <a href="https://shakabornman.github.io/hae-scorecard/risk-review.html" target="_blank" class="tool-card coo-only">
+            <div class="tool-icon" style="background:#FEF3C7">⚠️</div>
+            <div class="tool-name">Risk Register</div>
+            <div class="tool-desc">Live risk register and escalations</div>
+          </a>
         </div>
-        <a href="https://shakabornman.github.io/hae-scorecard/risk-review.html" target="_blank" class="tool-card coo-only">
-          <div class="tool-icon" style="background:#FEF3C7">⚠️</div>
-          <div class="tool-name">Risk Register</div>
-          <div class="tool-desc">Live risk register and escalations</div>
-        </a>
+
+        <div class="section-header"><div class="section-title">Administration</div></div>
+        <div class="tool-grid">
+          <div class="tool-card coo-only" onclick="showToast('Policy manager coming soon')">
+            <div class="tool-icon" style="background:#F0EAF8">📋</div>
+            <div class="tool-name">Policy Manager</div>
+            <div class="tool-desc">Manage and publish policies</div>
+            <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+          </div>
+          <div class="tool-card coo-only" onclick="forceRollup()">
+            <div class="tool-icon" style="background:#FEF3C7">🔄</div>
+            <div class="tool-name">Force Rollup</div>
+            <div class="tool-desc">Manually trigger scorecard rollup</div>
+          </div>
+        </div>
       </div>
 
-      <div class="section-header"><div class="section-title">Administration</div></div>
+      <div id="board-section" style="display:none">
+        <div class="section-header"><div class="section-title">Governance</div></div>
+        <div class="tool-grid">
+          <div class="tool-card coo-only" onclick="showPage('board')">
+            <div class="tool-icon" style="background:#F0EAF8">🏛️</div>
+            <div class="tool-name">Board</div>
+            <div class="tool-desc">Board governance documents</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOARD PAGE (Executive or Board tier) -->
+    <div class="page" id="page-board">
+      <div style="margin-bottom:24px">
+        <button onclick="showPage('management')" style="background:none;border:none;color:var(--navy);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:10px;font-family:'Inter',sans-serif">← Back to Executive</button>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px">Board</div>
+        <div style="font-size:13px;color:var(--mid)">Board governance documents</div>
+      </div>
+
       <div class="tool-grid">
-        <div class="tool-card coo-only" onclick="showToast('Policy manager coming soon')">
-          <div class="tool-icon" style="background:#F0EAF8">📋</div>
-          <div class="tool-name">Policy Manager</div>
-          <div class="tool-desc">Manage and publish policies</div>
+        <div class="tool-card" onclick="showToast('Share Register — coming soon')">
+          <div class="tool-icon" style="background:#EBF1F7">📑</div>
+          <div class="tool-name">Share Register</div>
+          <div class="tool-desc">Shareholding record</div>
           <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
         </div>
-        <div class="tool-card coo-only" onclick="forceRollup()">
-          <div class="tool-icon" style="background:#FEF3C7">🔄</div>
-          <div class="tool-name">Force Rollup</div>
-          <div class="tool-desc">Manually trigger scorecard rollup</div>
+        <div class="tool-card" onclick="showToast('Board Meeting Notices — coming soon')">
+          <div class="tool-icon" style="background:#FFF3E0">📨</div>
+          <div class="tool-name">Board Meeting Notices</div>
+          <div class="tool-desc">Notices of upcoming meetings</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card" onclick="showToast('Board Meeting Agendas — coming soon')">
+          <div class="tool-icon" style="background:#E6F4EE">🗒</div>
+          <div class="tool-name">Board Meeting Agendas</div>
+          <div class="tool-desc">Agendas for upcoming meetings</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card" onclick="showToast('Board Meeting Minutes — coming soon')">
+          <div class="tool-icon" style="background:#F0EAF8">📝</div>
+          <div class="tool-name">Board Meeting Minutes</div>
+          <div class="tool-desc">Minutes of meetings held</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card" onclick="showToast('Resolutions — coming soon')">
+          <div class="tool-icon" style="background:#FEF3C7">⚖️</div>
+          <div class="tool-name">Resolutions</div>
+          <div class="tool-desc">Board resolutions on record</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
+        </div>
+        <div class="tool-card" onclick="showToast('Board Register — coming soon')">
+          <div class="tool-icon" style="background:#EBF1F7">📇</div>
+          <div class="tool-name">Board Register</div>
+          <div class="tool-desc">Board member record</div>
+          <span class="tool-badge" style="background:var(--paper);color:var(--mid)">Coming soon</span>
         </div>
       </div>
     </div>
@@ -1252,9 +1313,21 @@ function initPortal(user) {
   document.getElementById('profile-dept').textContent = employeeDoc?.department || '—';
   document.getElementById('profile-facility').textContent = employeeDoc?.facility === 'KRC' ? 'KURUMAN RENAL CLINIC' : 'HOSPITAL AT EKHAYA';
 
-  if (isExecutive) {
+  // Board tier is not yet a formal named tier in the access control spec —
+  // this check is forward-compatible: harmless no-op until Core Infrastructure
+  // adds 'board' to the tier list and assigns it to specific access_control docs.
+  const hasBoard = accessLevels.includes('board');
+  const showExecutiveTab = isExecutive || hasBoard;
+
+  if (showExecutiveTab) {
     document.querySelectorAll('.coo-nav').forEach(el => el.style.display = 'block');
     document.querySelectorAll('.coo-mobile').forEach(el => el.style.display = 'block');
+  }
+  if (isExecutive) {
+    document.getElementById('exec-only-sections').style.display = 'block';
+  }
+  if (showExecutiveTab) {
+    document.getElementById('board-section').style.display = 'block';
   }
 
   if (accessLevels.length > 0) {
@@ -1528,8 +1601,11 @@ window.showPage = function(pageId) {
   const page = document.getElementById('page-'+pageId);
   if (page) page.classList.add('active');
 
+  // 'board' has no top-nav entry of its own — it's reached via the Executive
+  // page's Board tile, so treat 'management' as the active tab while on it.
+  const activeNavId = pageId === 'board' ? 'management' : pageId;
   document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => {
-    if (l.getAttribute('onclick')?.includes(`'${pageId}'`)) l.classList.add('active');
+    if (l.getAttribute('onclick')?.includes(`'${activeNavId}'`)) l.classList.add('active');
   });
 
   // Lazy-load the P&P list the first time the Information page is opened

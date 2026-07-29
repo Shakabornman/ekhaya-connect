@@ -305,7 +305,7 @@
     <div class="seal">HE</div>
     <div class="auth-card">
       <h1>Share Register</h1>
-      <p>Hospital at Ekhaya (Pty) Ltd — Executive access</p>
+      <p>Hospital at Ekhaya (Pty) Ltd — Executive & Board access</p>
       <input type="email" id="loginEmail" placeholder="Email address" autocomplete="username" />
       <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
       <button id="loginBtn">Sign in</button>
@@ -316,8 +316,8 @@
   <!-- ACCESS DENIED -->
   <div id="deniedScreen" style="display:none;">
     <div class="auth-card">
-      <h1>Executive access required</h1>
-      <p>Your account doesn't have executive-level access to the share register. Contact the COO's office if you believe this is incorrect.</p>
+      <h1>Access required</h1>
+      <p>Your account doesn't have executive or board-level access to the share register. Contact the COO's office if you believe this is incorrect.</p>
       <button id="signOutDenied">Sign out</button>
     </div>
   </div>
@@ -326,7 +326,7 @@
   <div id="app">
     <header class="top">
       <div>
-        <div class="brand-eyebrow">Ekhaya Connect · Executive</div>
+        <div class="brand-eyebrow">Ekhaya Connect · Executive / Board</div>
         <h1 id="companyName">Share Register</h1>
         <div class="reg" id="companyReg"></div>
       </div>
@@ -476,12 +476,12 @@ import {
 // (same project as the staff portal / timesheet processor: hae-vuma-92fca)
 // ---------------------------------------------------------------------------
 const firebaseConfig = {
-  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  apiKey: "REPLACE_ME",
   authDomain: "hae-vuma-92fca.firebaseapp.com",
   projectId: "hae-vuma-92fca",
-  storageBucket: "hae-vuma-92fca.appspot.com",
-  messagingSenderId: "1052424261313",
-  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -524,11 +524,12 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // Check accessLevel per Ekhaya Connect convention: users/{uid}.accessLevel
-  const userDocSnap = await getDoc(doc(db, 'users', user.uid));
-  const accessLevel = userDocSnap.exists() ? userDocSnap.data().accessLevel : null;
+  // Access check per Ekhaya Connect convention: access_control/{uid}.accessLevels (array)
+  const accessDocSnap = await getDoc(doc(db, 'access_control', user.uid));
+  const accessLevels = accessDocSnap.exists() ? (accessDocSnap.data().accessLevels || []) : [];
+  const hasAccess = accessLevels.includes('executive') || accessLevels.includes('board');
 
-  if (accessLevel !== 'executive') {
+  if (!hasAccess) {
     authScreen.style.display = 'none';
     deniedScreen.style.display = 'flex';
     appEl.style.display = 'none';
@@ -538,7 +539,7 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = {
     uid: user.uid,
     email: user.email,
-    displayName: (userDocSnap.data() && userDocSnap.data().displayName) || user.email,
+    displayName: user.displayName || user.email,
   };
 
   authScreen.style.display = 'none';

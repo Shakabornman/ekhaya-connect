@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Share Register — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2A43;
+    --ink-soft: #4A5C70;
+    --paper: #F7F6F2;
+    --paper-line: #E3DFD4;
+    --gold: #B8912F;
+    --gold-soft: #F1E7CD;
+    --green: #1E6F4C;
+    --green-soft: #E4F2EA;
+    --amber: #9A6B12;
+    --amber-soft: #FBEFD8;
+    --gray: #6B7280;
+    --gray-soft: #EDEDED;
+    --danger: #A6303A;
+    --radius: 3px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .ledger-rule {
+    border: none;
+    border-top: 1px solid var(--paper-line);
+    margin: 0;
+  }
+
+  /* ---------- Auth screens ---------- */
+  #authScreen, #deniedScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .seal {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 22px; color: var(--gold);
+  }
+  .auth-card {
+    background: #fff;
+    border: 1px solid var(--paper-line);
+    padding: 40px;
+    width: 340px;
+    text-align: center;
+  }
+  .auth-card h1 { font-size: 20px; margin: 12px 0 4px; }
+  .auth-card p { color: var(--ink-soft); margin: 0 0 20px; font-size: 13px; }
+  .auth-card input {
+    width: 100%; padding: 10px 12px; margin-bottom: 10px;
+    border: 1px solid var(--paper-line); border-radius: var(--radius);
+    font-family: inherit; font-size: 14px;
+  }
+  .auth-card button, .btn-primary {
+    width: 100%; padding: 10px 12px;
+    background: var(--ink); color: #fff; border: none; border-radius: var(--radius);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px;
+    cursor: pointer; letter-spacing: 0.02em;
+  }
+  .auth-card button:hover, .btn-primary:hover { background: #16385a; }
+  #authError { color: var(--danger); font-size: 12px; min-height: 16px; margin-top: 6px; }
+
+  /* ---------- Shell ---------- */
+  #app { display: none; }
+  header.top {
+    background: var(--ink);
+    color: #fff;
+    padding: 22px 36px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  header.top .brand-eyebrow {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold-soft); opacity: 0.85;
+  }
+  header.top h1 { color: #fff; font-size: 24px; margin: 2px 0 0; }
+  header.top .reg { font-size: 12px; color: #c7d2df; margin-top: 4px; }
+  header.top .who { font-size: 12px; color: #c7d2df; text-align: right; }
+  header.top .who button {
+    background: none; border: 1px solid #3c5a76; color: #dce6ef;
+    padding: 4px 10px; border-radius: var(--radius); font-size: 11px; margin-top: 6px; cursor: pointer;
+  }
+
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: #fff;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .stat {
+    padding: 18px 28px;
+    border-right: 1px solid var(--paper-line);
+  }
+  .stat:last-child { border-right: none; }
+  .stat .label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+  .stat .value { font-family: 'Fraunces', serif; font-size: 26px; margin-top: 4px; }
+
+  main { padding: 28px 36px 60px; max-width: 1280px; margin: 0 auto; }
+
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; gap: 12px;
+  }
+  .toolbar input[type="search"] {
+    padding: 9px 14px; border: 1px solid var(--paper-line); border-radius: var(--radius);
+    width: 280px; font-family: inherit; font-size: 13px; background: #fff;
+  }
+  .btn {
+    padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink);
+    background: #fff; color: var(--ink); font-weight: 600; font-size: 13px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid:hover { background: #16385a; }
+  .btn:hover { background: var(--gray-soft); }
+  .btn.small { padding: 5px 10px; font-size: 12px; border-radius: 3px; }
+  .btn.ghost { border-color: var(--paper-line); color: var(--ink-soft); }
+
+  table.register {
+    width: 100%; border-collapse: collapse; background: #fff;
+    border: 1px solid var(--paper-line);
+  }
+  table.register th {
+    text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-soft); padding: 12px 16px; border-bottom: 2px solid var(--ink);
+  }
+  table.register td {
+    padding: 13px 16px; border-bottom: 1px solid var(--paper-line); vertical-align: middle;
+  }
+  table.register tr:hover td { background: #FCFBF8; }
+  .shareholder-name { font-weight: 600; }
+  .mono { font-variant-numeric: tabular-nums; font-family: 'Inter', sans-serif; }
+  .cert-no {
+    font-size: 11px; padding: 3px 7px; background: var(--gold-soft); color: #6b520f;
+    border-radius: 2px; letter-spacing: 0.02em;
+  }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+  .badge.active { background: var(--green-soft); color: var(--green); }
+  .badge.pending { background: var(--amber-soft); color: var(--amber); }
+  .badge.transferred { background: var(--gray-soft); color: var(--gray); }
+  .row-actions { display: flex; gap: 6px; }
+
+  /* ---------- Modals ---------- */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(15,42,67,0.45);
+    align-items: center; justify-content: center; z-index: 50;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: #fff; width: 520px; max-width: 92vw; max-height: 88vh; overflow-y: auto;
+    border-radius: 4px; padding: 28px 30px;
+  }
+  .modal h2 { font-size: 19px; margin: 0 0 4px; }
+  .modal .sub { color: var(--ink-soft); font-size: 12px; margin-bottom: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--paper-line); border-radius: 3px;
+    font-family: 'Inter', sans-serif; font-size: 13px;
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field input[readonly] { background: var(--gray-soft); color: var(--ink-soft); cursor: not-allowed; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  #formError { color: var(--danger); font-size: 12px; margin-top: -6px; margin-bottom: 10px; }
+
+  .history-entry {
+    padding: 12px 0; border-bottom: 1px solid var(--paper-line);
+  }
+  .history-entry:last-child { border-bottom: none; }
+  .history-entry .meta { font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .history-entry .action-tag {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+    padding: 2px 7px; border-radius: 2px; background: var(--ink); color: #fff; margin-right: 6px;
+  }
+  .diff-row { font-size: 12px; margin: 3px 0 0 2px; }
+  .diff-row .field-name { color: var(--ink-soft); }
+  .diff-old { color: var(--danger); text-decoration: line-through; margin-right: 4px; }
+  .diff-new { color: var(--green); }
+  #historyEmpty { color: var(--ink-soft); font-size: 13px; padding: 10px 0; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff;
+    padding: 12px 18px; border-radius: 4px; font-size: 13px; z-index: 100;
+    opacity: 0; transform: translateY(8px); transition: all 0.25s ease;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ---------- Certificate ---------- */
+  .cert-modal { width: 780px; max-width: 94vw; padding: 0; background: transparent; box-shadow: none; }
+  .cert-modal .modal-actions { padding: 16px 6px 0; background: transparent; }
+  #certPrintArea {
+    background: #fffdf7;
+    border: 2px solid var(--ink);
+    outline: 6px solid #fff;
+    outline-offset: -14px;
+    padding: 46px 54px 34px;
+    position: relative;
+  }
+  #certPrintArea::before {
+    content: "";
+    position: absolute; inset: 8px;
+    border: 1px solid var(--gold);
+    pointer-events: none;
+  }
+  .cert-eyebrow {
+    text-align: center; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 6px;
+  }
+  .cert-company {
+    text-align: center; font-family: 'Fraunces', serif; font-size: 26px; margin: 0;
+  }
+  .cert-incorp {
+    text-align: center; font-size: 11px; color: var(--ink-soft); margin: 6px 0 26px;
+  }
+  .cert-this-certifies {
+    text-align: center; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .cert-shareholder {
+    text-align: center; font-family: 'Fraunces', serif; font-size: 22px; margin: 0 0 18px;
+  }
+  .cert-body {
+    text-align: center; font-size: 14px; line-height: 1.8; margin: 0 0 26px; color: var(--ink);
+  }
+  .cert-body strong { font-variant-numeric: tabular-nums; }
+  .cert-meta {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    border-top: 1px solid var(--paper-line); border-bottom: 1px solid var(--paper-line);
+    padding: 14px 0; margin-bottom: 30px;
+  }
+  .cert-meta div { text-align: center; }
+  .cert-meta .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .cert-meta .v { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px; margin-top: 2px; }
+  .cert-signatures {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 10px 30px 28px;
+  }
+  .cert-signatures .line { border-top: 1px solid var(--ink); padding-top: 6px; text-align: center; font-size: 11px; color: var(--ink-soft); }
+  .cert-footnote { font-size: 10px; color: var(--ink-soft); text-align: center; margin-bottom: 18px; }
+  .cert-verify {
+    background: var(--gold-soft); border: 1px dashed var(--gold); border-radius: 3px;
+    padding: 10px 16px; font-size: 11px; color: #6b520f; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+  }
+  @media print {
+    body * { visibility: hidden; }
+    #certPrintArea, #certPrintArea * { visibility: visible; }
+    #certPrintArea { position: absolute; top: 0; left: 0; width: 100%; border: none; outline: none; }
+    #certPrintArea::before { display: none; }
+    .overlay { position: static; background: none; }
+    .cert-modal .modal-actions { display: none; }
+    .cert-type-toggle { display: none !important; }
+  }
+
+  .cert-type-toggle {
+    display: flex; align-items: center; gap: 18px; justify-content: center;
+    padding: 14px 6px 4px; font-size: 12px; color: var(--ink-soft);
+  }
+  .cert-type-toggle label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .cert-stamp {
+    position: absolute;
+    top: 38%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-14deg);
+    border: 4px solid #0b5fc7;
+    color: #0b5fc7;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 40px;
+    letter-spacing: 0.12em;
+    padding: 8px 28px;
+    border-radius: 10px;
+    opacity: 0.55;
+    pointer-events: none;
+    display: none;
+  }
+  #certPrintArea.is-copy .cert-stamp { display: block; }
+</style>
+</head>
+<body>
+
+  <!-- AUTH -->
+  <div id="authScreen">
+    <div class="seal">HE</div>
+    <div class="auth-card">
+      <h1>Share Register</h1>
+      <p>Hospital at Ekhaya (Pty) Ltd — Executive access</p>
+      <input type="email" id="loginEmail" placeholder="Email address" autocomplete="username" />
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+      <button id="loginBtn">Sign in</button>
+      <div id="authError"></div>
+    </div>
+  </div>
+
+  <!-- ACCESS DENIED -->
+  <div id="deniedScreen" style="display:none;">
+    <div class="auth-card">
+      <h1>Executive access required</h1>
+      <p>Your account doesn't have executive-level access to the share register. Contact the COO's office if you believe this is incorrect.</p>
+      <button id="signOutDenied">Sign out</button>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app">
+    <header class="top">
+      <div>
+        <div class="brand-eyebrow">Ekhaya Connect · Executive</div>
+        <h1 id="companyName">Share Register</h1>
+        <div class="reg" id="companyReg"></div>
+      </div>
+      <div class="who">
+        <div id="whoEmail"></div>
+        <button id="signOutBtn">Sign out</button>
+      </div>
+    </header>
+
+    <div class="stats-strip">
+      <div class="stat"><div class="label">Shareholders</div><div class="value" id="statCount">—</div></div>
+      <div class="stat"><div class="label">Shares issued</div><div class="value" id="statShares">—</div></div>
+      <div class="stat"><div class="label">Total value (R)</div><div class="value" id="statValue">—</div></div>
+      <div class="stat"><div class="label">Pending entries</div><div class="value" id="statPending">—</div></div>
+    </div>
+
+    <main>
+      <div class="toolbar">
+        <input type="search" id="searchBox" placeholder="Search shareholder, certificate no…" />
+        <button class="btn solid" id="addEntryBtn">+ Add shareholder entry</button>
+      </div>
+
+      <table class="register">
+        <thead>
+          <tr>
+            <th>Shareholder</th>
+            <th>Certificate No.</th>
+            <th>Shares</th>
+            <th>Value (R)</th>
+            <th>Status</th>
+            <th>Transfer date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="registerBody"></tbody>
+      </table>
+    </main>
+  </div>
+
+  <!-- ADD/EDIT MODAL -->
+  <div class="overlay" id="entryOverlay">
+    <div class="modal">
+      <h2 id="entryModalTitle">Add shareholder entry</h2>
+      <div class="sub">Every save is recorded in this entry's history with your name and the time.</div>
+      <div id="formError"></div>
+      <div class="field">
+        <label>Shareholder name</label>
+        <input type="text" id="f_shareholderName" />
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Email (optional)</label>
+          <input type="email" id="f_shareholderEmail" />
+        </div>
+        <div class="field">
+          <label>Certificate no. <span style="font-weight:400; text-transform:none;">(auto-generated for new entries)</span></label>
+          <input type="text" id="f_shareCertificateNo" placeholder="H@E00000018" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Number of shares</label>
+          <input type="number" id="f_numberOfShares" min="0" />
+        </div>
+        <div class="field">
+          <label>Value per share (R)</label>
+          <input type="number" id="f_valuePerShare" min="0" step="0.01" value="1" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Transfer no.</label>
+          <input type="text" id="f_transferNo" placeholder="DDMMYYYY/000000" />
+        </div>
+        <div class="field">
+          <label>Transfer date</label>
+          <input type="date" id="f_transferDate" />
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Holder reference</label>
+          <input type="text" id="f_holderRef" maxlength="6" />
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="f_status">
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="transferred">Transferred</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes (optional)</label>
+        <textarea id="f_notes"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="entryCancelBtn">Cancel</button>
+        <button class="btn solid" id="entrySaveBtn">Save entry</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY MODAL -->
+  <div class="overlay" id="historyOverlay">
+    <div class="modal">
+      <h2>History</h2>
+      <div class="sub" id="historySub"></div>
+      <div id="historyList"></div>
+      <div id="historyEmpty" style="display:none;">No history recorded yet.</div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="historyCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE MODAL -->
+  <div class="overlay" id="certOverlay">
+    <div class="modal cert-modal">
+      <div class="cert-type-toggle">
+        <label><input type="radio" name="certType" value="original" id="certTypeOriginal" checked /> Original</label>
+        <label><input type="radio" name="certType" value="copy" id="certTypeCopy" /> Copy</label>
+      </div>
+      <div id="certPrintArea"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="certCloseBtn">Close</button>
+        <button class="btn solid" id="certPrintBtn">Print / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, collection, addDoc, updateDoc, getDocs,
+  query, where, orderBy, serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ---------------------------------------------------------------------------
+// FIREBASE CONFIG — replace with the existing Ekhaya Connect config
+// (same project as the staff portal / timesheet processor: hae-vuma-92fca)
+// ---------------------------------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain: "hae-vuma-92fca.firebaseapp.com",
+  projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.appspot.com",
+  messagingSenderId: "1052424261313",
+  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const COMPANY_ID = "hae";
+let currentUser = null;
+let unsubscribeRegister = null;
+let allEntries = [];
+let companyData = null;
+
+// ---------- Auth wiring ----------
+const authScreen = document.getElementById('authScreen');
+const deniedScreen = document.getElementById('deniedScreen');
+const appEl = document.getElementById('app');
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    errEl.textContent = 'Sign-in failed. Check your email and password.';
+  }
+});
+
+document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+document.getElementById('signOutDenied').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    currentUser = null;
+    authScreen.style.display = 'flex';
+    deniedScreen.style.display = 'none';
+    appEl.style.display = 'none';
+    if (unsubscribeRegister) { unsubscribeRegister(); unsubscribeRegister = null; }
+    return;
+  }
+
+  // Check accessLevel per Ekhaya Connect convention: users/{uid}.accessLevel
+  const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+  const accessLevel = userDocSnap.exists() ? userDocSnap.data().accessLevel : null;
+
+  if (accessLevel !== 'executive') {
+    authScreen.style.display = 'none';
+    deniedScreen.style.display = 'flex';
+    appEl.style.display = 'none';
+    return;
+  }
+
+  currentUser = {
+    uid: user.uid,
+    email: user.email,
+    displayName: (userDocSnap.data() && userDocSnap.data().displayName) || user.email,
+  };
+
+  authScreen.style.display = 'none';
+  deniedScreen.style.display = 'none';
+  appEl.style.display = 'block';
+  document.getElementById('whoEmail').textContent = currentUser.displayName;
+
+  await loadCompany();
+  listenToRegister();
+});
+
+// ---------- Company header ----------
+async function loadCompany() {
+  const snap = await getDoc(doc(db, 'companies', COMPANY_ID));
+  if (snap.exists()) {
+    const c = snap.data();
+    companyData = c;
+    document.getElementById('companyName').textContent = c.companyName || 'Share Register';
+    document.getElementById('companyReg').textContent = c.registrationNumber
+      ? `Reg. No. ${c.registrationNumber}` : '';
+  }
+}
+
+// ---------- Live register listener ----------
+function listenToRegister() {
+  const q = query(collection(db, 'shareRegister'), where('companyId', '==', COMPANY_ID));
+  unsubscribeRegister = onSnapshot(q, (snap) => {
+    allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allEntries.sort((a, b) => (a.shareholderName || '').localeCompare(b.shareholderName || ''));
+    renderStats();
+    renderTable(document.getElementById('searchBox').value);
+  });
+}
+
+function renderStats() {
+  const count = allEntries.length;
+  const shares = allEntries.reduce((s, e) => s + (e.numberOfShares || 0), 0);
+  const value = allEntries.reduce((s, e) => s + (e.totalValue || 0), 0);
+  const pending = allEntries.filter(e => e.status === 'pending').length;
+  document.getElementById('statCount').textContent = count;
+  document.getElementById('statShares').textContent = shares.toLocaleString('en-ZA');
+  document.getElementById('statValue').textContent = value.toLocaleString('en-ZA');
+  document.getElementById('statPending').textContent = pending;
+}
+
+function renderTable(filterText) {
+  const body = document.getElementById('registerBody');
+  const f = (filterText || '').toLowerCase();
+  const rows = allEntries.filter(e =>
+    !f ||
+    (e.shareholderName || '').toLowerCase().includes(f) ||
+    (e.shareCertificateNo || '').toLowerCase().includes(f) ||
+    (e.holderRef || '').toLowerCase().includes(f)
+  );
+
+  body.innerHTML = rows.map(e => `
+    <tr>
+      <td class="shareholder-name">${escapeHtml(e.shareholderName)}</td>
+      <td><span class="cert-no">${escapeHtml(e.shareCertificateNo || '—')}</span></td>
+      <td class="mono">${e.numberOfShares != null ? e.numberOfShares.toLocaleString('en-ZA') : '—'}</td>
+      <td class="mono">${e.totalValue != null ? e.totalValue.toLocaleString('en-ZA') : '—'}</td>
+      <td><span class="badge ${e.status}">${e.status}</span></td>
+      <td class="mono">${e.transferDate || '—'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn small ghost" data-edit="${e.id}">Edit</button>
+          <button class="btn small ghost" data-history="${e.id}">History</button>
+          <button class="btn small ghost" data-cert="${e.id}">Certificate</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" style="text-align:center; color:var(--ink-soft); padding:30px;">No entries match.</td></tr>`;
+
+  body.querySelectorAll('[data-edit]').forEach(btn =>
+    btn.addEventListener('click', () => openEntryModal(btn.dataset.edit)));
+  body.querySelectorAll('[data-history]').forEach(btn =>
+    btn.addEventListener('click', () => openHistoryModal(btn.dataset.history)));
+  body.querySelectorAll('[data-cert]').forEach(btn =>
+    btn.addEventListener('click', () => openCertificateModal(btn.dataset.cert)));
+}
+
+document.getElementById('searchBox').addEventListener('input', (e) => renderTable(e.target.value));
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// ---------- Add/Edit modal ----------
+const entryOverlay = document.getElementById('entryOverlay');
+let editingId = null;
+
+const FIELD_IDS = [
+  'shareholderName', 'shareholderEmail', 'shareCertificateNo', 'numberOfShares',
+  'valuePerShare', 'transferNo', 'transferDate', 'holderRef', 'status', 'notes'
+];
+
+document.getElementById('addEntryBtn').addEventListener('click', () => openEntryModal(null));
+document.getElementById('entryCancelBtn').addEventListener('click', () => entryOverlay.classList.remove('open'));
+
+// Next certificate number = highest existing "H@E0000000X" + 1, zero-padded to 8 digits.
+function nextCertificateNo() {
+  const CERT_PREFIX = 'H@E';
+  const CERT_DIGITS = 8;
+  let max = 0;
+  allEntries.forEach(e => {
+    const m = (e.shareCertificateNo || '').match(/^H@E(\d+)$/);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return CERT_PREFIX + String(max + 1).padStart(CERT_DIGITS, '0');
+}
+
+function openEntryModal(id) {
+  editingId = id;
+  document.getElementById('formError').textContent = '';
+  const entry = id ? allEntries.find(e => e.id === id) : null;
+
+  const certField = document.getElementById('f_shareCertificateNo');
+  document.getElementById('entryModalTitle').textContent = id ? 'Edit shareholder entry' : 'Add shareholder entry';
+  document.getElementById('f_shareholderName').value = entry?.shareholderName || '';
+  document.getElementById('f_shareholderEmail').value = entry?.shareholderEmail || '';
+
+  if (id) {
+    // Editing an existing entry — certificate number stays manually correctable.
+    certField.value = entry?.shareCertificateNo || '';
+    certField.readOnly = false;
+    certField.title = '';
+  } else {
+    // New entry — auto-generated, not hand-typed, so it can never collide again.
+    certField.value = nextCertificateNo();
+    certField.readOnly = true;
+    certField.title = 'Auto-generated — the next available certificate number';
+  }
+
+  document.getElementById('f_numberOfShares').value = entry?.numberOfShares ?? '';
+  document.getElementById('f_valuePerShare').value = entry?.valuePerShare ?? 1;
+  document.getElementById('f_transferNo').value = entry?.transferNo || '';
+  document.getElementById('f_transferDate').value = entry?.transferDate || '';
+  document.getElementById('f_holderRef').value = entry?.holderRef || '';
+  document.getElementById('f_status').value = entry?.status || 'active';
+  document.getElementById('f_notes').value = entry?.notes || '';
+
+  entryOverlay.classList.add('open');
+}
+
+document.getElementById('entrySaveBtn').addEventListener('click', async () => {
+  const errEl = document.getElementById('formError');
+  const name = document.getElementById('f_shareholderName').value.trim();
+  if (!name) { errEl.textContent = 'Shareholder name is required.'; return; }
+
+  const sharesRaw = document.getElementById('f_numberOfShares').value;
+  const numberOfShares = sharesRaw === '' ? null : Number(sharesRaw);
+  const valuePerShare = Number(document.getElementById('f_valuePerShare').value || 1);
+  const totalValue = numberOfShares != null ? numberOfShares * valuePerShare : null;
+
+  const newData = {
+    companyId: COMPANY_ID,
+    shareholderName: name,
+    shareholderEmail: document.getElementById('f_shareholderEmail').value.trim() || null,
+    shareCertificateNo: document.getElementById('f_shareCertificateNo').value.trim() || null,
+    numberOfShares,
+    valuePerShare,
+    totalValue,
+    transferNo: document.getElementById('f_transferNo').value.trim() || null,
+    transferDate: document.getElementById('f_transferDate').value || null,
+    holderRef: document.getElementById('f_holderRef').value.trim() || null,
+    status: document.getElementById('f_status').value,
+    notes: document.getElementById('f_notes').value.trim() || null,
+    updatedAt: serverTimestamp(),
+    updatedBy: currentUser,
+  };
+
+  try {
+    if (editingId) {
+      const before = allEntries.find(e => e.id === editingId);
+      await updateDoc(doc(db, 'shareRegister', editingId), newData);
+      await logAudit(editingId, name, 'updated', diffEntries(before, newData));
+    } else {
+      newData.createdAt = serverTimestamp();
+      newData.createdBy = currentUser;
+      const ref = await addDoc(collection(db, 'shareRegister'), newData);
+      await logAudit(ref.id, name, 'created', null);
+    }
+    entryOverlay.classList.remove('open');
+    showToast(editingId ? 'Entry updated.' : 'Entry added.');
+  } catch (e) {
+    errEl.textContent = 'Could not save — check your connection and try again.';
+    console.error(e);
+  }
+});
+
+function diffEntries(before, after) {
+  if (!before) return null;
+  const changes = {};
+  FIELD_IDS.forEach(key => {
+    const b = before[key] ?? null;
+    const a = after[key] ?? null;
+    if (String(b) !== String(a)) changes[key] = { before: b, after: a };
+  });
+  return Object.keys(changes).length ? changes : null;
+}
+
+async function logAudit(shareRegisterId, shareholderNameAtTime, action, changes) {
+  await addDoc(collection(db, 'shareRegisterAudit'), {
+    shareRegisterId,
+    shareholderNameAtTime,
+    action,
+    changes: changes || null,
+    changedBy: currentUser,
+    changedAt: serverTimestamp(),
+  });
+}
+
+// ---------- History modal ----------
+const historyOverlay = document.getElementById('historyOverlay');
+document.getElementById('historyCloseBtn').addEventListener('click', () => historyOverlay.classList.remove('open'));
+
+async function openHistoryModal(entryId) {
+  const entry = allEntries.find(e => e.id === entryId);
+  document.getElementById('historySub').textContent = entry ? entry.shareholderName : '';
+  const listEl = document.getElementById('historyList');
+  const emptyEl = document.getElementById('historyEmpty');
+  listEl.innerHTML = '';
+  emptyEl.style.display = 'none';
+
+  const q = query(
+    collection(db, 'shareRegisterAudit'),
+    where('shareRegisterId', '==', entryId),
+    orderBy('changedAt', 'desc')
+  );
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    emptyEl.style.display = 'block';
+  } else {
+    listEl.innerHTML = snap.docs.map(d => {
+      const a = d.data();
+      const when = a.changedAt?.toDate ? a.changedAt.toDate().toLocaleString('en-ZA') : '—';
+      const who = a.changedBy?.displayName || a.changedBy?.email || 'Unknown';
+      let diffHtml = '';
+      if (a.changes) {
+        diffHtml = Object.entries(a.changes).map(([field, v]) => `
+          <div class="diff-row">
+            <span class="field-name">${field}:</span>
+            <span class="diff-old">${escapeHtml(v.before ?? '—')}</span>
+            <span class="diff-new">${escapeHtml(v.after ?? '—')}</span>
+          </div>
+        `).join('');
+      }
+      return `
+        <div class="history-entry">
+          <div class="meta"><span class="action-tag">${a.action}</span>${who} · ${when}</div>
+          ${diffHtml}
+          ${a.note ? `<div class="diff-row">${escapeHtml(a.note)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  historyOverlay.classList.add('open');
+}
+
+// ---------- Certificate ----------
+const certOverlay = document.getElementById('certOverlay');
+document.getElementById('certCloseBtn').addEventListener('click', () => certOverlay.classList.remove('open'));
+let certEntryId = null;
+
+document.getElementById('certTypeOriginal').addEventListener('change', updateStampVisibility);
+document.getElementById('certTypeCopy').addEventListener('change', updateStampVisibility);
+function updateStampVisibility() {
+  const isCopy = document.getElementById('certTypeCopy').checked;
+  document.getElementById('certPrintArea').classList.toggle('is-copy', isCopy);
+}
+
+async function openCertificateModal(entryId) {
+  const e = allEntries.find(x => x.id === entryId);
+  if (!e) return;
+  certEntryId = entryId;
+
+  const company = companyData || {};
+  const totalValue = e.totalValue != null ? e.totalValue.toLocaleString('en-ZA') : '—';
+  const shares = e.numberOfShares != null ? e.numberOfShares.toLocaleString('en-ZA') : 'TBC';
+  const barcode = `${company.barcodePrefix || ''}${e.shareCertificateNo || ''}`;
+  const issuedNow = new Date().toLocaleString('en-ZA');
+  const shortId = entryId.slice(-8).toUpperCase();
+
+  // Default to "Copy" if this certificate has already been issued at least once before.
+  let alreadyIssued = false;
+  try {
+    const q = query(
+      collection(db, 'shareRegisterAudit'),
+      where('shareRegisterId', '==', entryId),
+      where('action', 'in', ['certificate_issued', 'certificate_copy_issued'])
+    );
+    const snap = await getDocs(q);
+    alreadyIssued = !snap.empty;
+  } catch (err) {
+    console.error('Could not check prior issuance:', err);
+  }
+  document.getElementById('certTypeOriginal').checked = !alreadyIssued;
+  document.getElementById('certTypeCopy').checked = alreadyIssued;
+
+  document.getElementById('certPrintArea').innerHTML = `
+    <div class="cert-stamp">COPY</div>
+    <div class="cert-eyebrow">Share Certificate</div>
+    <h2 class="cert-company">${escapeHtml(company.companyName || '')}</h2>
+    <div class="cert-incorp">Incorporated under the Companies Act, 2008. Reg. No. ${escapeHtml(company.registrationNumber || '')}</div>
+
+    <div class="cert-this-certifies">This certifies that</div>
+    <h3 class="cert-shareholder">${escapeHtml(e.shareholderName)}</h3>
+    <p class="cert-body">
+      is the registered owner of <strong>${shares}</strong> fully paid ordinary shares
+      of the value of <strong>R${e.valuePerShare != null ? e.valuePerShare.toFixed(2) : '1.00'}</strong> each,
+      totalling <strong>R${totalValue}</strong>, in ${escapeHtml(company.companyName || '')},
+      subject to the Memorandum and Articles of Association of the Company.
+    </p>
+
+    <div class="cert-meta">
+      <div><div class="k">Certificate No.</div><div class="v">${escapeHtml(e.shareCertificateNo || '—')}</div></div>
+      <div><div class="k">Transfer No.</div><div class="v">${escapeHtml(e.transferNo || '—')}</div></div>
+      <div><div class="k">Holder Ref.</div><div class="v">${escapeHtml(e.holderRef || '—')}</div></div>
+      <div><div class="k">Date</div><div class="v">${escapeHtml(e.transferDate || '—')}</div></div>
+    </div>
+
+    <div class="cert-signatures">
+      <div class="line">Director</div>
+      <div class="line">Company Secretary</div>
+    </div>
+
+    <div class="cert-footnote">
+      No transfer of any of the above shares will be registered without the production of this certificate<br/>
+      at the offices of the Secretary of the Company. Barcode: ${escapeHtml(barcode)}
+    </div>
+
+    <div class="cert-verify">
+      <span>Certificate ID: ${shortId} · Recorded in the Hospital at Ekhaya digital Share Register</span>
+      <span>Issued by ${escapeHtml(currentUser?.displayName || '')} · ${issuedNow}</span>
+    </div>
+  `;
+
+  updateStampVisibility();
+  certOverlay.classList.add('open');
+}
+
+document.getElementById('certPrintBtn').addEventListener('click', async () => {
+  const isCopy = document.getElementById('certTypeCopy').checked;
+  window.print();
+  // Log issuance — best-effort, doesn't block printing.
+  try {
+    const entry = allEntries.find(x => x.id === certEntryId);
+    await logAudit(
+      certEntryId,
+      entry?.shareholderName || '',
+      isCopy ? 'certificate_copy_issued' : 'certificate_issued',
+      null
+    );
+  } catch (err) {
+    console.error('Could not log certificate issuance:', err);
+  }
+});
+
+// ---------- Toast ----------
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>

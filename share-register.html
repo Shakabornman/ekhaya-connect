@@ -536,12 +536,12 @@ import {
 // (same project as the staff portal / timesheet processor: hae-vuma-92fca)
 // ---------------------------------------------------------------------------
 const firebaseConfig = {
-  apiKey:            "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
-  authDomain:        "hae-vuma-92fca.firebaseapp.com",
-  projectId:         "hae-vuma-92fca",
-  storageBucket:     "hae-vuma-92fca.firebasestorage.app",
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain: "hae-vuma-92fca.firebaseapp.com",
+  projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app",
   messagingSenderId: "1052424261313",
-  appId:             "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -738,6 +738,27 @@ function nextCertificateNo(offset = 0) {
   const CERT_PREFIX = 'H@E';
   const CERT_DIGITS = 8;
   return CERT_PREFIX + String(highestCertificateNumber() + 1 + offset).padStart(CERT_DIGITS, '0');
+}
+
+// Transfer No. follows the legacy spreadsheet style: "DDMMYYYY/100XXX", where
+// XXX continues the same running sequence the original register used
+// (…100115, 100116, 100117, next is 100118, and so on) — not reset per date.
+function highestTransferNumber() {
+  let max = 0;
+  allEntries.forEach(e => {
+    const m = (e.transferNo || '').match(/\/100(\d+)$/);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return max;
+}
+
+function nextTransferNo(dateStr, offset = 0) {
+  const seq = highestTransferNumber() + 1 + offset;
+  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}${mm}${yyyy}/100${seq}`;
 }
 
 function openEntryModal(id) {
@@ -980,7 +1001,7 @@ document.getElementById('transactionSaveBtn').addEventListener('click', async ()
         numberOfShares: b.shares,
         valuePerShare: source.valuePerShare,
         totalValue,
-        transferNo: `SALE-${(date || '').replace(/-/g, '')}-${ref.id.slice(-4).toUpperCase()}`,
+        transferNo: nextTransferNo(date, offset - 1),
         transferDate: date,
         holderRef: null,
         status: 'active',
@@ -1004,7 +1025,7 @@ document.getElementById('transactionSaveBtn').addEventListener('click', async ()
         numberOfShares: remainder,
         valuePerShare: source.valuePerShare,
         totalValue,
-        transferNo: `REISSUE-${(date || '').replace(/-/g, '')}-${ref.id.slice(-4).toUpperCase()}`,
+        transferNo: nextTransferNo(date, offset - 1),
         transferDate: date,
         holderRef: source.holderRef,
         status: 'reissued',

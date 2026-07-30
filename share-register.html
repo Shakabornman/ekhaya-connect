@@ -266,9 +266,10 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 10px 30px 28px;
   }
   .cert-signatures .line { border-top: 1px solid var(--ink); padding-top: 6px; text-align: center; font-size: 11px; color: var(--ink-soft); }
-  .cert-signatures .sig-img { display: block; width: auto; max-width: 100%; margin: 0 auto -6px; object-fit: contain; }
-  .cert-signatures .sig-director { height: 46px; }
-  .cert-signatures .sig-secretary { height: 90px; }
+  .cert-signatures .sig-slot { height: 78px; display: flex; align-items: flex-end; justify-content: center; }
+  .cert-signatures .sig-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .cert-signatures .sig-director { max-height: 46px; }
+  .cert-signatures .sig-secretary { max-height: 78px; }
   .cert-footnote { font-size: 10px; color: var(--ink-soft); text-align: center; margin-bottom: 18px; }
   .cert-verify {
     background: var(--gold-soft); border: 1px dashed var(--gold); border-radius: 3px;
@@ -413,7 +414,7 @@
       </div>
       <div class="two-col">
         <div class="field">
-          <label>Transfer no.</label>
+          <label>Transfer no. <span style="font-weight:400; text-transform:none;">(auto-generated for new entries)</span></label>
           <input type="text" id="f_transferNo" placeholder="DDMMYYYY/000000" />
         </div>
         <div class="field">
@@ -726,6 +727,12 @@ const FIELD_IDS = [
 
 document.getElementById('addEntryBtn').addEventListener('click', () => openEntryModal(null));
 document.getElementById('entryCancelBtn').addEventListener('click', () => entryOverlay.classList.remove('open'));
+document.getElementById('f_transferDate').addEventListener('change', () => {
+  const transferNoField = document.getElementById('f_transferNo');
+  if (transferNoField.readOnly) {
+    transferNoField.value = nextTransferNo(document.getElementById('f_transferDate').value);
+  }
+});
 
 // Next certificate number = highest existing "H@E0000000X" + 1, zero-padded to 8 digits.
 function highestCertificateNumber() {
@@ -773,26 +780,33 @@ function openEntryModal(id) {
   const entry = id ? allEntries.find(e => e.id === id) : null;
 
   const certField = document.getElementById('f_shareCertificateNo');
+  const transferNoField = document.getElementById('f_transferNo');
   document.getElementById('entryModalTitle').textContent = id ? 'Edit shareholder entry' : 'Add shareholder entry';
   document.getElementById('f_shareholderName').value = entry?.shareholderName || '';
   document.getElementById('f_shareholderEmail').value = entry?.shareholderEmail || '';
 
   if (id) {
-    // Editing an existing entry — certificate number stays manually correctable.
+    // Editing an existing entry — certificate number and transfer number stay manually correctable.
     certField.value = entry?.shareCertificateNo || '';
     certField.readOnly = false;
     certField.title = '';
+    transferNoField.value = entry?.transferNo || '';
+    transferNoField.readOnly = false;
+    transferNoField.title = '';
   } else {
-    // New entry — auto-generated, not hand-typed, so it can never collide again.
+    // New entry — both auto-generated, not hand-typed, so neither can collide or get left blank.
     certField.value = nextCertificateNo();
     certField.readOnly = true;
     certField.title = 'Auto-generated — the next available certificate number';
+    document.getElementById('f_transferDate').value = document.getElementById('f_transferDate').value || new Date().toISOString().slice(0, 10);
+    transferNoField.value = nextTransferNo(document.getElementById('f_transferDate').value);
+    transferNoField.readOnly = true;
+    transferNoField.title = 'Auto-generated — the next available transfer number in sequence';
   }
 
   document.getElementById('f_numberOfShares').value = entry?.numberOfShares ?? '';
   document.getElementById('f_valuePerShare').value = entry?.valuePerShare ?? 1;
-  document.getElementById('f_transferNo').value = entry?.transferNo || '';
-  document.getElementById('f_transferDate').value = entry?.transferDate || '';
+  document.getElementById('f_transferDate').value = entry?.transferDate || document.getElementById('f_transferDate').value || '';
   document.getElementById('f_holderRef').value = entry?.holderRef || '';
   document.getElementById('f_status').value = entry?.status || 'active';
   document.getElementById('f_notes').value = entry?.notes || '';
@@ -1200,8 +1214,14 @@ async function openCertificateModal(entryId) {
     </div>
 
     <div class="cert-signatures">
-      <div><img class="sig-img sig-director" src="${SIG_DIRECTOR}" alt="Director signature" /><div class="line">Director</div></div>
-      <div><img class="sig-img sig-secretary" src="${SIG_SECRETARY}" alt="Company Secretary signature" /><div class="line">Company Secretary</div></div>
+      <div>
+        <div class="sig-slot"><img class="sig-img sig-director" src="${SIG_DIRECTOR}" alt="Director signature" /></div>
+        <div class="line">Director</div>
+      </div>
+      <div>
+        <div class="sig-slot"><img class="sig-img sig-secretary" src="${SIG_SECRETARY}" alt="Company Secretary signature" /></div>
+        <div class="line">Company Secretary</div>
+      </div>
     </div>
 
     <div class="cert-footnote">

@@ -20,6 +20,10 @@
     --amber-soft: #FBEFD8;
     --gray: #6B7280;
     --gray-soft: #EDEDED;
+    --blue: #1B5FA6;
+    --blue-soft: #E3EEF9;
+    --purple: #6B3FA0;
+    --purple-soft: #EFE6F7;
     --danger: #A6303A;
     --radius: 3px;
   }
@@ -160,7 +164,10 @@
   .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
   .badge.active { background: var(--green-soft); color: var(--green); }
   .badge.pending { background: var(--amber-soft); color: var(--amber); }
-  .badge.transferred { background: var(--gray-soft); color: var(--gray); }
+  .badge.reissued { background: var(--blue-soft); color: var(--blue); }
+  .badge.sold { background: var(--gray-soft); color: var(--gray); }
+  .badge.partial_sale { background: var(--purple-soft); color: var(--purple); }
+  .badge.cancelled { background: var(--gray-soft); color: var(--danger); }
   .row-actions { display: flex; gap: 6px; }
 
   /* ---------- Modals ---------- */
@@ -345,7 +352,12 @@
 
     <main>
       <div class="toolbar">
-        <input type="search" id="searchBox" placeholder="Search shareholder, certificate no…" />
+        <div style="display:flex; align-items:center; gap:14px;">
+          <input type="search" id="searchBox" placeholder="Search shareholder, certificate no…" />
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
+            <input type="checkbox" id="showRetiredToggle" /> Show sold/cancelled certificates
+          </label>
+        </div>
         <button class="btn solid" id="addEntryBtn">+ Add shareholder entry</button>
       </div>
 
@@ -412,11 +424,10 @@
           <input type="text" id="f_holderRef" maxlength="6" />
         </div>
         <div class="field">
-          <label>Status</label>
+          <label>Status <span style="font-weight:400; text-transform:none;">(sale/cancellation statuses are set via Cancel & Reissue)</span></label>
           <select id="f_status">
             <option value="active">Active</option>
             <option value="pending">Pending</option>
-            <option value="transferred">Transferred</option>
           </select>
         </div>
       </div>
@@ -427,6 +438,55 @@
       <div class="modal-actions">
         <button class="btn ghost" id="entryCancelBtn">Cancel</button>
         <button class="btn solid" id="entrySaveBtn">Save entry</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANCEL & REISSUE MODAL -->
+  <div class="overlay" id="transactionOverlay">
+    <div class="modal" style="width:600px;">
+      <h2>Cancel &amp; Reissue</h2>
+      <div class="sub" id="transactionSub"></div>
+      <div id="transactionError" style="color:var(--danger); font-size:12px; margin-bottom:10px;"></div>
+
+      <div class="field">
+        <label>Type</label>
+        <select id="t_type">
+          <option value="sale">Sale (one or more buyers)</option>
+          <option value="reissue">Reissue only — no sale (lost/damaged certificate)</option>
+        </select>
+      </div>
+
+      <div id="t_buyersSection">
+        <div id="t_buyersList"></div>
+        <button class="btn ghost small" id="t_addBuyerBtn" type="button" style="margin-top:4px;">+ Add buyer</button>
+        <div style="margin-top:12px; font-size:12px; color:var(--ink-soft);">
+          Remaining with original holder: <strong id="t_remainder">—</strong> shares
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:14px;">
+        <div class="field">
+          <label>Transaction date</label>
+          <input type="date" id="t_date" />
+        </div>
+        <div class="field">
+          <label>Consideration (R, optional)</label>
+          <input type="number" id="t_consideration" min="0" step="0.01" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Buyer signature reference (optional)</label>
+        <input type="text" id="t_signatureRef" placeholder="e.g. signed copy on file, ref no." />
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="t_notes"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" id="transactionCancelBtn">Cancel</button>
+        <button class="btn solid" id="transactionSaveBtn">Cancel source &amp; issue new certificate(s)</button>
       </div>
     </div>
   </div>
@@ -468,7 +528,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, collection, addDoc, updateDoc, getDocs,
-  query, where, orderBy, serverTimestamp, onSnapshot
+  query, where, orderBy, serverTimestamp, onSnapshot, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ---------------------------------------------------------------------------
@@ -476,12 +536,12 @@ import {
 // (same project as the staff portal / timesheet processor: hae-vuma-92fca)
 // ---------------------------------------------------------------------------
 const firebaseConfig = {
-  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  apiKey: "REPLACE_ME",
   authDomain: "hae-vuma-92fca.firebaseapp.com",
   projectId: "hae-vuma-92fca",
   storageBucket: "hae-vuma-92fca.firebasestorage.app",
-  messagingSenderId: "1052424261313",
-  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -575,11 +635,16 @@ function listenToRegister() {
   });
 }
 
+// Statuses that represent a certificate no longer in force — excluded from
+// live totals, and hidden from the table unless "Show sold/cancelled" is checked.
+const RETIRED_STATUSES = ['sold', 'partial_sale', 'cancelled'];
+
 function renderStats() {
-  const count = allEntries.length;
-  const shares = allEntries.reduce((s, e) => s + (e.numberOfShares || 0), 0);
-  const value = allEntries.reduce((s, e) => s + (e.totalValue || 0), 0);
-  const pending = allEntries.filter(e => e.status === 'pending').length;
+  const live = allEntries.filter(e => !RETIRED_STATUSES.includes(e.status));
+  const count = live.length;
+  const shares = live.reduce((s, e) => s + (e.numberOfShares || 0), 0);
+  const value = live.reduce((s, e) => s + (e.totalValue || 0), 0);
+  const pending = live.filter(e => e.status === 'pending').length;
   document.getElementById('statCount').textContent = count;
   document.getElementById('statShares').textContent = shares.toLocaleString('en-ZA');
   document.getElementById('statValue').textContent = value.toLocaleString('en-ZA');
@@ -589,30 +654,41 @@ function renderStats() {
 function renderTable(filterText) {
   const body = document.getElementById('registerBody');
   const f = (filterText || '').toLowerCase();
-  const rows = allEntries.filter(e =>
-    !f ||
-    (e.shareholderName || '').toLowerCase().includes(f) ||
-    (e.shareCertificateNo || '').toLowerCase().includes(f) ||
-    (e.holderRef || '').toLowerCase().includes(f)
-  );
+  const showRetired = document.getElementById('showRetiredToggle').checked;
+  const rows = allEntries.filter(e => {
+    if (!showRetired && RETIRED_STATUSES.includes(e.status)) return false;
+    return !f ||
+      (e.shareholderName || '').toLowerCase().includes(f) ||
+      (e.shareCertificateNo || '').toLowerCase().includes(f) ||
+      (e.holderRef || '').toLowerCase().includes(f);
+  });
 
-  body.innerHTML = rows.map(e => `
+  const statusLabels = {
+    active: 'Active', pending: 'Pending', reissued: 'Reissued',
+    sold: 'Sold', partial_sale: 'Partial sale', cancelled: 'Cancelled',
+  };
+
+  body.innerHTML = rows.map(e => {
+    const isRetired = RETIRED_STATUSES.includes(e.status);
+    return `
     <tr>
       <td class="shareholder-name">${escapeHtml(e.shareholderName)}</td>
       <td><span class="cert-no">${escapeHtml(e.shareCertificateNo || '—')}</span></td>
       <td class="mono">${e.numberOfShares != null ? e.numberOfShares.toLocaleString('en-ZA') : '—'}</td>
       <td class="mono">${e.totalValue != null ? e.totalValue.toLocaleString('en-ZA') : '—'}</td>
-      <td><span class="badge ${e.status}">${e.status}</span></td>
+      <td><span class="badge ${e.status}">${statusLabels[e.status] || e.status}</span></td>
       <td class="mono">${e.transferDate || '—'}</td>
       <td>
         <div class="row-actions">
-          <button class="btn small ghost" data-edit="${e.id}">Edit</button>
+          ${isRetired ? '' : `<button class="btn small ghost" data-edit="${e.id}">Edit</button>`}
           <button class="btn small ghost" data-history="${e.id}">History</button>
           <button class="btn small ghost" data-cert="${e.id}">Certificate</button>
+          ${isRetired ? '' : `<button class="btn small ghost" data-transact="${e.id}">Cancel &amp; Reissue</button>`}
         </div>
       </td>
     </tr>
-  `).join('') || `<tr><td colspan="7" style="text-align:center; color:var(--ink-soft); padding:30px;">No entries match.</td></tr>`;
+  `;
+  }).join('') || `<tr><td colspan="7" style="text-align:center; color:var(--ink-soft); padding:30px;">No entries match.</td></tr>`;
 
   body.querySelectorAll('[data-edit]').forEach(btn =>
     btn.addEventListener('click', () => openEntryModal(btn.dataset.edit)));
@@ -620,9 +696,12 @@ function renderTable(filterText) {
     btn.addEventListener('click', () => openHistoryModal(btn.dataset.history)));
   body.querySelectorAll('[data-cert]').forEach(btn =>
     btn.addEventListener('click', () => openCertificateModal(btn.dataset.cert)));
+  body.querySelectorAll('[data-transact]').forEach(btn =>
+    btn.addEventListener('click', () => openTransactionModal(btn.dataset.transact)));
 }
 
 document.getElementById('searchBox').addEventListener('input', (e) => renderTable(e.target.value));
+document.getElementById('showRetiredToggle').addEventListener('change', () => renderTable(document.getElementById('searchBox').value));
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({
@@ -643,15 +722,22 @@ document.getElementById('addEntryBtn').addEventListener('click', () => openEntry
 document.getElementById('entryCancelBtn').addEventListener('click', () => entryOverlay.classList.remove('open'));
 
 // Next certificate number = highest existing "H@E0000000X" + 1, zero-padded to 8 digits.
-function nextCertificateNo() {
+function highestCertificateNumber() {
   const CERT_PREFIX = 'H@E';
-  const CERT_DIGITS = 8;
   let max = 0;
   allEntries.forEach(e => {
     const m = (e.shareCertificateNo || '').match(/^H@E(\d+)$/);
     if (m) max = Math.max(max, parseInt(m[1], 10));
   });
-  return CERT_PREFIX + String(max + 1).padStart(CERT_DIGITS, '0');
+  return max;
+}
+
+// offset lets a single transaction reserve several sequential certificate
+// numbers at once without colliding (e.g. offset 0, 1, 2 for three new entries).
+function nextCertificateNo(offset = 0) {
+  const CERT_PREFIX = 'H@E';
+  const CERT_DIGITS = 8;
+  return CERT_PREFIX + String(highestCertificateNumber() + 1 + offset).padStart(CERT_DIGITS, '0');
 }
 
 function openEntryModal(id) {
@@ -754,6 +840,226 @@ async function logAudit(shareRegisterId, shareholderNameAtTime, action, changes)
     changedAt: serverTimestamp(),
   });
 }
+
+// ---------- Cancel & Reissue ----------
+const transactionOverlay = document.getElementById('transactionOverlay');
+let transactionSourceId = null;
+let buyerRowCount = 0;
+
+document.getElementById('transactionCancelBtn').addEventListener('click', () => transactionOverlay.classList.remove('open'));
+document.getElementById('t_type').addEventListener('change', updateTransactionMode);
+document.getElementById('t_addBuyerBtn').addEventListener('click', () => addBuyerRow());
+
+function openTransactionModal(entryId) {
+  const source = allEntries.find(e => e.id === entryId);
+  if (!source) return;
+  if (source.numberOfShares == null) {
+    alert('This entry has no confirmed share count yet — confirm the share count via Edit before processing a sale or reissue.');
+    return;
+  }
+  transactionSourceId = entryId;
+  document.getElementById('transactionError').textContent = '';
+  document.getElementById('transactionSub').textContent =
+    `${source.shareholderName} · Certificate ${source.shareCertificateNo || '—'} · ${source.numberOfShares.toLocaleString('en-ZA')} shares`;
+  document.getElementById('t_type').value = 'sale';
+  document.getElementById('t_date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('t_consideration').value = '';
+  document.getElementById('t_signatureRef').value = '';
+  document.getElementById('t_notes').value = '';
+  document.getElementById('t_buyersList').innerHTML = '';
+  buyerRowCount = 0;
+  addBuyerRow();
+  updateTransactionMode();
+  transactionOverlay.classList.add('open');
+}
+
+function updateTransactionMode() {
+  const isSale = document.getElementById('t_type').value === 'sale';
+  document.getElementById('t_buyersSection').style.display = isSale ? 'block' : 'none';
+  updateRemainder();
+}
+
+function addBuyerRow() {
+  buyerRowCount += 1;
+  const rowId = `buyerRow${buyerRowCount}`;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'two-col';
+  wrapper.style.marginBottom = '8px';
+  wrapper.id = rowId;
+  wrapper.innerHTML = `
+    <div class="field" style="margin-bottom:0;">
+      <label>Buyer name</label>
+      <input type="text" class="buyerName" />
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label>Shares</label>
+      <input type="number" class="buyerShares" min="1" />
+    </div>
+    <div class="field" style="margin-bottom:0; grid-column: 1 / -1;">
+      <label>Buyer email (optional)</label>
+      <input type="email" class="buyerEmail" />
+    </div>
+  `;
+  document.getElementById('t_buyersList').appendChild(wrapper);
+  wrapper.querySelector('.buyerShares').addEventListener('input', updateRemainder);
+}
+
+function updateRemainder() {
+  const source = allEntries.find(e => e.id === transactionSourceId);
+  if (!source) return;
+  const isSale = document.getElementById('t_type').value === 'sale';
+  if (!isSale) {
+    document.getElementById('t_remainder').textContent = `${source.numberOfShares.toLocaleString('en-ZA')} (full reissue, same holder)`;
+    return;
+  }
+  const buyerShares = Array.from(document.querySelectorAll('.buyerShares'))
+    .map(el => Number(el.value) || 0);
+  const totalBuyerShares = buyerShares.reduce((a, b) => a + b, 0);
+  const remainder = source.numberOfShares - totalBuyerShares;
+  document.getElementById('t_remainder').textContent = remainder.toLocaleString('en-ZA');
+}
+
+document.getElementById('transactionSaveBtn').addEventListener('click', async () => {
+  const errEl = document.getElementById('transactionError');
+  errEl.textContent = '';
+  const source = allEntries.find(e => e.id === transactionSourceId);
+  if (!source) { errEl.textContent = 'Source entry not found — close and retry.'; return; }
+
+  const type = document.getElementById('t_type').value;
+  const isSale = type === 'sale';
+  const date = document.getElementById('t_date').value || null;
+  const consideration = document.getElementById('t_consideration').value
+    ? Number(document.getElementById('t_consideration').value) : null;
+  const signatureRef = document.getElementById('t_signatureRef').value.trim() || null;
+  const notes = document.getElementById('t_notes').value.trim() || null;
+
+  let buyers = [];
+  if (isSale) {
+    const nameEls = document.querySelectorAll('.buyerName');
+    const shareEls = document.querySelectorAll('.buyerShares');
+    const emailEls = document.querySelectorAll('.buyerEmail');
+    for (let i = 0; i < nameEls.length; i++) {
+      const name = nameEls[i].value.trim();
+      const shares = Number(shareEls[i].value) || 0;
+      const email = emailEls[i].value.trim() || null;
+      if (!name && !shares) continue;
+      if (!name || shares <= 0) { errEl.textContent = 'Every buyer needs a name and a positive share count.'; return; }
+      buyers.push({ name, shares, email });
+    }
+    if (buyers.length === 0) { errEl.textContent = 'Add at least one buyer, or switch to "Reissue only".'; return; }
+    const totalBuyerShares = buyers.reduce((s, b) => s + b.shares, 0);
+    if (totalBuyerShares > source.numberOfShares) {
+      errEl.textContent = `Buyers total ${totalBuyerShares.toLocaleString('en-ZA')} shares, more than the ${source.numberOfShares.toLocaleString('en-ZA')} available on this certificate.`;
+      return;
+    }
+  }
+
+  const remainder = isSale
+    ? source.numberOfShares - buyers.reduce((s, b) => s + b.shares, 0)
+    : source.numberOfShares;
+
+  const sourceNewStatus = !isSale ? 'cancelled' : (remainder > 0 ? 'partial_sale' : 'sold');
+
+  try {
+    const batch = writeBatch(db);
+    const now = serverTimestamp();
+    let offset = 0;
+    const newEntryRefs = [];
+
+    // Buyer entries (sale only)
+    for (const b of buyers) {
+      const ref = doc(collection(db, 'shareRegister'));
+      const certNo = nextCertificateNo(offset++);
+      const totalValue = b.shares * source.valuePerShare;
+      batch.set(ref, {
+        companyId: COMPANY_ID,
+        legacyEntryNo: null,
+        shareholderName: b.name,
+        shareholderEmail: b.email,
+        shareCertificateNo: certNo,
+        numberOfShares: b.shares,
+        valuePerShare: source.valuePerShare,
+        totalValue,
+        transferNo: `SALE-${(date || '').replace(/-/g, '')}-${ref.id.slice(-4).toUpperCase()}`,
+        transferDate: date,
+        holderRef: null,
+        status: 'active',
+        notes: null,
+        createdAt: now, createdBy: currentUser, updatedAt: now, updatedBy: currentUser,
+      });
+      newEntryRefs.push({ ref, role: 'buyer', name: b.name });
+    }
+
+    // Remainder / reissue entry (same holder)
+    if (remainder > 0) {
+      const ref = doc(collection(db, 'shareRegister'));
+      const certNo = nextCertificateNo(offset++);
+      const totalValue = remainder * source.valuePerShare;
+      batch.set(ref, {
+        companyId: COMPANY_ID,
+        legacyEntryNo: null,
+        shareholderName: source.shareholderName,
+        shareholderEmail: source.shareholderEmail,
+        shareCertificateNo: certNo,
+        numberOfShares: remainder,
+        valuePerShare: source.valuePerShare,
+        totalValue,
+        transferNo: `REISSUE-${(date || '').replace(/-/g, '')}-${ref.id.slice(-4).toUpperCase()}`,
+        transferDate: date,
+        holderRef: source.holderRef,
+        status: 'reissued',
+        notes: !isSale ? notes : null,
+        createdAt: now, createdBy: currentUser, updatedAt: now, updatedBy: currentUser,
+      });
+      newEntryRefs.push({ ref, role: 'remainder', name: source.shareholderName });
+    }
+
+    // Retire the source certificate — numberOfShares stays as historical record.
+    batch.update(doc(db, 'shareRegister', source.id), {
+      status: sourceNewStatus,
+      updatedAt: now,
+      updatedBy: currentUser,
+    });
+
+    await batch.commit();
+
+    // Transaction record — separate from ordinary audit log, its own history of sales.
+    const txRef = await addDoc(collection(db, 'shareTransactions'), {
+      companyId: COMPANY_ID,
+      transactionType: !isSale ? 'reissue' : (remainder > 0 ? 'partial_sale' : 'full_sale'),
+      sourceEntryId: source.id,
+      sourceShareholderName: source.shareholderName,
+      sourceCertificateNo: source.shareCertificateNo,
+      sharesInvolved: source.numberOfShares,
+      buyers: buyers,
+      remainderShares: isSale ? remainder : null,
+      newEntryIds: newEntryRefs.map(r => r.ref.id),
+      transactionDate: date,
+      consideration,
+      buyerSignatureRef: signatureRef,
+      notes,
+      processedBy: currentUser,
+      processedAt: now,
+    });
+
+    // Audit trail entries, cross-referencing the transaction.
+    await logAudit(source.id, source.shareholderName,
+      !isSale ? 'cancelled_reissued' : (remainder > 0 ? 'cancelled_partial_sale' : 'cancelled_sold'),
+      { shareTransactionId: { before: null, after: txRef.id } });
+
+    for (const r of newEntryRefs) {
+      await logAudit(r.ref.id, r.name,
+        r.role === 'buyer' ? 'created_from_sale' : 'created_reissue',
+        { shareTransactionId: { before: null, after: txRef.id }, supersedes: { before: null, after: source.shareCertificateNo } });
+    }
+
+    transactionOverlay.classList.remove('open');
+    showToast('Certificate cancelled and new certificate(s) issued.');
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = 'Could not process — check your connection and try again.';
+  }
+});
 
 // ---------- History modal ----------
 const historyOverlay = document.getElementById('historyOverlay');

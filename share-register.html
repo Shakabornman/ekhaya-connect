@@ -266,7 +266,9 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 10px 30px 28px;
   }
   .cert-signatures .line { border-top: 1px solid var(--ink); padding-top: 6px; text-align: center; font-size: 11px; color: var(--ink-soft); }
-  .cert-signatures .sig-img { display: block; max-height: 42px; max-width: 100%; margin: 0 auto -6px; object-fit: contain; }
+  .cert-signatures .sig-img { display: block; width: auto; max-width: 100%; margin: 0 auto -6px; object-fit: contain; }
+  .cert-signatures .sig-director { height: 46px; }
+  .cert-signatures .sig-secretary { height: 90px; }
   .cert-footnote { font-size: 10px; color: var(--ink-soft); text-align: center; margin-bottom: 18px; }
   .cert-verify {
     background: var(--gold-soft); border: 1px dashed var(--gold); border-radius: 3px;
@@ -1198,8 +1200,8 @@ async function openCertificateModal(entryId) {
     </div>
 
     <div class="cert-signatures">
-      <div><img class="sig-img" src="${SIG_DIRECTOR}" alt="Director signature" /><div class="line">Director</div></div>
-      <div><img class="sig-img" src="${SIG_SECRETARY}" alt="Company Secretary signature" /><div class="line">Company Secretary</div></div>
+      <div><img class="sig-img sig-director" src="${SIG_DIRECTOR}" alt="Director signature" /><div class="line">Director</div></div>
+      <div><img class="sig-img sig-secretary" src="${SIG_SECRETARY}" alt="Company Secretary signature" /><div class="line">Company Secretary</div></div>
     </div>
 
     <div class="cert-footnote">

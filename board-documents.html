@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Board Document Library — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2A43;
+    --ink-soft: #4A5C70;
+    --paper: #F7F6F2;
+    --paper-line: #E3DFD4;
+    --gold: #B8912F;
+    --gold-soft: #F1E7CD;
+    --green: #1E6F4C;
+    --green-soft: #E4F2EA;
+    --amber: #9A6B12;
+    --amber-soft: #FBEFD8;
+    --gray: #6B7280;
+    --gray-soft: #EDEDED;
+    --danger: #A6303A;
+    --blue: #1E5F8F;
+    --blue-soft: #E8F1F8;
+    --radius: 3px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---------- Auth screens ---------- */
+  #authScreen, #deniedScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .seal {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 22px; color: var(--gold);
+  }
+  .auth-card {
+    background: #fff;
+    border: 1px solid var(--paper-line);
+    padding: 40px;
+    width: 340px;
+    text-align: center;
+  }
+  .auth-card h1 { font-size: 20px; margin: 12px 0 4px; }
+  .auth-card p { color: var(--ink-soft); margin: 0 0 20px; font-size: 13px; }
+  .auth-card input {
+    width: 100%; padding: 10px 12px; margin-bottom: 10px;
+    border: 1px solid var(--paper-line); border-radius: var(--radius);
+    font-family: inherit; font-size: 14px;
+  }
+  .auth-card button, .btn-primary {
+    width: 100%; padding: 10px 12px;
+    background: var(--ink); color: #fff; border: none; border-radius: var(--radius);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px;
+    cursor: pointer; letter-spacing: 0.02em;
+  }
+  .auth-card button:hover, .btn-primary:hover { background: #16385a; }
+  #authError { color: var(--danger); font-size: 12px; min-height: 16px; margin-top: 6px; }
+
+  /* ---------- Shell ---------- */
+  #app { display: none; }
+  header.top {
+    background: var(--ink);
+    color: #fff;
+    padding: 22px 36px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  header.top .brand-eyebrow {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold-soft); opacity: 0.85;
+  }
+  header.top h1 { color: #fff; font-size: 24px; margin: 2px 0 0; }
+  header.top .who { font-size: 12px; color: #c7d2df; text-align: right; }
+  header.top .who button {
+    background: none; border: 1px solid #3c5a76; color: #dce6ef;
+    padding: 4px 10px; border-radius: var(--radius); font-size: 11px; margin-top: 6px; cursor: pointer;
+  }
+
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: #fff;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .stat {
+    padding: 18px 24px;
+    border-right: 1px solid var(--paper-line);
+  }
+  .stat:last-child { border-right: none; }
+  .stat .label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+  .stat .value { font-family: 'Fraunces', serif; font-size: 26px; margin-top: 4px; }
+
+  main { padding: 28px 36px 60px; max-width: 1280px; margin: 0 auto; }
+
+  .type-tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--paper-line); }
+  .type-tab {
+    padding: 10px 18px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--ink-soft); background: none; border: none; border-bottom: 2px solid transparent;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .type-tab:hover { color: var(--ink); }
+  .type-tab.active { color: var(--ink); border-bottom-color: var(--gold); }
+  .type-tab .count { font-size: 11px; background: var(--gray-soft); color: var(--ink-soft); padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
+  .type-tab.active .count { background: var(--gold-soft); color: #6b520f; }
+
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar input[type="search"] {
+    padding: 9px 14px; border: 1px solid var(--paper-line); border-radius: var(--radius);
+    width: 280px; font-family: inherit; font-size: 13px; background: #fff;
+  }
+  .toggle-label {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); cursor: pointer;
+  }
+  .btn {
+    padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink);
+    background: #fff; color: var(--ink); font-weight: 600; font-size: 13px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid:hover { background: #16385a; }
+  .btn:hover { background: var(--gray-soft); }
+  .btn.small { padding: 5px 10px; font-size: 12px; border-radius: 3px; }
+  .btn.ghost { border-color: var(--paper-line); color: var(--ink-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  table.register {
+    width: 100%; border-collapse: collapse; background: #fff;
+    border: 1px solid var(--paper-line);
+  }
+  table.register th {
+    text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-soft); padding: 12px 16px; border-bottom: 2px solid var(--ink);
+  }
+  table.register td {
+    padding: 13px 16px; border-bottom: 1px solid var(--paper-line); vertical-align: middle;
+  }
+  table.register tr:hover td { background: #FCFBF8; }
+  .doc-title { font-weight: 600; }
+  .doc-filename { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .mono { font-variant-numeric: tabular-nums; font-family: 'Inter', sans-serif; }
+  .type-badge {
+    font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap;
+  }
+  .type-badge.notice { background: #FFF3E0; color: #92400E; }
+  .type-badge.agenda { background: var(--green-soft); color: var(--green); }
+  .type-badge.minutes { background: #F0EAF8; color: #5b2a86; }
+  .type-badge.resolution { background: var(--amber-soft); color: var(--amber); }
+  .badge.superseded { background: var(--gray-soft); color: var(--gray); font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+  .tag-chip {
+    display: inline-block; font-size: 10px; background: var(--blue-soft); color: var(--blue);
+    padding: 2px 7px; border-radius: 3px; margin: 1px 3px 1px 0;
+  }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  #resultsEmpty { text-align: center; padding: 48px 24px; color: var(--ink-soft); background: #fff; border: 1px solid var(--paper-line); border-top: none; }
+
+  /* ---------- Modals ---------- */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(15,42,67,0.45);
+    align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: #fff; width: 520px; max-width: 92vw; max-height: 88vh; overflow-y: auto;
+    border-radius: 4px; padding: 28px 30px;
+  }
+  .modal h2 { font-size: 19px; margin: 0 0 4px; }
+  .modal .sub { color: var(--ink-soft); font-size: 12px; margin-bottom: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--paper-line); border-radius: 3px;
+    font-family: 'Inter', sans-serif; font-size: 13px;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  #formError { color: var(--danger); font-size: 12px; margin-top: -6px; margin-bottom: 10px; }
+
+  .upload-drop {
+    border: 2px dashed var(--paper-line); border-radius: 6px; padding: 32px; text-align: center;
+    cursor: pointer; position: relative; transition: all 0.15s;
+  }
+  .upload-drop:hover, .upload-drop.over { border-color: var(--ink); background: var(--paper); }
+  .upload-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-drop-icon { font-size: 26px; margin-bottom: 8px; }
+  .upload-drop-text { font-size: 13px; color: var(--ink-soft); }
+  .spinner-row { text-align: center; padding: 24px; }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--paper-line); border-top-color: var(--ink); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-suggestion {
+    background: var(--green-soft); border: 1px solid #a7d9c0; border-radius: 6px;
+    padding: 12px 14px; margin-bottom: 16px; font-size: 13px;
+  }
+  .ai-suggestion .ai-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
+  .ai-suggestion .ai-confidence { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+  .progress-bar { height: 4px; background: var(--paper-line); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--ink); border-radius: 2px; width: 0%; transition: width 0.3s; }
+  .supersede-note {
+    background: var(--amber-soft); border: 1px solid #f2d99a; border-radius: 6px;
+    padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--amber);
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff;
+    padding: 12px 20px; border-radius: 4px; font-size: 13px; opacity: 0; transform: translateY(8px);
+    transition: all 0.2s; pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--danger); }
+
+  @media (max-width: 720px) {
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    main { padding: 20px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="seal">HAE</div>
+  <div class="auth-card">
+    <h1>Board Document Library</h1>
+    <p>Hospital at Ekhaya — sign in with your executive account</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" />
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+    <button id="loginBtn">Sign in</button>
+    <div id="authError"></div>
+  </div>
+</div>
+
+<!-- DENIED SCREEN -->
+<div id="deniedScreen" style="display:none">
+  <div class="seal" style="border-color:var(--danger);color:var(--danger)">✕</div>
+  <div class="auth-card">
+    <h1>Access restricted</h1>
+    <p>Your account does not have Board Governance access. Contact the COO if you believe this is an error.</p>
+    <button id="signOutDenied">Sign out</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Hospital at Ekhaya — Board Governance</div>
+      <h1>Document Library</h1>
+    </div>
+    <div class="who">
+      <div id="whoEmail">—</div>
+      <button id="signOutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="stats-strip">
+    <div class="stat"><div class="label">Total Active</div><div class="value" id="statTotal">0</div></div>
+    <div class="stat"><div class="label">Notices</div><div class="value" id="statNotice">0</div></div>
+    <div class="stat"><div class="label">Agendas</div><div class="value" id="statAgenda">0</div></div>
+    <div class="stat"><div class="label">Minutes</div><div class="value" id="statMinutes">0</div></div>
+    <div class="stat"><div class="label">Resolutions</div><div class="value" id="statResolution">0</div></div>
+  </div>
+
+  <main>
+    <div class="type-tabs" id="typeTabs">
+      <button class="type-tab active" data-type="all" onclick="setTypeFilter('all')">All <span class="count" id="tabCountAll">0</span></button>
+      <button class="type-tab" data-type="notice" onclick="setTypeFilter('notice')">Notices <span class="count" id="tabCountNotice">0</span></button>
+      <button class="type-tab" data-type="agenda" onclick="setTypeFilter('agenda')">Agendas <span class="count" id="tabCountAgenda">0</span></button>
+      <button class="type-tab" data-type="minutes" onclick="setTypeFilter('minutes')">Minutes <span class="count" id="tabCountMinutes">0</span></button>
+      <button class="type-tab" data-type="resolution" onclick="setTypeFilter('resolution')">Resolutions <span class="count" id="tabCountResolution">0</span></button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="search" id="searchInput" placeholder="Search title, tag, or date…" oninput="renderList()" />
+        <label class="toggle-label">
+          <input type="checkbox" id="showSuperseded" onchange="renderList()" />
+          Show superseded
+        </label>
+      </div>
+      <button class="btn solid" onclick="openUploadModal(null)">+ Upload Document</button>
+    </div>
+
+    <table class="register">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Meeting Date</th>
+          <th>Tags</th>
+          <th>Uploaded</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="registerBody"></tbody>
+    </table>
+    <div id="resultsEmpty" style="display:none">No documents match your search.</div>
+  </main>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="overlay" id="uploadOverlay">
+  <div class="modal">
+    <h2 id="uploadModalTitle">Upload document</h2>
+    <div class="sub">Upload a scan or PDF — AI will suggest the type, title, meeting date and tags for you to confirm.</div>
+    <div id="supersedeNotice" class="supersede-note" style="display:none"></div>
+    <div id="formError"></div>
+
+    <div id="uploadStep1">
+      <div class="upload-drop" id="uploadDrop">
+        <input type="file" id="uploadFileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="handleUploadFile(this.files[0])" />
+        <div class="upload-drop-icon">📄</div>
+        <div class="upload-drop-text">Drop document here or click to browse<br><small>PDF · JPG · PNG · DOC · DOCX</small></div>
+      </div>
+    </div>
+
+    <div id="uploadStep2" style="display:none">
+      <div class="spinner-row"><div class="spinner"></div>AI reading document…</div>
+    </div>
+
+    <div id="uploadStep3" style="display:none">
+      <div class="ai-suggestion" id="aiSuggestionBox">
+        <div class="ai-label">AI Suggestion</div>
+        <div id="aiSuggestionText"></div>
+        <div class="ai-confidence" id="aiConfidenceText"></div>
+      </div>
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="f_title" />
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Document type</label>
+          <select id="f_type">
+            <option value="notice">Notice</option>
+            <option value="agenda">Agenda</option>
+            <option value="minutes">Minutes</option>
+            <option value="resolution">Resolution</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Meeting date</label>
+          <input type="date" id="f_meetingDate" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Tags (comma-separated)</label>
+        <input type="text" id="f_tags" placeholder="e.g. AGM, Q1 2026, audit committee" />
+      </div>
+      <div id="uploadProgress" style="display:none">
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:4px">Uploading…</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="uploadCancelBtn">Cancel</button>
+      <button class="btn solid" id="uploadConfirmBtn" style="display:none">Save document</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs,
+  query, where, serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+// ---------------------------------------------------------------------------
+// FIREBASE CONFIG — same project as the rest of Ekhaya Connect (hae-vuma-92fca)
+// ---------------------------------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain: "hae-vuma-92fca.firebaseapp.com",
+  projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app",
+  messagingSenderId: "1052424261313",
+  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// Shared Cloudflare Worker proxy — same one used by the Motivation Tool,
+// Timesheet Processor, and HR Documents module. Model per existing convention.
+const AI_PROXY = 'https://hae-motivation-proxy.shakabornman.workers.dev';
+const AI_MODEL = 'claude-sonnet-4-6';
+
+const TYPE_LABELS = { notice: 'Notice', agenda: 'Agenda', minutes: 'Minutes', resolution: 'Resolution' };
+
+let currentUser = null;
+let unsubscribeDocs = null;
+let allDocs = [];
+let typeFilter = 'all';
+
+// ---------- Auth wiring ----------
+const authScreen = document.getElementById('authScreen');
+const deniedScreen = document.getElementById('deniedScreen');
+const appEl = document.getElementById('app');
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    console.error('Sign-in error:', e);
+    errEl.textContent = `Sign-in failed: ${e.code || e.message || 'unknown error'}`;
+  }
+});
+
+document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+document.getElementById('signOutDenied').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    currentUser = null;
+    authScreen.style.display = 'flex';
+    deniedScreen.style.display = 'none';
+    appEl.style.display = 'none';
+    if (unsubscribeDocs) { unsubscribeDocs(); unsubscribeDocs = null; }
+    return;
+  }
+
+  // Access check per Ekhaya Connect convention: access_control/{uid}.accessLevels (array)
+  const accessDocSnap = await getDoc(doc(db, 'access_control', user.uid));
+  const accessLevels = accessDocSnap.exists() ? (accessDocSnap.data().accessLevels || []) : [];
+  const hasAccess = accessLevels.includes('executive') || accessLevels.includes('board');
+
+  if (!hasAccess) {
+    authScreen.style.display = 'none';
+    deniedScreen.style.display = 'flex';
+    appEl.style.display = 'none';
+    return;
+  }
+
+  currentUser = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName || user.email,
+  };
+
+  authScreen.style.display = 'none';
+  deniedScreen.style.display = 'none';
+  appEl.style.display = 'block';
+  document.getElementById('whoEmail').textContent = currentUser.displayName;
+
+  listenToDocuments();
+});
+
+// ---------- Document list ----------
+function listenToDocuments() {
+  const q = query(collection(db, 'board_documents'));
+  unsubscribeDocs = onSnapshot(q, (snap) => {
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allDocs.sort((a, b) => (b.uploadedAt || '').localeCompare(a.uploadedAt || ''));
+    renderList();
+  }, (err) => {
+    console.error('Listener error:', err);
+    showToast('Could not load documents: ' + err.message, 'error');
+  });
+}
+
+window.setTypeFilter = (type) => {
+  typeFilter = type;
+  document.querySelectorAll('.type-tab').forEach(t => t.classList.toggle('active', t.dataset.type === type));
+  renderList();
+};
+
+// ---------- Deep-link by type — reads ?type= from the URL (set by index.html's
+// four Board tiles) and pre-selects the matching tab. Runs once at load;
+// falls back silently to the default "All" tab for any missing/invalid value.
+(function initTypeFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedType = params.get('type');
+  const validTypes = ['notice', 'agenda', 'minutes', 'resolution'];
+  if (requestedType && validTypes.includes(requestedType)) {
+    window.setTypeFilter(requestedType);
+  }
+})();
+
+function renderList() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const showSuperseded = document.getElementById('showSuperseded').checked;
+
+  let visible = allDocs.filter(d => showSuperseded ? true : d.status !== 'superseded');
+
+  // Stats + tab counts always reflect active documents only, regardless of filter/search
+  const activeDocs = allDocs.filter(d => d.status !== 'superseded');
+  const countByType = { notice: 0, agenda: 0, minutes: 0, resolution: 0 };
+  activeDocs.forEach(d => { if (countByType[d.type] !== undefined) countByType[d.type]++; });
+  document.getElementById('statTotal').textContent = activeDocs.length;
+  document.getElementById('statNotice').textContent = countByType.notice;
+  document.getElementById('statAgenda').textContent = countByType.agenda;
+  document.getElementById('statMinutes').textContent = countByType.minutes;
+  document.getElementById('statResolution').textContent = countByType.resolution;
+  document.getElementById('tabCountAll').textContent = activeDocs.length;
+  document.getElementById('tabCountNotice').textContent = countByType.notice;
+  document.getElementById('tabCountAgenda').textContent = countByType.agenda;
+  document.getElementById('tabCountMinutes').textContent = countByType.minutes;
+  document.getElementById('tabCountResolution').textContent = countByType.resolution;
+
+  if (typeFilter !== 'all') visible = visible.filter(d => d.type === typeFilter);
+
+  if (search) {
+    visible = visible.filter(d => {
+      const hay = [
+        d.title || '', TYPE_LABELS[d.type] || '', d.meetingDate || '',
+        ...(d.tags || [])
+      ].join(' ').toLowerCase();
+      return hay.includes(search);
+    });
+  }
+
+  const tbody = document.getElementById('registerBody');
+  const emptyEl = document.getElementById('resultsEmpty');
+
+  if (!visible.length) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  tbody.innerHTML = visible.map(d => {
+    const tagsHtml = (d.tags || []).map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join('');
+    const uploadedDate = d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('en-ZA') : '—';
+    const meetingDate = d.meetingDate ? new Date(d.meetingDate + 'T00:00:00').toLocaleDateString('en-ZA') : '—';
+    const statusHtml = d.status === 'superseded'
+      ? `<span class="badge superseded">Superseded</span>`
+      : `<span class="badge superseded" style="background:var(--green-soft);color:var(--green)">Active</span>`;
+    const supersedeBtn = d.status === 'superseded'
+      ? ''
+      : `<button class="btn small ghost" onclick="openUploadModal('${d.id}')">Supersede</button>`;
+    return `
+      <tr>
+        <td>
+          <div class="doc-title">${escapeHtml(d.title || 'Untitled')}</div>
+          <div class="doc-filename">${escapeHtml(d.fileName || '')}</div>
+        </td>
+        <td><span class="type-badge ${d.type}">${TYPE_LABELS[d.type] || d.type}</span></td>
+        <td class="mono">${meetingDate}</td>
+        <td>${tagsHtml || '—'}</td>
+        <td class="mono">${uploadedDate}</td>
+        <td>${statusHtml}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn small" onclick="viewDoc('${d.downloadUrl}')">View</button>
+            ${supersedeBtn}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+window.viewDoc = (url) => window.open(url, '_blank');
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---------- Upload / AI-assisted flow ----------
+let uploadFile = null;
+let aiSuggestion = null;
+let supersedesId = null;
+
+window.openUploadModal = function(replaceDocId) {
+  uploadFile = null;
+  aiSuggestion = null;
+  supersedesId = replaceDocId || null;
+
+  const notice = document.getElementById('supersedeNotice');
+  const titleEl = document.getElementById('uploadModalTitle');
+  if (replaceDocId) {
+    const orig = allDocs.find(d => d.id === replaceDocId);
+    titleEl.textContent = 'Upload replacement document';
+    notice.style.display = 'block';
+    notice.textContent = `This will supersede "${orig?.title || 'the existing document'}". The original is kept on record, marked superseded, and moved to the archive — never deleted.`;
+  } else {
+    titleEl.textContent = 'Upload document';
+    notice.style.display = 'none';
+  }
+
+  document.getElementById('uploadStep1').style.display = 'block';
+  document.getElementById('uploadStep2').style.display = 'none';
+  document.getElementById('uploadStep3').style.display = 'none';
+  document.getElementById('uploadConfirmBtn').style.display = 'none';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('formError').textContent = '';
+  document.getElementById('uploadFileInput').value = '';
+  document.getElementById('uploadOverlay').classList.add('open');
+};
+
+document.getElementById('uploadCancelBtn').addEventListener('click', () => {
+  document.getElementById('uploadOverlay').classList.remove('open');
+});
+
+window.handleUploadFile = async function(file) {
+  if (!file) return;
+  uploadFile = file;
+  document.getElementById('uploadStep1').style.display = 'none';
+  document.getElementById('uploadStep2').style.display = 'block';
+
+  try {
+    const result = await readDocumentWithAI(file);
+    aiSuggestion = result;
+    document.getElementById('aiSuggestionText').textContent =
+      `Type: ${TYPE_LABELS[result.type] || result.type || 'Unknown'} · Title: ${result.title || 'Unknown'} · Meeting date: ${result.meetingDate || 'Unknown'}`;
+    document.getElementById('aiConfidenceText').textContent =
+      `Confidence: ${result.confidence || 'Medium'} — please verify before saving`;
+
+    document.getElementById('f_title').value = result.title || '';
+    if (result.type && TYPE_LABELS[result.type]) document.getElementById('f_type').value = result.type;
+    if (result.meetingDate) document.getElementById('f_meetingDate').value = result.meetingDate;
+    document.getElementById('f_tags').value = (result.tags || []).join(', ');
+  } catch (e) {
+    document.getElementById('aiSuggestionBox').style.display = 'none';
+    console.warn('AI read failed:', e.message);
+  }
+
+  // If superseding, pre-fill type/title/tags from the original for continuity
+  if (supersedesId) {
+    const orig = allDocs.find(d => d.id === supersedesId);
+    if (orig) {
+      if (!document.getElementById('f_title').value) document.getElementById('f_title').value = orig.title || '';
+      document.getElementById('f_type').value = orig.type || document.getElementById('f_type').value;
+      if (!document.getElementById('f_tags').value) document.getElementById('f_tags').value = (orig.tags || []).join(', ');
+    }
+  }
+
+  document.getElementById('uploadStep2').style.display = 'none';
+  document.getElementById('uploadStep3').style.display = 'block';
+  document.getElementById('uploadConfirmBtn').style.display = 'inline-block';
+};
+
+async function readDocumentWithAI(file) {
+  const base64 = await fileToBase64(file);
+  const isPDF = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+  const mediaType = isPDF ? 'application/pdf' : (file.type || 'image/jpeg');
+
+  const prompt = `You are reading a scanned board governance document for HOSPITAL AT EKHAYA (Vuma Development Solutions (Pty) Ltd).
+
+Identify:
+1. Document type — exactly one of: notice, agenda, minutes, resolution
+2. A short descriptive title (e.g. "Notice of AGM — March 2026", "Minutes — Ordinary Board Meeting")
+3. The meeting date if visible, in YYYY-MM-DD format, or null if not found
+4. 2-4 short suggested tags (committee name, meeting type, subject area)
+5. Your confidence level: High, Medium, or Low
+
+Return ONLY valid JSON, no other text:
+{
+  "type": "notice|agenda|minutes|resolution",
+  "title": "suggested title",
+  "meetingDate": "YYYY-MM-DD or null",
+  "tags": ["tag1", "tag2"],
+  "confidence": "High or Medium or Low",
+  "notes": "any other relevant detail"
+}`;
+
+  const response = await fetch(AI_PROXY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: isPDF ? 'document' : 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: prompt }
+        ]
+      }]
+    })
+  });
+  const data = await response.json();
+  const text = (data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
+  return JSON.parse(text);
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+document.getElementById('uploadConfirmBtn').addEventListener('click', async () => {
+  const title = document.getElementById('f_title').value.trim();
+  const type = document.getElementById('f_type').value;
+  const meetingDate = document.getElementById('f_meetingDate').value || null;
+  const tags = document.getElementById('f_tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const errEl = document.getElementById('formError');
+  errEl.textContent = '';
+
+  if (!title) { errEl.textContent = 'Enter a title.'; return; }
+  if (!type) { errEl.textContent = 'Select a document type.'; return; }
+  if (!uploadFile) { errEl.textContent = 'No file selected.'; return; }
+
+  const btn = document.getElementById('uploadConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const timestamp = Date.now();
+    const safeName = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `board-documents/${type}/${timestamp}_${safeName}`;
+    const storageRef = ref(storage, storagePath);
+
+    document.getElementById('uploadProgress').style.display = 'block';
+    const fill = document.getElementById('progressFill');
+
+    await new Promise((resolve, reject) => {
+      const task = uploadBytesResumable(storageRef, uploadFile);
+      task.on('state_changed',
+        snap => { fill.style.width = Math.round((snap.bytesTransferred / snap.totalBytes) * 100) + '%'; },
+        reject, resolve
+      );
+    });
+
+    const downloadUrl = await getDownloadURL(storageRef);
+    const nowIso = new Date().toISOString();
+
+    const newDocData = {
+      type, title, meetingDate, tags,
+      storagePath, fileName: uploadFile.name, downloadUrl,
+      status: 'active',
+      supersededBy: null,
+      supersedes: supersedesId || null,
+      uploadedBy: currentUser?.email || 'unknown',
+      uploadedAt: nowIso,
+      aiSuggestion: aiSuggestion || null,
+    };
+
+    const newRef = await addDoc(collection(db, 'board_documents'), newDocData);
+
+    // If this upload supersedes an existing document: archive the original,
+    // then flip its status. The original is never deleted.
+    if (supersedesId) {
+      const orig = allDocs.find(d => d.id === supersedesId);
+      if (orig) {
+        const { id, ...origData } = orig;
+        await setDoc(doc(db, 'board_documents_archive', supersedesId), {
+          ...origData,
+          supersededAt: nowIso,
+          supersededBy: newRef.id,
+        });
+        await updateDoc(doc(db, 'board_documents', supersedesId), {
+          status: 'superseded',
+          supersededBy: newRef.id,
+        });
+      }
+    }
+
+    document.getElementById('uploadOverlay').classList.remove('open');
+    showToast(supersedesId ? 'Replacement document saved.' : 'Document saved.');
+  } catch (e) {
+    errEl.textContent = 'Could not save — check your connection and try again.';
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save document';
+  }
+});
+
+// ---------- Drag & drop ----------
+document.addEventListener('DOMContentLoaded', () => {
+  const zone = document.getElementById('uploadDrop');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleUploadFile(file);
+  });
+});
+
+// ---------- Toast ----------
+let toastTimer = null;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+</script>
+</body>
+</html>

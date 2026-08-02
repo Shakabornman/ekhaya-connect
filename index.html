@@ -861,6 +861,9 @@ body {
 
       <div class="section-header" id="hr-section" style="display:none"><div class="section-title">HR</div></div>
       <div class="tool-grid" id="hr-tools"></div>
+
+      <div class="section-header" id="ohsc-section" style="display:none"><div class="section-title">Compliance</div></div>
+      <div class="tool-grid" id="ohsc-tools"></div>
     </div>
 
     <!-- INFORMATION PAGE -->
@@ -1377,6 +1380,19 @@ function buildToolGrids(isExecutive) {
       { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
     ];
     renderTools('hr-tools', hrTools);
+  }
+
+  // OHSC Compliance — Executive, or the dedicated ohsc-support / ohsc-kitchen
+  // tags (deliberately narrower/different from the general 'support' tier).
+  // Own section, kept separate from HR.
+  const hasOhsc = accessLevels.includes('executive') ||
+    accessLevels.includes('ohsc-support') || accessLevels.includes('ohsc-kitchen');
+  if (hasOhsc) {
+    document.getElementById('ohsc-section').style.display = 'flex';
+    const ohscTools = [
+      { icon:'✅', color:'#E6F4EE', name:'OHSC Compliance', desc:'Support Services & Kitchen assessment', url:'https://shakabornman.github.io/hae-hr-portal/ohsc-assessment.html' },
+    ];
+    renderTools('ohsc-tools', ohscTools);
   }
 }
 

@@ -7,22 +7,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: single reading column; a rules strip, then collapsible chapters that mirror the scheme's own PMB structure */
+/* Layout: one reading column. Quick-check table for HAE's own codes first, then rules, then collapsible DTP chapters in the CMS body-system order */
 :root{
   --bg:#f5f7f8; --surface:#ffffff; --fg:#17232b; --muted:#566771; --line:#d9e1e5;
-  --accent:#0b6e79; --accent-soft:#e0f0f1; --warn:#9a5a00; --warn-soft:#fbf0dc; --code-bg:#eef2f4;
+  --accent:#0b6e79; --accent-soft:#e0f0f1; --warn:#9a5a00; --warn-soft:#fbf0dc;
+  --yes:#1d7a45; --yes-soft:#e1f3e8; --no:#8a3b2e; --no-soft:#f7e6e2; --code-bg:#eef2f4;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f171b; --surface:#16222a; --fg:#e3ebee; --muted:#9db0b9; --line:#29404b;
-  --accent:#5cc3cc; --accent-soft:#163a40; --warn:#f0b35a; --warn-soft:#3a2c15; --code-bg:#1d2e37; color-scheme:dark}}
+  --accent:#5cc3cc; --accent-soft:#163a40; --warn:#f0b35a; --warn-soft:#3a2c15;
+  --yes:#6fd39a; --yes-soft:#173524; --no:#f09a88; --no-soft:#3b1f1a; --code-bg:#1d2e37; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f171b; --surface:#16222a; --fg:#e3ebee; --muted:#9db0b9; --line:#29404b;
-  --accent:#5cc3cc; --accent-soft:#163a40; --warn:#f0b35a; --warn-soft:#3a2c15; --code-bg:#1d2e37; color-scheme:dark}
+  --accent:#5cc3cc; --accent-soft:#163a40; --warn:#f0b35a; --warn-soft:#3a2c15;
+  --yes:#6fd39a; --yes-soft:#173524; --no:#f09a88; --no-soft:#3b1f1a; --code-bg:#1d2e37; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body)}
-.wrap{max-width:52rem;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:grid;gap:28px}
+.wrap{max-width:60rem;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:grid;gap:28px}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
 h1{font-size:clamp(1.8rem,5vw,2.5rem)}
 h2{font-size:1.35rem}
@@ -35,19 +38,19 @@ header{display:grid;gap:10px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:grid}
 .stat b{font-family:var(--display);font-size:1.4rem;color:var(--accent);font-variant-numeric:tabular-nums}
 .stat span{font-size:.85rem;color:var(--muted)}
-code,.code{font-family:var(--mono);font-size:.85em;background:var(--code-bg);padding:1px 5px;border-radius:4px;white-space:nowrap}
+code,.code{font-family:var(--mono);font-size:.84em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
 section{display:grid;gap:12px}
-.search{display:flex;gap:8px;align-items:center}
+.search{display:flex;gap:8px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:8px;z-index:2}
 .search input{flex:1;min-width:0;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)}
 .search input:focus{outline:2px solid var(--accent);outline-offset:1px}
-.search button{font:inherit;font-weight:600;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.search button{font:inherit;font-weight:600;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;white-space:nowrap}
 .search button:focus-visible{outline:2px solid var(--accent)}
 details{background:var(--surface);border:1px solid var(--line);border-radius:10px}
 summary{cursor:pointer;list-style:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
 summary::-webkit-details-marker{display:none}
 summary:focus-visible{outline:2px solid var(--accent);border-radius:10px}
 summary .t{font-family:var(--display);font-weight:600;font-size:1.05rem}
-summary .n{font-size:.8rem;color:var(--muted);white-space:nowrap}
+summary .n{font-size:.8rem;color:var(--muted);white-space:nowrap;margin-left:auto}
 summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:1.2rem}
 details[open]>summary::after{content:"–"}
 .inner{padding:0 16px 16px;display:grid;gap:12px;min-width:0}
@@ -57,17 +60,22 @@ ul{margin:0;padding-left:1.2rem;display:grid;gap:4px}
 .warn{background:var(--warn-soft);border-radius:8px;padding:10px 12px;font-size:.95rem}
 .warn strong{color:var(--warn)}
 .tbl{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:.93rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.cdl{columns:2 14rem;column-gap:24px;padding-left:1.4rem}
-.cdl li{break-inside:avoid;margin-bottom:4px}
+th{font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.dtp{font-family:var(--mono);font-size:.84rem;color:var(--accent);white-space:nowrap}
+td.icd{font-family:var(--mono);font-size:.82rem;min-width:9rem}
+tr.hit td{background:var(--warn-soft)}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.pill.y{background:var(--yes-soft);color:var(--yes)}
+.pill.n{background:var(--no-soft);color:var(--no)}
+.pill.c{background:var(--accent-soft);color:var(--accent)}
+.pill.m{background:var(--warn-soft);color:var(--warn)}
 .rules{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
 .rule{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:6px;align-content:start;min-width:0}
 .rule h3{color:var(--accent)}
 footer{font-size:.85rem;color:var(--muted);display:grid;gap:6px}
 a{color:var(--accent)}
-mark{background:var(--warn-soft);color:var(--fg)}
 .empty{color:var(--muted);font-size:.95rem}
 </style>
 </head>
@@ -78,7 +86,7 @@ mark{background:var(--warn-soft);color:var(--fg)}
 <header>
   <div class="eyebrow">Hospital at Ekhaya · Billing &amp; Case Management</div>
   <h1>Prescribed Minimum Benefits: a working guide for billing</h1>
-  <p class="lede">What medical schemes must pay for, how to code and authorise it so they do, and what to do when they don't. Prepared for Mercia Mbayimbayi and the billing team.</p>
+  <p class="lede">What medical schemes must pay for, the DTP and ICD-10 codes that trigger it, and what to do when a scheme doesn't pay. Prepared for Mercia Mbayimbayi and the billing team.</p>
   <div class="stats">
     <div class="stat"><b>271</b><span>Diagnosis and Treatment Pairs</span></div>
     <div class="stat"><b>26</b><span>Chronic Disease List conditions</span></div>
@@ -88,13 +96,40 @@ mark{background:var(--warn-soft);color:var(--fg)}
 
 <section>
   <h2>What a PMB is</h2>
-  <p>PMBs are the minimum benefits every registered medical scheme must fund, on every option, under the Medical Schemes Act 131 of 1998 and its Regulations (Annexure A). They cover three groups:</p>
+  <p>PMBs are the minimum benefits every registered medical scheme must fund, on every option, under the Medical Schemes Act 131 of 1998 and its Regulations (Annexure A). There are three groups:</p>
   <ul>
     <li><strong>Emergency medical conditions</strong>: any condition that fits the legal definition below, whatever the diagnosis.</li>
-    <li><strong>Diagnosis and Treatment Pairs (DTPs)</strong>: 271 listed conditions, each paired with the treatment the scheme must pay for. You will often hear "270"; the CMS count is 271.</li>
-    <li><strong>Chronic Disease List (CDL)</strong>: 26 chronic conditions where the scheme must pay for diagnosis, medication and ongoing management according to the treatment algorithms.</li>
+    <li><strong>Diagnosis and Treatment Pairs (DTPs)</strong>: 271 listed conditions, each with a DTP code (e.g. <code>903D</code> pneumonia) and the treatment the scheme must fund. You will often hear "270"; the CMS count is 271.</li>
+    <li><strong>Chronic Disease List (CDL)</strong>: 26 chronic conditions. HIV/AIDS is also a PMB, which is why some schemes quote 27.</li>
   </ul>
-  <div class="tip"><strong>The billing point:</strong> PMB status is decided by the <em>diagnosis</em>. If the ICD-10 code on the claim does not show a PMB condition, the scheme's system will not treat it as one. How the patient got ill or injured does not matter, only what the diagnosis is.</div>
+  <div class="tip"><strong>The billing point:</strong> the scheme's system decides PMB status from the <em>ICD-10 code</em> on the claim. If the code does not map to a DTP, the claim is not paid as a PMB, whatever the patient had. The DTP letter tells you the body system: A brain, B eye, C ENT, D lungs, E heart, F gut, G liver/pancreas, H bones, J skin/breast, K endocrine, L kidney/male, M female, N pregnancy/newborn, S systemic, T mental health.</div>
+</section>
+
+<section>
+  <h2>Quick check: HAE's most-used codes</h2>
+  <p class="empty">The primary codes that appear most often on HAE accounts, and whether they qualify as a PMB.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>ICD-10</th><th>Description</th><th>PMB?</th><th>What to know</th></tr></thead>
+    <tbody>
+      <tr><td class="icd">N10</td><td>Acute pyelonephritis</td><td><span class="pill y">Yes · 904L</span></td><td>It is a PMB, so it is an attractive code to overuse. It is the primary code on over 90% of casualty visits since April 2026. Each one needs clinical evidence: fever, loin pain, urine dipstick or MC&amp;S. If there is no evidence, it is <code>N39.0</code>.</td></tr>
+      <tr><td class="icd">N39.0</td><td>Urinary tract infection, site not specified</td><td><span class="pill n">No</span></td><td>This is the honest code for a simple UTI and is paid from day-to-day benefits.</td></tr>
+      <tr><td class="icd">J18.0 / J18.9</td><td>Bronchopneumonia / pneumonia, unspecified</td><td><span class="pill y">Yes · 903D</span></td><td>Needs support in the notes (X-ray, signs on examination). A high casualty volume will draw audits.</td></tr>
+      <tr><td class="icd">J20.9 · J22 · J06.9</td><td>Acute bronchitis · lower respiratory infection · upper respiratory infection</td><td><span class="pill n">No</span></td><td>Day-to-day benefits. Do not "upgrade" these to pneumonia without a diagnosis.</td></tr>
+      <tr><td class="icd">F32.2 / F32.3</td><td>Severe depressive episode</td><td><span class="pill y">Yes · 902T</span></td><td>Up to 21 days in hospital a year. Track the days used.</td></tr>
+      <tr><td class="icd">F20 · F31</td><td>Schizophrenia · bipolar disorder</td><td><span class="pill y">Yes · 907T / 902T</span></td><td>Also on the CDL for chronic medication.</td></tr>
+      <tr><td class="icd">A09.9</td><td>Gastroenteritis, unspecified</td><td><span class="pill m">Only with dehydration</span></td><td>It becomes 901F only when dehydration or haemorrhage is life-threatening. In that case add <code>E86</code> and make sure IV fluids are recorded.</td></tr>
+      <tr><td class="icd">I10</td><td>Essential hypertension</td><td><span class="pill c">CDL</span></td><td>Chronic medication only. On an admission it should be a secondary code, unless the admission is for a hypertensive crisis with organ damage.</td></tr>
+      <tr><td class="icd">E11.8 / E11.9</td><td>Type 2 diabetes</td><td><span class="pill c">CDL</span></td><td>An admission is a PMB (31K) for ketoacidosis <code>E11.1</code> or coma <code>E11.0</code>. <code>E16.0–E16.2</code> is hypoglycaemia.</td></tr>
+      <tr><td class="icd">J45.9 / J46</td><td>Asthma / status asthmaticus</td><td><span class="pill y">Attack · 157D</span></td><td>An acute attack is a PMB. Controlled asthma is CDL.</td></tr>
+      <tr><td class="icd">R07.4</td><td>Chest pain, unspecified</td><td><span class="pill n">No</span></td><td>If an MI or unstable angina is confirmed, code <code>I21</code> / <code>I20.0</code> (907E).</td></tr>
+      <tr><td class="icd">J03.9 · J02.9</td><td>Acute tonsillitis · pharyngitis</td><td><span class="pill n">No</span></td><td>A peritonsillar abscess, <code>J36</code>, is a PMB (240C).</td></tr>
+      <tr><td class="icd">H66.9 / H65.0</td><td>Acute otitis media</td><td><span class="pill y">Yes · 482C</span></td><td>Often missed in casualty, especially in children.</td></tr>
+      <tr><td class="icd">M54.5 · M79.x</td><td>Low back pain · soft-tissue pain</td><td><span class="pill n">No</span></td><td>Use the SA 4-character code (<code>M54.5</code>). The US-style <code>M54.59</code> may be rejected.</td></tr>
+      <tr><td class="icd">R51 · R42 · R11 · R50.9</td><td>Headache · dizziness · nausea/vomiting · fever</td><td><span class="pill n">No</span></td><td>Symptom codes. Once the doctor makes a diagnosis, code the diagnosis.</td></tr>
+      <tr><td class="icd">T78.4</td><td>Allergy, unspecified</td><td><span class="pill m">Only if anaphylaxis</span></td><td>Anaphylactic shock is <code>T78.0</code>/<code>T78.2</code> (48S), and needs an External Cause Code.</td></tr>
+      <tr><td class="icd">S01.x · S09.9</td><td>Open wound of head · head injury, unspecified</td><td><span class="pill m">Emergency only</span></td><td>An injury is a PMB through the emergency rule, or through 1A when there is intracranial injury with loss of consciousness (<code>S06</code>). It always needs an External Cause Code (<code>V01–Y98</code>).</td></tr>
+    </tbody>
+  </table></div>
 </section>
 
 <section>
@@ -125,9 +160,10 @@ mark{background:var(--warn-soft);color:var(--fg)}
     <div class="inner">
       <p>An emergency medical condition is <em>"the sudden and, at the time, unexpected onset of a health condition that requires immediate medical or surgical treatment, where failure to provide medical or surgical treatment would result in serious impairment to bodily functions or serious dysfunction of a bodily organ or part, or would place the person's life in serious jeopardy."</em></p>
       <ul>
-        <li>An emergency is a PMB even when the final diagnosis is not on the DTP list.</li>
+        <li>An emergency is a PMB even when the final diagnosis is not on the DTP list, for example a closed arm fracture.</li>
         <li>An emergency is involuntary use of a non-DSP: the patient could not choose where to go. The scheme may not apply non-network penalties to the emergency treatment.</li>
         <li>Once the patient is stable, the scheme may ask for transfer to its DSP. Care after a refused transfer can be treated as voluntary.</li>
+        <li><strong>260S</strong>, imminent death regardless of diagnosis, is also a PMB.</li>
       </ul>
       <div class="tip"><strong>For HAE casualty and GEMS:</strong> HAE is not on the GEMS hospital network. When a GEMS admission came through casualty as a real emergency, the file must show it: triage category, vital signs, time of arrival and the doctor's note. Obtain auth within one working day and code the diagnosis precisely. If the claim is then rejected under the non-network rule or the R15,000 exclusion, dispute it as an emergency PMB.</div>
     </div>
@@ -135,202 +171,48 @@ mark{background:var(--warn-soft);color:var(--fg)}
 </section>
 
 <section>
-  <h2>Diagnosis and Treatment Pairs by body system</h2>
+  <h2>Diagnosis and Treatment Pairs with ICD-10 codes</h2>
   <div class="search">
     <label for="q" class="eyebrow" style="white-space:nowrap">Find</label>
-    <input id="q" type="search" placeholder="Condition or ICD-10 code, e.g. pneumonia or J18">
+    <input id="q" type="search" placeholder="Condition, DTP or ICD-10, e.g. pneumonia, 904L, N10">
     <button id="toggle" type="button">Open all</button>
   </div>
-  <p class="empty" id="nores" hidden>Nothing matches. Check the CMS coded PMB list linked at the bottom.</p>
-
-  <div id="dtp" style="display:grid;gap:10px">
-  <details>
-    <summary><span class="t">Brain &amp; Nervous System</span><span class="n">Neurology · neurosurgery</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Stroke: cerebral haemorrhage or infarction <code>I61–I64</code></li>
-        <li>Status epilepticus and epilepsy, acute management <code>G40–G41</code> (epilepsy is also on the CDL)</li>
-        <li>Meningitis and encephalitis, bacterial or viral <code>G00–G05</code>, <code>A39</code></li>
-        <li>Head injury with intracranial injury or loss of consciousness <code>S06</code></li>
-        <li>Spinal cord injury and compression</li>
-        <li>Brain and spinal cord tumours</li>
-      </ul>
-      <div class="tip"><strong>Coding tip:</strong> a headache (<code>R51</code>) or dizziness (<code>R42</code>) alone is not a PMB. When the doctor finds the cause, code the cause.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Respiratory System</span><span class="n">Lungs · airway</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Pneumonia <code>J12–J18</code></li>
-        <li>Acute asthma attack and status asthmaticus <code>J45–J46</code> (asthma is also on the CDL)</li>
-        <li>COPD, acute exacerbation <code>J44</code> (COPD is also on the CDL)</li>
-        <li>Pneumothorax and haemothorax</li>
-        <li>Pulmonary embolism <code>I26</code></li>
-        <li>Acute respiratory failure</li>
-        <li>Lung cancer</li>
-      </ul>
-      <div class="warn"><strong>HAE watch:</strong> <code>J18.0</code> (bronchopneumonia) appears as the primary code on a large number of casualty visits. Pneumonia is a PMB, so schemes audit it. The clinical notes must support the code, for example a chest X-ray, raised temperature or abnormal breath sounds.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Heart &amp; Circulation</span><span class="n">Cardiac · vascular</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Acute myocardial infarction <code>I21</code> and unstable angina <code>I20.0</code></li>
-        <li>Cardiac failure, acute <code>I50</code> (also on the CDL)</li>
-        <li>Dysrhythmias <code>I47–I49</code> (also on the CDL)</li>
-        <li>Valve disease requiring intervention</li>
-        <li>Deep vein thrombosis and other thrombo-embolism</li>
-        <li>Aortic aneurysm and acute arterial occlusion</li>
-      </ul>
-      <div class="tip"><strong>Coding tip:</strong> chest pain (<code>R07.4</code>) is a symptom code. Once MI, angina or another cause is confirmed, code that instead.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Gastro-Intestinal System</span><span class="n">Gut · liver · pancreas</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Appendicitis <code>K35</code></li>
-        <li>Intestinal obstruction <code>K56</code>, and hernia with obstruction or gangrene</li>
-        <li>Peptic ulcer with haemorrhage or perforation <code>K25–K28</code>; other upper or lower GI bleeding</li>
-        <li>Gastroenteritis or colitis with life-threatening haemorrhage or dehydration (excludes chronic UC and Crohn's)</li>
-        <li>Acute pancreatitis <code>K85</code></li>
-        <li>Peritonitis, liver failure, biliary obstruction and acute cholecystitis</li>
-        <li>GI cancers</li>
-      </ul>
-      <div class="warn"><strong>HAE watch:</strong> <code>A09.9</code> gastroenteritis on its own is <em>not</em> a PMB. It is one only when dehydration or haemorrhage is life-threatening, and then the dehydration code (<code>E86</code>) must be on the claim too, with the notes supporting it (for example IV fluids).</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Musculoskeletal &amp; Trauma</span><span class="n">Fractures · injuries · burns</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Fractures, open and closed, including reduction and fixation</li>
-        <li>Dislocations of major joints</li>
-        <li>Crush injuries and traumatic amputation</li>
-        <li>Burns: extensive burns, and burns to the face, hands or genitals</li>
-        <li>Septic arthritis and acute osteomyelitis</li>
-        <li>Rheumatoid arthritis (CDL)</li>
-      </ul>
-      <div class="warn"><strong>Injury rule:</strong> every injury code (<code>S00–T98</code>) needs an External Cause Code (<code>V01–Y98</code>) as a secondary code, or schemes reject the claim. Simple low back pain (<code>M54.5</code>) and soft-tissue pain are not PMBs.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Ear, Nose &amp; Throat</span><span class="n">ENT · head and neck</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Acute upper airway obstruction</li>
-        <li>Cleft lip and palate repair</li>
-        <li>Cancers of the oral cavity, pharynx and larynx</li>
-      </ul>
-      <div class="tip"><strong>Coding tip:</strong> uncomplicated tonsillitis (<code>J03.9</code>), pharyngitis and sinusitis are not PMBs. They are day-to-day claims.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Eye Conditions</span><span class="n">Ophthalmology</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Cataract</li>
-        <li>Glaucoma (also on the CDL)</li>
-        <li>Retinal detachment</li>
-        <li>Penetrating eye injuries and other serious eye trauma</li>
-      </ul>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Systemic &amp; Infectious Diseases</span><span class="n">Infections · blood · cancers</span></summary>
-    <div class="inner">
-      <ul>
-        <li>HIV/AIDS: diagnosis, antiretroviral therapy and opportunistic infections</li>
-        <li>Tuberculosis <code>A15–A19</code></li>
-        <li>Septicaemia <code>A40–A41</code></li>
-        <li>Malaria <code>B50–B54</code></li>
-        <li>Acute leukaemias, lymphomas and other haematological cancers</li>
-        <li>Haemophilia (CDL)</li>
-      </ul>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Kidney &amp; Urinary</span><span class="n">Renal · urology</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Acute renal failure <code>N17</code></li>
-        <li>End-stage renal disease: dialysis and transplant (chronic renal disease is on the CDL). This is relevant to Kuruman Renal Clinic.</li>
-        <li>Testicular torsion</li>
-        <li>Prostate and other urological cancers</li>
-      </ul>
-      <div class="warn"><strong>HAE watch:</strong> <code>N10</code> (acute pyelonephritis) is the primary code on nearly every casualty visit since April 2026. Check each one against the clinical notes. Wrong codes that change what a scheme pays can be treated as fraud, whether or not N10 is a PMB.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Mental Health</span><span class="n">Psychiatric ward</span></summary>
-    <div class="inner">
-      <div class="tbl"><table>
-        <thead><tr><th>Condition</th><th>What the scheme must fund per year</th></tr></thead>
-        <tbody>
-          <tr><td>Major depression and bipolar mood disorder</td><td>Hospital care up to 3 weeks, <em>or</em> up to 15 outpatient psychotherapy contacts</td></tr>
-          <tr><td>Schizophrenia and paranoid or psychotic disorders</td><td>Hospital care up to 3 weeks</td></tr>
-          <tr><td>Substance abuse (including detox)</td><td>Hospital care up to 3 weeks</td></tr>
-          <tr><td>Anorexia and bulimia nervosa</td><td>Hospital care up to 3 weeks, or at least 15 outpatient contacts</td></tr>
-          <tr><td>Acute stress disorder with recent significant trauma</td><td>Hospital admission up to 3 days, or up to 12 outpatient contacts</td></tr>
-          <tr><td>Attempted suicide</td><td>Hospital care up to 3 days, or up to 6 outpatient contacts</td></tr>
-        </tbody>
-      </table></div>
-      <div class="tip"><strong>For HAE's psychiatric ward:</strong> count PMB days per patient per year. Once a patient passes 21 days, the rest of the stay is paid from normal benefits or by the patient. Warn the patient and get authorisation for the extension before day 21, not after discharge. <code>F32.2</code> (severe depression) is correctly used as the PMB code here.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Pregnancy &amp; Newborns</span><span class="n">Obstetrics · neonatal</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Antenatal care, delivery, and pregnancy complications</li>
-        <li>Ectopic pregnancy and miscarriage with complications</li>
-        <li>Newborn care, including low birth weight with breathing problems and neonatal infections</li>
-      </ul>
-    </div>
-  </details>
-
-  <details>
-    <summary><span class="t">Endocrine, Skin &amp; Breast</span><span class="n">Metabolic · oncology</span></summary>
-    <div class="inner">
-      <ul>
-        <li>Diabetic ketoacidosis and hyperosmolar coma (diabetes is also on the CDL)</li>
-        <li>Thyroid cancer and complicated hyperthyroidism</li>
-        <li>Breast cancer and melanoma</li>
-      </ul>
-      <div class="tip"><strong>Coding tip:</strong> <code>E11.8</code> (type 2 diabetes with unspecified complications) is vague. If the complication is known, for example ketoacidosis, hyperglycaemia or a foot ulcer, code it.</div>
-    </div>
-  </details>
-  </div>
+  <p class="empty" id="nores" hidden>Nothing matches. Check the 2026 CMS coded PMB list.</p>
+  <div id="dtp" style="display:grid;gap:10px"></div>
+  <p class="empty">Ranges are inclusive: <code>K35–K37</code> means every code in K35, K36 and K37. Where only part of a category qualifies, the list shows the 4th character (e.g. <code>K25.0–K25.2</code> are the bleeding or perforated ulcers).</p>
 </section>
 
 <section>
-  <h2>Chronic Disease List (26 conditions)</h2>
+  <h2>Mental health entitlements</h2>
   <details>
-    <summary><span class="t">All CDL conditions</span><span class="n">Register with the scheme</span></summary>
+    <summary><span class="t">What the scheme must fund per year</span><span class="n">Psychiatric ward</span></summary>
     <div class="inner">
-      <ol class="cdl">
-        <li>Addison's disease</li><li>Asthma</li><li>Bipolar mood disorder</li><li>Bronchiectasis</li>
-        <li>Cardiac failure</li><li>Cardiomyopathy</li><li>Chronic obstructive pulmonary disease</li>
-        <li>Chronic renal disease</li><li>Coronary artery disease</li><li>Crohn's disease</li>
-        <li>Diabetes insipidus</li><li>Diabetes mellitus type 1</li><li>Diabetes mellitus type 2</li>
-        <li>Dysrhythmias</li><li>Epilepsy</li><li>Glaucoma</li><li>Haemophilia</li>
-        <li>Hyperlipidaemia</li><li>Hypertension</li><li>Hypothyroidism</li><li>Multiple sclerosis</li>
-        <li>Parkinson's disease</li><li>Rheumatoid arthritis</li><li>Schizophrenia</li>
-        <li>Systemic lupus erythematosus</li><li>Ulcerative colitis</li>
-      </ol>
-      <div class="tip"><strong>In hospital:</strong> a CDL condition on its own does not make an admission a PMB. The admission is a PMB when the reason for it is a PMB, for example a hypertensive crisis or acute heart failure. A controlled chronic condition (e.g. <code>I10</code>) should be a secondary code.</div>
+      <div class="tbl"><table>
+        <thead><tr><th>DTP</th><th>Condition</th><th>ICD-10</th><th>Benefit</th></tr></thead>
+        <tbody>
+          <tr><td class="dtp">902T</td><td>Major depression and bipolar mood disorder</td><td class="icd">F31, F32, F33</td><td>Hospital up to 3 weeks, <em>or</em> up to 15 outpatient psychotherapy contacts</td></tr>
+          <tr><td class="dtp">907T</td><td>Schizophrenia and paranoid delusional disorders</td><td class="icd">F20, F22, F25</td><td>Hospital up to 3 weeks</td></tr>
+          <tr><td class="dtp">182T</td><td>Substance abuse or dependence, including alcohol</td><td class="icd">F10–F19</td><td>Hospital up to 3 weeks (including detox)</td></tr>
+          <tr><td class="dtp">908T</td><td>Anorexia and bulimia nervosa</td><td class="icd">F50.0–F50.3</td><td>Hospital up to 3 weeks, or at least 15 outpatient contacts</td></tr>
+          <tr><td class="dtp">901T</td><td>Acute stress disorder with recent significant trauma</td><td class="icd">F43.0</td><td>Hospital up to 3 days, or up to 12 outpatient contacts</td></tr>
+          <tr><td class="dtp">903T</td><td>Attempted suicide</td><td class="icd">X60–X84 + injury/poisoning code</td><td>Hospital up to 3 days, or up to 6 outpatient contacts</td></tr>
+        </tbody>
+      </table></div>
+      <div class="tip"><strong>For HAE's psychiatric ward:</strong> count PMB days per patient per year. Once a patient passes 21 days, the rest of the stay is paid from normal benefits or by the patient. Warn the patient and get authorisation for the extension before day 21, not after discharge.</div>
+    </div>
+  </details>
+</section>
+
+<section>
+  <h2>Chronic Disease List with ICD-10 codes</h2>
+  <details>
+    <summary><span class="t">All 26 CDL conditions</span><span class="n">Register with the scheme</span></summary>
+    <div class="inner">
+      <div class="tbl"><table>
+        <thead><tr><th>Condition</th><th>ICD-10</th></tr></thead>
+        <tbody id="cdl"></tbody>
+      </table></div>
+      <div class="tip"><strong>In hospital:</strong> a CDL condition on its own does not make an admission a PMB. The admission is a PMB when the reason for it is a PMB, for example a hypertensive crisis or acute heart failure (204E). A controlled chronic condition should be a secondary code.</div>
     </div>
   </details>
 </section>
@@ -343,7 +225,7 @@ mark{background:var(--warn-soft);color:var(--fg)}
       <ol style="margin:0;padding-left:1.3rem;display:grid;gap:6px">
         <li>The primary ICD-10 code is the diagnosis the doctor actually made, at full specificity (4th character where it exists), and the notes support it.</li>
         <li>The diagnosis is coded, not the symptom. Use an R-code only when no diagnosis was made.</li>
-        <li>Every injury code has an External Cause Code.</li>
+        <li>Every injury code (<code>S00–T98</code>) has an External Cause Code (<code>V01–Y98</code>) as a secondary code.</li>
         <li>Emergency admissions have triage and vital signs on file, and auth was obtained within one working day (GEMS: R1,000 co-payment otherwise).</li>
         <li>Planned admissions have pre-authorisation, and the billed level of care matches what was authorised.</li>
         <li>Psychiatric admissions: PMB days used this year are recorded, and an extension is requested before day 21.</li>
@@ -357,9 +239,9 @@ mark{background:var(--warn-soft);color:var(--fg)}
       <ol style="margin:0;padding-left:1.3rem;display:grid;gap:6px">
         <li>Check the rejection code on the remittance. Was it coding, authorisation, benefits exhausted, or non-network/DSP?</li>
         <li>If it is a coding error, correct it and resubmit.</li>
-        <li>If it was paid from savings, or rejected as "benefits exhausted" although it is a PMB, write to the scheme asking for it to be reprocessed as a PMB from risk. Quote the ICD-10 code and Regulation 10(6).</li>
+        <li>If it was paid from savings, or rejected as "benefits exhausted" although it is a PMB, write to the scheme asking for it to be reprocessed as a PMB from risk. Quote the ICD-10 code, the DTP code and Regulation 10(6).</li>
         <li>If it was an emergency rejected for non-network use, send the triage notes and argue involuntary use of a non-DSP (Regulations 7 and 8).</li>
-        <li>If the scheme's internal dispute process fails, the member (or HAE on the member's behalf) can complain to the Council for Medical Schemes.</li>
+        <li>If the scheme's internal dispute process fails, the member (or HAE on the member's behalf) can complain to the Council for Medical Schemes: information@medicalschemes.co.za, 0861 123 267.</li>
         <li>Record the outcome, so the agent can track which schemes and codes cause disputes.</li>
       </ol>
     </div>
@@ -367,27 +249,323 @@ mark{background:var(--warn-soft);color:var(--fg)}
 </section>
 
 <footer>
-  <p>Sources: <a href="https://www.medicalschemes.co.za/resources/pmb/" target="_blank" rel="noopener">Council for Medical Schemes: PMBs</a> · <a href="https://www.gems.gov.za/Information/Prescribed-Minimum-Benefits" target="_blank" rel="noopener">GEMS PMB rules</a> · <a href="https://www.sadag.org/images/pdf/pmb_consumerguidebooklet.pdf" target="_blank" rel="noopener">CMS PMB consumer booklet</a></p>
-  <p>This is a working summary, not the Regulations. The DTP examples are the common ones and not the full list of 271. Before disputing a claim, check the exact code against the CMS coded PMB list and the scheme's current rules. Prepared 30 September 2026.</p>
+  <p>Sources: <a href="https://www.medicalschemes.co.za/resources/pmb/pmb-conditions/" target="_blank" rel="noopener">CMS: PMB conditions (DTP list)</a> · <a href="https://www.medicalschemes.com/files/ICD10%20Codings/CMS%20PMB%20Four%20Character%20Coding%20July%202005.pdf" target="_blank" rel="noopener">CMS PMB four-character coding</a> · <a href="https://www.medicalschemes.co.za/wpfd_file/2026-pmb-icd-10-coded-list-distribution/" target="_blank" rel="noopener">CMS 2026 PMB ICD-10 coded list</a> · <a href="https://www.gems.gov.za/Information/Prescribed-Minimum-Benefits" target="_blank" rel="noopener">GEMS PMB rules</a> · <a href="https://www.sadag.org/images/pdf/pmb_consumerguidebooklet.pdf" target="_blank" rel="noopener">CMS PMB consumer booklet</a></p>
+  <p>The DTP codes and conditions follow the CMS list. The ICD-10 codes are the main WHO/SA MIT codes for each condition. They are a working guide, not the full official mapping, and some DTPs have extra qualifying codes. The 2026 CMS coded list is the authority: check it before a dispute. Version 2 · 30 September 2026.</p>
 </footer>
 </div>
 
 <script>
+var DTP=[
+["Brain & Nervous System","Neurology · neurosurgery",[
+["901A","Stroke due to haemorrhage or ischaemia","I60–I64"],
+["265A","Transient cerebral ischaemia; life-threatening cerebrovascular conditions NOS","G45, I65–I67"],
+["28A","Subarachnoid and intracranial haemorrhage/haematoma; compression of brain","I60–I62, S06.4–S06.6, G93.5"],
+["1A","Severe or moderate head injury: haematoma or oedema with loss of consciousness","S06.0–S06.9"],
+["49A","Compound or depressed fractures of skull","S02.0–S02.1, S02.7–S02.9"],
+["902A","Epilepsy: status epilepticus, initial diagnosis, candidate for neurosurgery","G40, G41"],
+["905A","Meningitis, acute and subacute","G00–G03, A39.0, A17.0"],
+["684A","Viral meningitis, encephalitis, myelitis and encephalomyelitis","A85–A89, G04, B00.4, B02.0–B02.1"],
+["211A","Intraspinal and intracranial abscess","G06"],
+["906A","Acute generalised paralysis, including polio and Guillain-Barré","A80, G61.0"],
+["305A","Tetanus","A33–A35"],
+["940A","Reversible CNS abnormalities due to other systemic disease","G92, G93.4"],
+["941A","Spinal cord compression, ischaemia or degenerative disease NOS","G95.1–G95.2, G99.2"],
+["109A","Vertebral fractures/dislocations, open or closed, with spinal cord injury","S12–S14, S22–S24, S32–S34 (with cord injury)"],
+["213A","Difficulty breathing, eating, swallowing, bowel or bladder control from a non-progressive neurological condition","G81–G82, N31"],
+["510A","Peripheral nerve injury with open wound","S44, S54, S64, S74, S84, S94"],
+["513A","Myasthenia gravis; muscular dystrophy; neuromyopathies NOS","G70–G72"],
+["341A","Basal ganglia and extrapyramidal disorders; dystonias NOS","G20–G25"],
+["950A","Benign and malignant brain tumours, treatable","C70–C72, D32–D33, D42–D43"],
+["83A","Encephalocele; congenital hydrocephalus","Q01, Q03, G91"],
+["84A","Spina bifida","Q05"]]],
+["Respiratory System","Lungs · airway",[
+["903D","Bacterial, viral or fungal pneumonia","J12–J18"],
+["157D","Acute asthmatic attack; RSV pneumonia under age 3","J45, J46, J12.1"],
+["158D","Respiratory failure, regardless of cause","J96"],
+["125D","Adult respiratory distress syndrome; inhalation and aspiration pneumonias","J80, J69"],
+["5D","Pneumothorax and haemothorax","J93, S27.0–S27.2"],
+["170D","Empyema and abscess of lung","J85, J86"],
+["934D","Frank haemoptysis","R04.2"],
+["315D","Atelectasis (collapsed lung)","J98.1"],
+["900D","Open fracture of ribs or sternum; multiple rib fractures; flail chest","S22.2–S22.5"],
+["177D","COVID-19","U07.1, U07.2"],
+["950D","Cancer of lung, bronchus, pleura, trachea, mediastinum, treatable","C33–C39, C45.0"],
+["340D","Benign neoplasm of respiratory and intrathoracic organs","D14"],
+["203D","Hypoplasia and dysplasia of lung","Q33.6"]]],
+["Heart & Circulation","Cardiac · vascular",[
+["907E","Acute and subacute ischaemic heart disease, including MI and unstable angina","I20.0, I21–I24"],
+["204E","Cardiac failure: acute, or recent deterioration of chronic failure","I50, I11.0"],
+["903E","Life-threatening cardiac arrhythmias","I44.2, I47, I48, I49.0"],
+["284E","Acute pulmonary heart disease and pulmonary embolism","I26"],
+["209E","Deep phlebitis and thrombophlebitis (DVT)","I80.1–I80.3"],
+["155E","Myocarditis; cardiomyopathy","I40, I42"],
+["108E","Pericarditis","I30–I31"],
+["210E","Diseases of endocardium; endocarditis","I33, I38"],
+["35E","Acute rheumatic fever","I00–I02"],
+["914E","Rheumatic pericarditis; rheumatic myocarditis","I01.0, I01.2, I09.0"],
+["309E","Diseases of aortic valve","I35"],
+["314E","Diseases of mitral valve","I05, I34"],
+["497E","Multiple valvular disease","I08"],
+["16E","Rupture of papillary muscle","I23.5"],
+["908E","Aneurysm of major artery of chest, abdomen or neck","I71–I72"],
+["18E","Dissecting or ruptured aortic aneurysm","I71.0, I71.1, I71.3"],
+["26E","Arterial embolism/thrombosis of abdominal or thoracic aorta","I74.0–I74.1"],
+["902E","Disorders of visceral arteries","I77"],
+["915E","Gangrene; severe atherosclerosis of limbs; diabetes with peripheral circulatory disease","I70.2, R02, E10.5–E14.5"],
+["294E","Giant cell arteritis; Kawasaki disease; hypersensitivity angiitis","M31.5–M31.6, M30.3, M31.0"],
+["111E","Injury to major blood vessels: trunk, head, neck, upper limbs","S15, S25, S35, S45, S55"],
+["19E","Injury to major blood vessels of extremities","S65, S75, S85, S95"],
+["900E","Life-threatening complications of elective cardiac or major vascular procedures","T82"],
+["450E","Hereditary haemorrhagic telangiectasia","I78.0"],
+["93E","Ventricular septal defect, persistent","Q21.0"],
+["99E","Tetralogy of Fallot","Q21.3"],
+["98E","Transposition of great vessels","Q20.3"],
+["100E","Patent ductus arteriosus; aortopulmonary fistula","Q25.0"],
+["97E","Coronary artery anomaly","Q24.5"],
+["905E","Other correctable congenital cardiac conditions","Q20–Q26"]]],
+["Gastro-Intestinal System","Gut",[
+["9F","Appendicitis","K35–K37"],
+["902F","Gastric or intestinal ulcers with haemorrhage or perforation","K25–K28 (.0–.2, .4–.6)"],
+["901F","Gastroenteritis and colitis with life-threatening haemorrhage or dehydration","A00–A09, K52 + E86"],
+["6F","Hernia with obstruction or gangrene; uncomplicated hernia under age 18","K40.0–K40.4, K41.0–K41.4, K42.0–K42.1, K43.0–K43.1, K45.0–K45.1, K46.0–K46.1"],
+["20F","Intestinal obstruction without hernia; symptomatic foreign body in GI tract","K56.1–K56.7, T18.2–T18.5"],
+["232F","Paralytic ileus","K56.0"],
+["3F","Peritonitis, regardless of cause","K65"],
+["900F","Rupture of intra-abdominal organ","S36"],
+["124F","Acute vascular insufficiency of intestine","K55.0"],
+["254F","Acute diverticulitis of colon","K57.2–K57.5, K57.8"],
+["41F","Abscess of intestine","K61, K63.0"],
+["516F","Oesophageal varices","I85"],
+["214F","Oesophageal stricture","K22.2"],
+["489F","Pyloric stenosis and other disorders of stomach and duodenum","K31.1–K31.5"],
+["498F","Peritoneal adhesions","K66.0"],
+["507F","Thrombosed and complicated haemorrhoids","I84.0–I84.3"],
+["920F","Anal fissure; anal fistula","K60"],
+["264F","Anal and rectal polyp","K62.0–K62.1"],
+["555F","Rectal prolapse","K62.3"],
+["337F","Amoebiasis; typhoid","A01.0, A06"],
+["950C","Cancer of oesophagus, stomach, bowel, rectum, anus, treatable","C15–C21, C26"],
+["952F","Cancer of retroperitoneum, peritoneum, omentum, mesentery","C48"]]],
+["Liver, Bile Ducts & Pancreas","Hepatobiliary",[
+["327G","Acute pancreatitis","K85"],
+["910G","Calculus of bile duct with cholecystitis","K80.3–K80.4"],
+["156G","Disorders of bile duct","K83"],
+["911G","Liver failure; hepatic vascular obstruction; inborn errors of liver metabolism; biliary atresia","K72, K76.5, Q44.2"],
+["325G","Acute necrosis of liver","K72.0"],
+["27G","Liver abscess; pancreatic abscess","K75.0, K85"],
+["255G","Cyst and pseudocyst of pancreas","K86.2–K86.3"],
+["231G","Portal vein thrombosis","I81"],
+["36G","Budd-Chiari syndrome and other venous thrombosis","I82.0"],
+["743G","Hepatorenal syndrome","K76.7"],
+["950G","Cancer of liver, biliary system and pancreas, treatable","C22–C25"]]],
+["Musculoskeletal & Trauma","Bones · joints · injuries",[
+["900H","Open fracture or dislocation of bones and joints","Fracture code with 5th character 1 (open), e.g. S52.21, S82.21"],
+["178H","Fracture of hip","S72.0–S72.2"],
+["491H","Fractures/dislocations of vertebral column without cord injury","S12, S13, S22.0–S22.1, S23, S32, S33"],
+["147H","Crush injuries of trunk and limbs, including blood vessels","S17, S28, S38, S47, S57, S67, S77, S87, S97, T04"],
+["901H","Traumatic amputation of limbs, hands, feet and digits","S48, S58, S68, S78, S88, S98"],
+["445H","Injury to internal organs","S26–S27, S36–S37"],
+["500H","Disruption of Achilles or quadriceps tendon","S86.0, S76.1"],
+["32H","Acute osteomyelitis","M86.0–M86.1"],
+["206H","Chronic osteomyelitis","M86.3–M86.6"],
+["34H","Pyogenic (septic) arthritis","M00"],
+["353H","Abscess of bursa or tendon","M65.0, M71.0"],
+["950H","Cancer of bones, treatable","C40–C41"],
+["85H","Congenital hip dislocation; coxa vara/valga; clubfoot","Q65, Q66.0"]]],
+["Ear, Nose & Throat","ENT · head and neck",[
+["900C","Acute upper airway obstruction, including croup, epiglottitis, laryngotracheitis","J04.2, J05.0–J05.1, J38.4"],
+["482C","Acute otitis media","H65.0–H65.1, H66.0, H66.9"],
+["33C","Acute and chronic mastoiditis","H70"],
+["240C","Peritonsillar abscess","J36"],
+["132C","Life-threatening diseases of pharynx, including retropharyngeal abscess","J39.0–J39.1"],
+["29C","Foreign body in pharynx, larynx, trachea, bronchus or oesophagus","T17.2–T17.9, T18.1"],
+["521C","Foreign body in ear or nose","T16, T17.0–T17.1"],
+["12C","Deep open wound of neck; open fracture of larynx or trachea","S11, S12.8"],
+["339C","Fracture of face bones, orbit, jaw; cranial nerve injury","S02.2–S02.6, S04"],
+["457C","Open wound of ear drum","S09.2"],
+["543C","Stomatitis, cellulitis and abscess of oral soft tissue; Vincent's angina","K12.2, A69.1"],
+["347C","Sialoadenitis; abscess or fistula of salivary glands","K11.2–K11.4"],
+["241C","Cancrum oris","A69.0"],
+["133C","Cholesteatoma","H71"],
+["219C","Leukoplakia of oral mucosa, including tongue","K13.2"],
+["910C","Chronic upper airway obstruction resulting in cor pulmonale","G47.3"],
+["901C","Cleft palate and/or cleft lip","Q35–Q37"],
+["38C","Choanal atresia","Q30.0"],
+["950C","Cancer of oral cavity, pharynx, nose, ear, larynx, treatable","C00–C14, C30–C32"]]],
+["Eye Conditions","Ophthalmology",[
+["909B","Open wound of eyeball and other eye structures","S05.2–S05.7"],
+["911B","Corneal ulcer; superficial injury of eye and adnexa","H16.0, S00.1–S00.2, S05.0, T26"],
+["922B","Retained intraocular foreign body","H44.6–H44.7"],
+["389B","Hyphaema","H21.0"],
+["47B","Acute orbital cellulitis","H05.0"],
+["419B","Purulent endophthalmitis","H44.0"],
+["904B","Retinal detachment, tear and other retinal disorders","H33, H35"],
+["906B","Retinal vascular occlusion","H34"],
+["394B","Angle-closure glaucoma","H40.2"],
+["407B","Primary open-angle glaucoma with failed medical management","H40.1"],
+["405B","Glaucoma associated with disorders of the lens","H40.5"],
+["901B","Cataract; aphakia","H25–H26, H27.0, Q12.0"],
+["386B","Herpes zoster or simplex with eye complications","B00.5, B02.3"],
+["586B","Bell's palsy; exposure keratoconjunctivitis","G51.0, H16.2"],
+["485B","Inflammation of lacrimal passages","H04.3–H04.4"],
+["409B","Sympathetic uveitis; degenerative disorders of globe; thyroid eye disease threatening sight","H44.1, H44.5"],
+["950B","Cancer of the eye and orbit, treatable","C69, D09.2"]]],
+["Systemic & Infectious Diseases","Infection · blood · poisoning",[
+["904S","Septicaemia; metastatic infections","A40–A41"],
+["11S","Tuberculosis","A15–A19"],
+["172S","Malaria; trypanosomiasis; other life-threatening parasitic disease","B50–B54, B56–B57"],
+["48S","Anaphylactic shock","T78.0, T78.2, T80.5, T88.6"],
+["247S","Poisoning by ingestion or injection; non-medicinal agents","T36–T50, T51–T65"],
+["316S","Toxic effect of gases, fumes and vapours","T58, T59"],
+["908S","Exposure to the elements: hypo- and hyperthermia, lightning","T67–T69, T75.0"],
+["44S","Erysipelas","A46"],
+["128S","Tetanus; anthrax; Whipple's disease","A33–A35, A22, K90.8"],
+["15S","Whooping cough; diphtheria","A37, A36"],
+["338S","Cholera; rat-bite fever","A00, A25"],
+["197S","Botulism","A05.1"],
+["336S","Leptospirosis; spirochaetal infections NOS","A27, A69.9"],
+["907S","Life-threatening rickettsial and arthropod-borne diseases (incl. tick-bite fever)","A75–A79, A90–A99"],
+["903S","Deep-seated, disseminated and systemic fungal infections","B37.1, B37.7, B38–B46"],
+["912S","Leprosy and other mycobacterial infections (not TB)","A30–A31"],
+["50S","Syphilis: congenital, secondary and tertiary","A50, A51.3–A51.4, A52"],
+["911S","Sexually transmitted disease with systemic involvement NOS","A54.8, A56.8"],
+["246S","Cysticercosis; other systemic cestode infection","B67, B69"],
+["913S","Immune compromise NOS with life-threatening infection","D84.9"],
+["252S","Life-threatening anaemia NOS","D62, D64.9"],
+["113S","Acquired haemolytic anaemias","D59"],
+["174S","Hereditary haemolytic anaemias (e.g. sickle cell)","D55–D58"],
+["900S","Aplastic anaemia; agranulocytosis; hereditary immune deficiencies","D60–D61, D70, D80–D84"],
+["916S","Coagulation defects","D65–D68"],
+["901S","Acute leukaemias; lymphomas","C81–C85, C91.0, C92.0, C93.0, C95.0"],
+["910S","Multiple myeloma and chronic leukaemias","C90, C91.1, C92.1"],
+["179S","Hereditary angioedema; angioneurotic oedema","D84.1, T78.3"],
+["196S","Chronic granulomatous disease","D71"],
+["937S","Tumour of internal organ, benign or malignant unknown","D37–D48"],
+["260S","Imminent death, regardless of diagnosis","Any"]]],
+["Kidney & Urinary · Male Genital","Renal · urology",[
+["904L","Acute and chronic pyelonephritis; renal and perinephric abscess","N10, N11, N12, N15.1"],
+["903L","Acute glomerulonephritis and nephritic syndrome","N00, N01, N05"],
+["901L","End-stage renal disease, regardless of cause","N18 (end stage), dialysis Z49, Z99.2"],
+["905L","Obstruction of the urogenital tract, regardless of cause","N13, N20–N21 with obstruction"],
+["900L","Enlarged prostate with acute urinary retention or obstructive renal failure","N40 + R33"],
+["436L","Torsion of testis","N44"],
+["43L","Trauma to urinary system, including ruptured bladder","S37"],
+["354L","Abscess of prostate","N41.2"],
+["359L","Vesicoureteral reflux","N13.7"],
+["906L","Congenital urinary anomalies, symptomatic and life-threatening","Q60–Q64"],
+["952L","Cancer of kidney, bladder and urinary system, treatable","C64–C68"],
+["953L","Cancer of prostate, treatable","C61"],
+["950L","Cancer of testis, treatable","C62"],
+["954L","Cancer of penis and other male genital organs","C60, C63"]]],
+["Female Reproductive","Gynaecology",[
+["53M","Ectopic pregnancy","O00"],
+["903M","Spontaneous abortion (miscarriage)","O02.1, O03, O05–O06, O08"],
+["296M","Termination of pregnancy","O04, O07"],
+["951M","Hydatidiform mole; choriocarcinoma","O01, C58"],
+["288M","Acute pelvic inflammatory disease","N70, N73"],
+["435M","Torsion of ovary","N83.5"],
+["539M","Abscess of Bartholin's gland and vulva","N75.1, N76.4"],
+["237M","Sexual abuse, including rape","T74.2"],
+["434M","Benign disorders and neoplasms of ovary, tubes and uterus","D25–D28, N80–N85"],
+["530M","Uterine prolapse; cystocele","N81"],
+["460M","Fistula involving female genital tract","N82"],
+["266M","Cervical dysplasia and carcinoma-in-situ","D06, N87"],
+["528M","Menopause management; amenorrhoea; female hormone abnormalities","N91, N95, E28"],
+["902M","Infertility (as defined in Annexure A)","N97"],
+["960M","Cervical and breast cancer screening","Z12.3–Z12.4"],
+["954M","Cancer of cervix, treatable","C53"],
+["950M","Cancer of uterus, treatable","C54–C55"],
+["952M","Cancer of ovary, treatable","C56"],
+["953M","Cancer of vulva, vagina and other female organs","C51–C52, C57"],
+["645M","Congenital abnormalities of female genitalia","Q50–Q52"]]],
+["Pregnancy & Newborns","Obstetrics · neonatal",[
+["52N","Pregnancy: antenatal care, delivery and complications","O10–O99, Z34"],
+["56N","Respiratory conditions of the newborn","P20–P28"],
+["67N","Low birth weight under 1000 g with breathing difficulty","P07.0 + P22"],
+["967N","Low birth weight 1000–2500 g with breathing difficulty","P07.1 + P22"],
+["71N","Birth trauma to baby","P10–P15"],
+["901N","Congenital infections of the newborn","P35–P39"],
+["904N","Haematological disorders of the newborn (incl. jaundice)","P50–P61"],
+["902N","Neonatal endocrine, metabolic and toxin-induced conditions","P70–P74"],
+["903N","Neurological abnormalities of the newborn","P90–P91"],
+["54N","Necrotising enterocolitis","P77"],
+["74N","Neonatal GI abnormalities, including malrotation and atresia","P76, Q39–Q45"]]],
+["Endocrine & Metabolic","Diabetes · thyroid · electrolytes",[
+["31K","Hypoglycaemic coma; hyperglycaemia; diabetic ketoacidosis","E10.0–E14.1, E15, E16.0–E16.2"],
+["903K","Life-threatening fluid and electrolyte disorders","E87, E23.2, N25.1"],
+["904K","Hyper/hypothyroidism with life-threatening complications or needing surgery","E05, E03.5"],
+["331K","Acute thyroiditis","E06.0"],
+["236K","Life-threatening iron, vitamin or nutritional deficiency","D50–D53, E40–E46"],
+["902K","Disorders of adrenal secretion","E24–E27"],
+["447K","Disorders of parathyroid gland","E20–E21, D35.1"],
+["951K","Pituitary tumours with or without hypersecretion","D35.2, C75.1, E22–E23"],
+["61K","Congenital hypothyroidism","E03.0–E03.1"],
+["901K","Inborn errors of metabolism","E70–E77"],
+["30K","Benign neoplasm of islets of Langerhans","D13.7"],
+["952K","Cancer of thyroid; carcinoid syndrome","C73, E34.0"],
+["950K","Cancer of endocrine system excluding thyroid","C74–C75"]]],
+["Skin & Breast","Burns · infection · cancer",[
+["900J","Burns over 10% of body surface, or over 5% involving head, neck, hands or perineum","T20–T31"],
+["349J","Cellulitis or abscess risking organ/limb damage or septicaemia; necrotising fasciitis","L02, L03, M72.6"],
+["465J","Acute lymphadenitis","L04"],
+["112J","Toxic epidermal necrolysis; scalded skin syndrome; Stevens-Johnson","L51.1–L51.2, L00"],
+["901J","Disseminated bullous skin disease (pemphigus, pemphigoid)","L10, L12, Q81"],
+["356J","Pyoderma; deep-seated fungal infection","L08.0"],
+["950J","Cancer of breast, treatable","C50"],
+["953J","Malignant melanoma, treatable","C43"],
+["954J","Skin cancer excluding melanoma, treatable","C44"],
+["952J","Soft tissue cancer, including sarcomas","C49"],
+["951J","Lethal midline granuloma","M31.2"]]],
+["Mental Health","Psychiatric ward",[
+["902T","Major affective disorders, including unipolar and bipolar depression","F31, F32, F33"],
+["907T","Schizophrenic and paranoid delusional disorders","F20, F22, F25"],
+["184T","Brief reactive psychosis","F23"],
+["182T","Abuse of or dependence on psychoactive substances, including alcohol","F10–F19"],
+["910T","Delirium (alcohol or drug); drug-induced organic mental disorders","F05, F10.3–F10.5, F11–F19 (.3–.5)"],
+["903T","Attempted suicide, irrespective of cause","X60–X84 + injury/poisoning code"],
+["901T","Acute stress disorder with recent significant trauma","F43.0"],
+["908T","Anorexia nervosa and bulimia nervosa","F50.0–F50.3"],
+["909T","Treatable dementia","F02.8"]]]
+];
+var CDL=[["Addison's disease","E27.1"],["Asthma","J45"],["Bipolar mood disorder","F31"],["Bronchiectasis","J47"],["Cardiac failure","I50"],["Cardiomyopathy","I42"],["Chronic obstructive pulmonary disease","J43, J44"],["Chronic renal disease","N18"],["Coronary artery disease","I20, I25"],["Crohn's disease","K50"],["Diabetes insipidus","E23.2, N25.1"],["Diabetes mellitus type 1","E10"],["Diabetes mellitus type 2","E11"],["Dysrhythmias","I47–I49"],["Epilepsy","G40"],["Glaucoma","H40"],["Haemophilia","D66, D67"],["Hyperlipidaemia","E78"],["Hypertension","I10–I15"],["Hypothyroidism","E03, E89.0"],["Multiple sclerosis","G35"],["Parkinson's disease","G20"],["Rheumatoid arthritis","M05, M06"],["Schizophrenia","F20"],["Systemic lupus erythematosus","M32"],["Ulcerative colitis","K51"],["HIV/AIDS (PMB, often listed as the 27th)","B20–B24, Z21"]];
+
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 (function(){
+  var box=document.getElementById('dtp'),h='';
+  DTP.forEach(function(g){
+    h+='<details><summary><span class="t">'+esc(g[0])+'</span><span class="n">'+esc(g[1])+' · '+g[2].length+'</span></summary><div class="inner"><div class="tbl"><table><thead><tr><th>DTP</th><th>Condition</th><th>ICD-10</th></tr></thead><tbody>';
+    g[2].forEach(function(r){h+='<tr><td class="dtp">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="icd">'+esc(r[2])+'</td></tr>';});
+    h+='</tbody></table></div></div></details>';
+  });
+  box.innerHTML=h;
+  var c='';CDL.forEach(function(r){c+='<tr><td>'+esc(r[0])+'</td><td class="icd">'+esc(r[1])+'</td></tr>';});
+  document.getElementById('cdl').innerHTML=c;
+
   var q=document.getElementById('q'),btn=document.getElementById('toggle'),nores=document.getElementById('nores');
-  var items=[].slice.call(document.querySelectorAll('#dtp details'));
+  var groups=[].slice.call(box.querySelectorAll('details'));
+  function inRange(code,txt){
+    // match an ICD code like N10 or J18.0 against "J12–J18" style ranges
+    var m=code.match(/^([A-Z])(\d\d)/);if(!m)return false;
+    var L=m[1],n=+m[2],re=/([A-Z])(\d\d)(?:\.\d)?\s*–\s*([A-Z])?(\d\d)/g,x;
+    while((x=re.exec(txt))){var a=x[1],b=x[3]||x[1];if(a===L&&b===L&&n>=+x[2]&&n<=+x[4])return true;}
+    return false;
+  }
   function filter(){
-    var v=q.value.trim().toLowerCase(),hits=0;
-    items.forEach(function(d){
-      var m=!v||d.textContent.toLowerCase().indexOf(v)>-1;
-      d.hidden=!m; if(m){hits++; d.open=!!v;}
+    var v=q.value.trim(),lv=v.toLowerCase(),up=v.toUpperCase(),hits=0,isCode=/^[A-Z]\d\d/.test(up);
+    groups.forEach(function(d){
+      var any=false;
+      [].forEach.call(d.querySelectorAll('tbody tr'),function(tr){
+        var t=tr.textContent,ok=!v||t.toLowerCase().indexOf(lv)>-1||(isCode&&(t.indexOf(up.slice(0,3))>-1||inRange(up,tr.cells[2].textContent)));
+        tr.hidden=!ok;tr.classList.toggle('hit',!!v&&ok);if(ok)any=true;
+      });
+      d.hidden=!any;if(any)hits++;d.open=!!v&&any;
     });
     nores.hidden=hits>0;
   }
   q.addEventListener('input',filter);
   btn.addEventListener('click',function(){
     var open=btn.textContent==='Open all';
-    items.forEach(function(d){if(!d.hidden)d.open=open;});
+    groups.forEach(function(d){if(!d.hidden)d.open=open;});
     btn.textContent=open?'Close all':'Open all';
   });
 })();

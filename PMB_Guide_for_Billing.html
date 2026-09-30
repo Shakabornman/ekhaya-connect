@@ -1,0 +1,386 @@
+<title>PMB Guide for Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single reading column; a rules strip, then collapsible chapters that mirror the scheme's own PMB structure */
+:root{
+  --bg:#f5f7f8; --surface:#ffffff; --fg:#17232b; --muted:#566771; --line:#d9e1e5;
+  --accent:#0b6e79; --accent-soft:#e0f0f1; --warn:#9a5a00; --warn-soft:#fbf0dc; --code-bg:#eef2f4;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171b; --surface:#16222a; --fg:#e3ebee; --muted:#9db0b9; --line:#29404b;
+  --accent:#5cc3cc; --accent-soft:#163a40; --warn:#f0b35a; --warn-soft:#3a2c15; --code-bg:#1d2e37; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171b; --surface:#16222a; --fg:#e3ebee; --muted:#9db0b9; --line:#29404b;
+  --accent:#5cc3cc; --accent-soft:#163a40; --warn:#f0b35a; --warn-soft:#3a2c15; --code-bg:#1d2e37; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body)}
+.wrap{max-width:52rem;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(1.8rem,5vw,2.5rem)}
+h2{font-size:1.35rem}
+h3{font-size:1.05rem}
+p{margin:0}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.lede{color:var(--muted);max-width:65ch}
+header{display:grid;gap:10px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:grid}
+.stat b{font-family:var(--display);font-size:1.4rem;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat span{font-size:.85rem;color:var(--muted)}
+code,.code{font-family:var(--mono);font-size:.85em;background:var(--code-bg);padding:1px 5px;border-radius:4px;white-space:nowrap}
+section{display:grid;gap:12px}
+.search{display:flex;gap:8px;align-items:center}
+.search input{flex:1;min-width:0;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.search button{font:inherit;font-weight:600;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.search button:focus-visible{outline:2px solid var(--accent)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+summary{cursor:pointer;list-style:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary:focus-visible{outline:2px solid var(--accent);border-radius:10px}
+summary .t{font-family:var(--display);font-weight:600;font-size:1.05rem}
+summary .n{font-size:.8rem;color:var(--muted);white-space:nowrap}
+summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:1.2rem}
+details[open]>summary::after{content:"–"}
+.inner{padding:0 16px 16px;display:grid;gap:12px;min-width:0}
+ul{margin:0;padding-left:1.2rem;display:grid;gap:4px}
+.tip{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:.95rem}
+.tip strong{color:var(--accent)}
+.warn{background:var(--warn-soft);border-radius:8px;padding:10px 12px;font-size:.95rem}
+.warn strong{color:var(--warn)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.cdl{columns:2 14rem;column-gap:24px;padding-left:1.4rem}
+.cdl li{break-inside:avoid;margin-bottom:4px}
+.rules{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.rule h3{color:var(--accent)}
+footer{font-size:.85rem;color:var(--muted);display:grid;gap:6px}
+a{color:var(--accent)}
+mark{background:var(--warn-soft);color:var(--fg)}
+.empty{color:var(--muted);font-size:.95rem}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Hospital at Ekhaya · Billing &amp; Case Management</div>
+  <h1>Prescribed Minimum Benefits: a working guide for billing</h1>
+  <p class="lede">What medical schemes must pay for, how to code and authorise it so they do, and what to do when they don't. Prepared for Mercia Mbayimbayi and the billing team.</p>
+  <div class="stats">
+    <div class="stat"><b>271</b><span>Diagnosis and Treatment Pairs</span></div>
+    <div class="stat"><b>26</b><span>Chronic Disease List conditions</span></div>
+    <div class="stat"><b>All</b><span>emergency medical conditions</span></div>
+  </div>
+</header>
+
+<section>
+  <h2>What a PMB is</h2>
+  <p>PMBs are the minimum benefits every registered medical scheme must fund, on every option, under the Medical Schemes Act 131 of 1998 and its Regulations (Annexure A). They cover three groups:</p>
+  <ul>
+    <li><strong>Emergency medical conditions</strong>: any condition that fits the legal definition below, whatever the diagnosis.</li>
+    <li><strong>Diagnosis and Treatment Pairs (DTPs)</strong>: 271 listed conditions, each paired with the treatment the scheme must pay for. You will often hear "270"; the CMS count is 271.</li>
+    <li><strong>Chronic Disease List (CDL)</strong>: 26 chronic conditions where the scheme must pay for diagnosis, medication and ongoing management according to the treatment algorithms.</li>
+  </ul>
+  <div class="tip"><strong>The billing point:</strong> PMB status is decided by the <em>diagnosis</em>. If the ICD-10 code on the claim does not show a PMB condition, the scheme's system will not treat it as one. How the patient got ill or injured does not matter, only what the diagnosis is.</div>
+</section>
+
+<section>
+  <h2>Important rules</h2>
+  <div class="rules">
+    <div class="rule">
+      <h3>Paid from risk</h3>
+      <p>PMBs and CDL treatment must be paid from the scheme's risk pool. A scheme may not pay a PMB from the member's medical savings account (Regulation 10(6)).</p>
+      <p class="empty">GEMS options pay PMBs from day-to-day benefits first and then from risk once those run out. GEMS day-to-day benefits are risk-funded, not a savings account.</p>
+    </div>
+    <div class="rule">
+      <h3>DSPs and formularies</h3>
+      <p>Schemes may require members to use a Designated Service Provider (DSP), a network or a state facility, and a medicine formulary. If a member <em>voluntarily</em> goes elsewhere or uses a non-formulary medicine, the scheme may pay only up to its DSP rate and charge a co-payment.</p>
+      <p>If the use is <em>involuntary</em> (an emergency, the DSP was unavailable, or the DSP could not treat the patient in time), the scheme must pay in full, with no co-payment.</p>
+    </div>
+    <div class="rule">
+      <h3>Registration and authorisation</h3>
+      <p>CDL conditions must be registered with the scheme. Planned admissions need pre-authorisation. For emergency admissions, obtain authorisation as soon as possible after admission.</p>
+      <p><strong>GEMS:</strong> authorise within <strong>one working day</strong> of an emergency admission, or a <strong>R1,000 co-payment</strong> applies per admission.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Emergency medical conditions</h2>
+  <details>
+    <summary><span class="t">Legal definition and how to use it</span><span class="n">Regulation 7</span></summary>
+    <div class="inner">
+      <p>An emergency medical condition is <em>"the sudden and, at the time, unexpected onset of a health condition that requires immediate medical or surgical treatment, where failure to provide medical or surgical treatment would result in serious impairment to bodily functions or serious dysfunction of a bodily organ or part, or would place the person's life in serious jeopardy."</em></p>
+      <ul>
+        <li>An emergency is a PMB even when the final diagnosis is not on the DTP list.</li>
+        <li>An emergency is involuntary use of a non-DSP: the patient could not choose where to go. The scheme may not apply non-network penalties to the emergency treatment.</li>
+        <li>Once the patient is stable, the scheme may ask for transfer to its DSP. Care after a refused transfer can be treated as voluntary.</li>
+      </ul>
+      <div class="tip"><strong>For HAE casualty and GEMS:</strong> HAE is not on the GEMS hospital network. When a GEMS admission came through casualty as a real emergency, the file must show it: triage category, vital signs, time of arrival and the doctor's note. Obtain auth within one working day and code the diagnosis precisely. If the claim is then rejected under the non-network rule or the R15,000 exclusion, dispute it as an emergency PMB.</div>
+    </div>
+  </details>
+</section>
+
+<section>
+  <h2>Diagnosis and Treatment Pairs by body system</h2>
+  <div class="search">
+    <label for="q" class="eyebrow" style="white-space:nowrap">Find</label>
+    <input id="q" type="search" placeholder="Condition or ICD-10 code, e.g. pneumonia or J18">
+    <button id="toggle" type="button">Open all</button>
+  </div>
+  <p class="empty" id="nores" hidden>Nothing matches. Check the CMS coded PMB list linked at the bottom.</p>
+
+  <div id="dtp" style="display:grid;gap:10px">
+  <details>
+    <summary><span class="t">Brain &amp; Nervous System</span><span class="n">Neurology · neurosurgery</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Stroke: cerebral haemorrhage or infarction <code>I61–I64</code></li>
+        <li>Status epilepticus and epilepsy, acute management <code>G40–G41</code> (epilepsy is also on the CDL)</li>
+        <li>Meningitis and encephalitis, bacterial or viral <code>G00–G05</code>, <code>A39</code></li>
+        <li>Head injury with intracranial injury or loss of consciousness <code>S06</code></li>
+        <li>Spinal cord injury and compression</li>
+        <li>Brain and spinal cord tumours</li>
+      </ul>
+      <div class="tip"><strong>Coding tip:</strong> a headache (<code>R51</code>) or dizziness (<code>R42</code>) alone is not a PMB. When the doctor finds the cause, code the cause.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Respiratory System</span><span class="n">Lungs · airway</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Pneumonia <code>J12–J18</code></li>
+        <li>Acute asthma attack and status asthmaticus <code>J45–J46</code> (asthma is also on the CDL)</li>
+        <li>COPD, acute exacerbation <code>J44</code> (COPD is also on the CDL)</li>
+        <li>Pneumothorax and haemothorax</li>
+        <li>Pulmonary embolism <code>I26</code></li>
+        <li>Acute respiratory failure</li>
+        <li>Lung cancer</li>
+      </ul>
+      <div class="warn"><strong>HAE watch:</strong> <code>J18.0</code> (bronchopneumonia) appears as the primary code on a large number of casualty visits. Pneumonia is a PMB, so schemes audit it. The clinical notes must support the code, for example a chest X-ray, raised temperature or abnormal breath sounds.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Heart &amp; Circulation</span><span class="n">Cardiac · vascular</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Acute myocardial infarction <code>I21</code> and unstable angina <code>I20.0</code></li>
+        <li>Cardiac failure, acute <code>I50</code> (also on the CDL)</li>
+        <li>Dysrhythmias <code>I47–I49</code> (also on the CDL)</li>
+        <li>Valve disease requiring intervention</li>
+        <li>Deep vein thrombosis and other thrombo-embolism</li>
+        <li>Aortic aneurysm and acute arterial occlusion</li>
+      </ul>
+      <div class="tip"><strong>Coding tip:</strong> chest pain (<code>R07.4</code>) is a symptom code. Once MI, angina or another cause is confirmed, code that instead.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Gastro-Intestinal System</span><span class="n">Gut · liver · pancreas</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Appendicitis <code>K35</code></li>
+        <li>Intestinal obstruction <code>K56</code>, and hernia with obstruction or gangrene</li>
+        <li>Peptic ulcer with haemorrhage or perforation <code>K25–K28</code>; other upper or lower GI bleeding</li>
+        <li>Gastroenteritis or colitis with life-threatening haemorrhage or dehydration (excludes chronic UC and Crohn's)</li>
+        <li>Acute pancreatitis <code>K85</code></li>
+        <li>Peritonitis, liver failure, biliary obstruction and acute cholecystitis</li>
+        <li>GI cancers</li>
+      </ul>
+      <div class="warn"><strong>HAE watch:</strong> <code>A09.9</code> gastroenteritis on its own is <em>not</em> a PMB. It is one only when dehydration or haemorrhage is life-threatening, and then the dehydration code (<code>E86</code>) must be on the claim too, with the notes supporting it (for example IV fluids).</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Musculoskeletal &amp; Trauma</span><span class="n">Fractures · injuries · burns</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Fractures, open and closed, including reduction and fixation</li>
+        <li>Dislocations of major joints</li>
+        <li>Crush injuries and traumatic amputation</li>
+        <li>Burns: extensive burns, and burns to the face, hands or genitals</li>
+        <li>Septic arthritis and acute osteomyelitis</li>
+        <li>Rheumatoid arthritis (CDL)</li>
+      </ul>
+      <div class="warn"><strong>Injury rule:</strong> every injury code (<code>S00–T98</code>) needs an External Cause Code (<code>V01–Y98</code>) as a secondary code, or schemes reject the claim. Simple low back pain (<code>M54.5</code>) and soft-tissue pain are not PMBs.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Ear, Nose &amp; Throat</span><span class="n">ENT · head and neck</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Acute upper airway obstruction</li>
+        <li>Cleft lip and palate repair</li>
+        <li>Cancers of the oral cavity, pharynx and larynx</li>
+      </ul>
+      <div class="tip"><strong>Coding tip:</strong> uncomplicated tonsillitis (<code>J03.9</code>), pharyngitis and sinusitis are not PMBs. They are day-to-day claims.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Eye Conditions</span><span class="n">Ophthalmology</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Cataract</li>
+        <li>Glaucoma (also on the CDL)</li>
+        <li>Retinal detachment</li>
+        <li>Penetrating eye injuries and other serious eye trauma</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Systemic &amp; Infectious Diseases</span><span class="n">Infections · blood · cancers</span></summary>
+    <div class="inner">
+      <ul>
+        <li>HIV/AIDS: diagnosis, antiretroviral therapy and opportunistic infections</li>
+        <li>Tuberculosis <code>A15–A19</code></li>
+        <li>Septicaemia <code>A40–A41</code></li>
+        <li>Malaria <code>B50–B54</code></li>
+        <li>Acute leukaemias, lymphomas and other haematological cancers</li>
+        <li>Haemophilia (CDL)</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Kidney &amp; Urinary</span><span class="n">Renal · urology</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Acute renal failure <code>N17</code></li>
+        <li>End-stage renal disease: dialysis and transplant (chronic renal disease is on the CDL). This is relevant to Kuruman Renal Clinic.</li>
+        <li>Testicular torsion</li>
+        <li>Prostate and other urological cancers</li>
+      </ul>
+      <div class="warn"><strong>HAE watch:</strong> <code>N10</code> (acute pyelonephritis) is the primary code on nearly every casualty visit since April 2026. Check each one against the clinical notes. Wrong codes that change what a scheme pays can be treated as fraud, whether or not N10 is a PMB.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Mental Health</span><span class="n">Psychiatric ward</span></summary>
+    <div class="inner">
+      <div class="tbl"><table>
+        <thead><tr><th>Condition</th><th>What the scheme must fund per year</th></tr></thead>
+        <tbody>
+          <tr><td>Major depression and bipolar mood disorder</td><td>Hospital care up to 3 weeks, <em>or</em> up to 15 outpatient psychotherapy contacts</td></tr>
+          <tr><td>Schizophrenia and paranoid or psychotic disorders</td><td>Hospital care up to 3 weeks</td></tr>
+          <tr><td>Substance abuse (including detox)</td><td>Hospital care up to 3 weeks</td></tr>
+          <tr><td>Anorexia and bulimia nervosa</td><td>Hospital care up to 3 weeks, or at least 15 outpatient contacts</td></tr>
+          <tr><td>Acute stress disorder with recent significant trauma</td><td>Hospital admission up to 3 days, or up to 12 outpatient contacts</td></tr>
+          <tr><td>Attempted suicide</td><td>Hospital care up to 3 days, or up to 6 outpatient contacts</td></tr>
+        </tbody>
+      </table></div>
+      <div class="tip"><strong>For HAE's psychiatric ward:</strong> count PMB days per patient per year. Once a patient passes 21 days, the rest of the stay is paid from normal benefits or by the patient. Warn the patient and get authorisation for the extension before day 21, not after discharge. <code>F32.2</code> (severe depression) is correctly used as the PMB code here.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Pregnancy &amp; Newborns</span><span class="n">Obstetrics · neonatal</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Antenatal care, delivery, and pregnancy complications</li>
+        <li>Ectopic pregnancy and miscarriage with complications</li>
+        <li>Newborn care, including low birth weight with breathing problems and neonatal infections</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Endocrine, Skin &amp; Breast</span><span class="n">Metabolic · oncology</span></summary>
+    <div class="inner">
+      <ul>
+        <li>Diabetic ketoacidosis and hyperosmolar coma (diabetes is also on the CDL)</li>
+        <li>Thyroid cancer and complicated hyperthyroidism</li>
+        <li>Breast cancer and melanoma</li>
+      </ul>
+      <div class="tip"><strong>Coding tip:</strong> <code>E11.8</code> (type 2 diabetes with unspecified complications) is vague. If the complication is known, for example ketoacidosis, hyperglycaemia or a foot ulcer, code it.</div>
+    </div>
+  </details>
+  </div>
+</section>
+
+<section>
+  <h2>Chronic Disease List (26 conditions)</h2>
+  <details>
+    <summary><span class="t">All CDL conditions</span><span class="n">Register with the scheme</span></summary>
+    <div class="inner">
+      <ol class="cdl">
+        <li>Addison's disease</li><li>Asthma</li><li>Bipolar mood disorder</li><li>Bronchiectasis</li>
+        <li>Cardiac failure</li><li>Cardiomyopathy</li><li>Chronic obstructive pulmonary disease</li>
+        <li>Chronic renal disease</li><li>Coronary artery disease</li><li>Crohn's disease</li>
+        <li>Diabetes insipidus</li><li>Diabetes mellitus type 1</li><li>Diabetes mellitus type 2</li>
+        <li>Dysrhythmias</li><li>Epilepsy</li><li>Glaucoma</li><li>Haemophilia</li>
+        <li>Hyperlipidaemia</li><li>Hypertension</li><li>Hypothyroidism</li><li>Multiple sclerosis</li>
+        <li>Parkinson's disease</li><li>Rheumatoid arthritis</li><li>Schizophrenia</li>
+        <li>Systemic lupus erythematosus</li><li>Ulcerative colitis</li>
+      </ol>
+      <div class="tip"><strong>In hospital:</strong> a CDL condition on its own does not make an admission a PMB. The admission is a PMB when the reason for it is a PMB, for example a hypertensive crisis or acute heart failure. A controlled chronic condition (e.g. <code>I10</code>) should be a secondary code.</div>
+    </div>
+  </details>
+</section>
+
+<section>
+  <h2>Billing checklist for every PMB account</h2>
+  <details open>
+    <summary><span class="t">Before the claim goes out</span><span class="n">Daily</span></summary>
+    <div class="inner">
+      <ol style="margin:0;padding-left:1.3rem;display:grid;gap:6px">
+        <li>The primary ICD-10 code is the diagnosis the doctor actually made, at full specificity (4th character where it exists), and the notes support it.</li>
+        <li>The diagnosis is coded, not the symptom. Use an R-code only when no diagnosis was made.</li>
+        <li>Every injury code has an External Cause Code.</li>
+        <li>Emergency admissions have triage and vital signs on file, and auth was obtained within one working day (GEMS: R1,000 co-payment otherwise).</li>
+        <li>Planned admissions have pre-authorisation, and the billed level of care matches what was authorised.</li>
+        <li>Psychiatric admissions: PMB days used this year are recorded, and an extension is requested before day 21.</li>
+        <li>Chronic conditions are listed as secondary codes, and the patient's CDL registration is noted.</li>
+      </ol>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">When a PMB claim is short-paid or rejected</span><span class="n">Dispute route</span></summary>
+    <div class="inner">
+      <ol style="margin:0;padding-left:1.3rem;display:grid;gap:6px">
+        <li>Check the rejection code on the remittance. Was it coding, authorisation, benefits exhausted, or non-network/DSP?</li>
+        <li>If it is a coding error, correct it and resubmit.</li>
+        <li>If it was paid from savings, or rejected as "benefits exhausted" although it is a PMB, write to the scheme asking for it to be reprocessed as a PMB from risk. Quote the ICD-10 code and Regulation 10(6).</li>
+        <li>If it was an emergency rejected for non-network use, send the triage notes and argue involuntary use of a non-DSP (Regulations 7 and 8).</li>
+        <li>If the scheme's internal dispute process fails, the member (or HAE on the member's behalf) can complain to the Council for Medical Schemes.</li>
+        <li>Record the outcome, so the agent can track which schemes and codes cause disputes.</li>
+      </ol>
+    </div>
+  </details>
+</section>
+
+<footer>
+  <p>Sources: <a href="https://www.medicalschemes.co.za/resources/pmb/" target="_blank" rel="noopener">Council for Medical Schemes: PMBs</a> · <a href="https://www.gems.gov.za/Information/Prescribed-Minimum-Benefits" target="_blank" rel="noopener">GEMS PMB rules</a> · <a href="https://www.sadag.org/images/pdf/pmb_consumerguidebooklet.pdf" target="_blank" rel="noopener">CMS PMB consumer booklet</a></p>
+  <p>This is a working summary, not the Regulations. The DTP examples are the common ones and not the full list of 271. Before disputing a claim, check the exact code against the CMS coded PMB list and the scheme's current rules. Prepared 30 September 2026.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+  var q=document.getElementById('q'),btn=document.getElementById('toggle'),nores=document.getElementById('nores');
+  var items=[].slice.call(document.querySelectorAll('#dtp details'));
+  function filter(){
+    var v=q.value.trim().toLowerCase(),hits=0;
+    items.forEach(function(d){
+      var m=!v||d.textContent.toLowerCase().indexOf(v)>-1;
+      d.hidden=!m; if(m){hits++; d.open=!!v;}
+    });
+    nores.hidden=hits>0;
+  }
+  q.addEventListener('input',filter);
+  btn.addEventListener('click',function(){
+    var open=btn.textContent==='Open all';
+    items.forEach(function(d){if(!d.hidden)d.open=open;});
+    btn.textContent=open?'Close all':'Open all';
+  });
+})();
+</script>

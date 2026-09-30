@@ -450,13 +450,21 @@ body {
 
 .tri-col-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 20px;
   margin-bottom: 28px;
 }
 
 .tri-col-row .tool-grid {
   margin-bottom: 0;
+}
+
+#clinical-column {
+  grid-column: span 2;
+}
+
+#clinical-column .tool-grid {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 #risk-stock-column {
@@ -1386,6 +1394,7 @@ function buildToolGrids(isExecutive) {
 
   const clinicalTools = [
     { icon:'📝', color:'#F0EAF8', name:'Motivation Letters', desc:'Medical aid motivation generator', url:'https://shakabornman.github.io/hae-motivation-tool/', badge:null },
+    { icon:'📘', color:'#EBF1F7', name:'PMB Guide for Billing', desc:'PMB coding and billing reference', url:'https://shakabornman.github.io/ekhaya-connect/PMB_Guide_for_Billing_standalone.html', badge:null },
   ];
   if (clinicalTools.length) {
     document.getElementById('clinical-column').style.display = 'block';

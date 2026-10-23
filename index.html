@@ -1350,7 +1350,7 @@ function initPortal(user) {
   // Board tier is not yet a formal named tier in the access control spec —
   // this check is forward-compatible: harmless no-op until Core Infrastructure
   // adds 'board' to the tier list and assigns it to specific access_control docs.
-  const hasBoard = accessLevels.includes('board');
+  const hasBoard = accessLevels.includes('board') || accessLevels.includes('cosec');
   const showExecutiveTab = isExecutive || hasBoard;
 
   if (showExecutiveTab) {

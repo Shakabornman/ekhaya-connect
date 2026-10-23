@@ -593,7 +593,7 @@ onAuthStateChanged(auth, async (user) => {
   // Access check per Ekhaya Connect convention: access_control/{uid}.accessLevels (array)
   const accessDocSnap = await getDoc(doc(db, 'access_control', user.uid));
   const accessLevels = accessDocSnap.exists() ? (accessDocSnap.data().accessLevels || []) : [];
-  const hasAccess = accessLevels.includes('executive') || accessLevels.includes('board');
+  const hasAccess = accessLevels.includes('executive') || accessLevels.includes('board') || accessLevels.includes('cosec');
 
   if (!hasAccess) {
     authScreen.style.display = 'none';

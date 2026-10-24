@@ -1048,21 +1048,14 @@ body {
             <h3>Staff Resources</h3>
           </div>
           <div class="info-card-body">
-            <div class="info-item">
-              <span class="item-icon">📖</span>
-              <div><div>Employee Handbook</div><div class="item-sub">Your rights and responsibilities</div></div>
-              <span class="coming-soon">Soon</span>
-            </div>
-            <div class="info-item">
+            <div class="info-item" role="button" tabindex="0" style="cursor:pointer" onclick="ppQuickFind('HUM-F021')">
               <span class="item-icon">🏖</span>
-              <div><div>Leave Calendar 2026</div><div class="item-sub">Public holidays and leave schedule</div></div>
-              <span class="coming-soon">Soon</span>
+              <div><div>Leave Application</div><div class="item-sub">Find the leave application form (HUM-F021)</div></div>
             </div>
-            <div class="info-item">
+            <a class="info-item" href="https://shakabornman.github.io/hae-pharmacy/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
               <span class="item-icon">💊</span>
-              <div><div>Drug Formulary</div><div class="item-sub">Approved medication list</div></div>
-              <span class="coming-soon">Soon</span>
-            </div>
+              <div><div>Drug Formulary</div><div class="item-sub">Approved medication list (nursing, finance and executive sign-in)</div></div>
+            </a>
           </div>
         </div>
       </div>
@@ -1653,6 +1646,18 @@ function initPPBrowser() {
   }
 }
 initPPBrowser();
+
+// Quick-find from a tile (e.g. the Leave Application form): fills the P&P search and shows the matches.
+window.ppQuickFind = async function(term) {
+  const searchEl = document.getElementById('pp-search');
+  if (!searchEl) return;
+  await loadPPDocuments();
+  searchEl.value = term;
+  const vol = document.getElementById('pp-volume-filter'); if (vol) vol.value = '';
+  const typ = document.getElementById('pp-type-filter'); if (typ) typ.value = '';
+  renderPPResults();
+  searchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────
 window.showPage = function(pageId) {

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hospital Committees — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2A43; --ink-soft: #4A5C70; --paper: #F7F6F2; --paper-line: #E3DFD4;
+    --gold: #B8912F; --gold-soft: #F1E7CD; --green: #1E6F4C; --green-soft: #E4F2EA;
+    --amber: #9A6B12; --amber-soft: #FBEFD8; --gray: #6B7280; --gray-soft: #EDEDED;
+    --danger: #A6303A; --danger-soft: #F8E4E6; --blue: #1E5F8F; --blue-soft: #E8F1F8; --radius: 3px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px; }
+  h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
+
+  #authScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; }
+  .seal { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 22px; color: var(--gold); }
+  .auth-card { background: #fff; border: 1px solid var(--paper-line); padding: 40px; width: 340px; max-width: 92vw; text-align: center; }
+  .auth-card h1 { font-size: 20px; margin: 12px 0 4px; }
+  .auth-card p { color: var(--ink-soft); margin: 0 0 20px; font-size: 13px; }
+  .auth-card input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--paper-line); border-radius: var(--radius); font-family: inherit; font-size: 14px; }
+  .auth-card button { width: 100%; padding: 10px 12px; background: var(--ink); color: #fff; border: none; border-radius: var(--radius); font-weight: 600; font-size: 13px; cursor: pointer; }
+  #authError { color: var(--danger); font-size: 12px; min-height: 16px; margin-top: 6px; }
+
+  #app { display: none; }
+  header.top { background: var(--ink); color: #fff; padding: 22px 36px; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+  header.top .brand-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-soft); opacity: 0.85; }
+  header.top h1 { color: #fff; font-size: 24px; margin: 2px 0 0; }
+  header.top .who { font-size: 12px; color: #c7d2df; text-align: right; }
+  header.top .who button { background: none; border: 1px solid #3c5a76; color: #dce6ef; padding: 4px 10px; border-radius: var(--radius); font-size: 11px; margin-top: 6px; cursor: pointer; }
+  main { padding: 28px 36px 60px; max-width: 1180px; margin: 0 auto; }
+  .note { background: var(--blue-soft); border: 1px solid #c9dcea; color: #234e6e; padding: 10px 14px; border-radius: var(--radius); font-size: 12px; margin-bottom: 18px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar input[type="search"], .toolbar select { padding: 9px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); font-family: inherit; font-size: 13px; background: #fff; }
+  .toolbar input[type="search"] { width: 260px; max-width: 100%; }
+  .btn { padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink); background: #fff; color: var(--ink); font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid:hover { background: #16385a; }
+  .btn:hover { background: var(--gray-soft); }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn.ghost { border-color: var(--paper-line); color: var(--ink-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--paper-line); border-top: 3px solid var(--gold); padding: 18px 20px; cursor: pointer; }
+  .card:hover { box-shadow: 0 2px 10px rgba(15,42,67,0.08); }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card .meta { color: var(--ink-soft); font-size: 12px; margin-top: 6px; }
+  .card .chair { margin-top: 10px; font-size: 13px; }
+  .card .chair b { font-weight: 600; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .badge.active { background: var(--green-soft); color: var(--green); }
+  .badge.dormant { background: var(--amber-soft); color: var(--amber); }
+  .badge.dissolved { background: var(--gray-soft); color: var(--gray); }
+  .badge.vacant { background: var(--danger-soft); color: var(--danger); }
+  .badge.flag { background: var(--amber-soft); color: var(--amber); }
+  .badge.sup { background: var(--gray-soft); color: var(--gray); }
+  .empty { text-align: center; padding: 48px 24px; color: var(--ink-soft); background: #fff; border: 1px solid var(--paper-line); }
+
+  .back { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 13px; padding: 0; margin-bottom: 14px; font-family: inherit; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-head h2 { margin: 0 0 6px; font-size: 26px; }
+  .section { background: #fff; border: 1px solid var(--paper-line); padding: 20px 22px; margin-bottom: 18px; }
+  .section h3 { margin: 0 0 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; font-size: 13px; }
+  .kv dt { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+  .kv dd { margin: 0; }
+  ul.plain { margin: 0; padding-left: 18px; }
+  table.reg { width: 100%; border-collapse: collapse; }
+  table.reg th { text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); padding: 10px 12px; border-bottom: 2px solid var(--ink); }
+  table.reg td { padding: 11px 12px; border-bottom: 1px solid var(--paper-line); vertical-align: middle; }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--paper-line); flex-wrap: wrap; }
+  .tab { padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; }
+  .tab.active { color: var(--ink); border-bottom-color: var(--gold); }
+  .muted { color: var(--ink-soft); font-size: 12px; }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,42,67,0.45); align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .overlay.open { display: flex; }
+  .modal { background: #fff; width: 560px; max-width: 94vw; max-height: 90vh; overflow-y: auto; border-radius: 4px; padding: 26px 28px; }
+  .modal h2 { font-size: 19px; margin: 0 0 4px; }
+  .modal .sub { color: var(--ink-soft); font-size: 12px; margin-bottom: 16px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input[type=text], .field input[type=date], .field input[type=file], .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--paper-line); border-radius: 3px; font-family: inherit; font-size: 13px; }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field .help { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+  .field .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .field .checks label { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); display: flex; gap: 5px; align-items: center; margin: 0; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  #modalError { color: var(--danger); font-size: 12px; min-height: 16px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 4px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 80; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+  @media (max-width: 720px) { main { padding: 18px 14px 50px; } header.top { padding: 16px; } .kv { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="seal">HAE</div>
+  <div class="auth-card">
+    <h1>Hospital Committees</h1>
+    <p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" />
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+    <button id="loginBtn">Sign in</button>
+    <div id="authError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Hospital at Ekhaya — Hospital Committees</div>
+      <h1>Committees</h1>
+    </div>
+    <div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+// Same Firebase project as the rest of Ekhaya Connect (hae-vuma-92fca).
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain: "hae-vuma-92fca.firebaseapp.com",
+  projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app",
+  messagingSenderId: "1052424261313",
+  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const ROLE_LABELS = { chair: 'Chair', deputy_chair: 'Deputy chair', secretary: 'Secretary', member: 'Member', ex_officio: 'Ex officio', invited: 'Invited' };
+const DOC_TYPES = { terms_of_reference: 'Terms of reference', appointment_letter: 'Appointment letter', agenda: 'Agenda', minutes: 'Minutes', action_register: 'Action register', readiness_report: 'Readiness report', annual_report: 'Annual report', report: 'Report', resolution: 'Resolution', policy: 'Policy', other: 'Other' };
+const TIERS = ['hr', 'finance', 'nursing', 'billing', 'casem', 'marketing', 'support', 'security'];
+
+let me = null;            // { uid, email, displayName, levels, isExec }
+let committees = [];      // loaded committee docs
+let members = {};         // committeeId -> member docs
+let employees = null;     // executive only, loaded on demand
+let state = { slug: new URLSearchParams(location.search).get('c'), q: '', status: 'all', docTab: 'current', docType: 'all' };
+
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const lines = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
+const csv = (t) => String(t || '').split(',').map((x) => x.trim()).filter(Boolean);
+const slugify = (t) => String(t).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const today = () => new Date().toISOString().slice(0, 10);
+
+function toast(msg, type) {
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (type === 'error' ? ' error' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.className = 'toast'; }, 3800);
+}
+
+// ---------- Auth ----------
+$('loginBtn').addEventListener('click', async () => {
+  $('authError').textContent = '';
+  try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); }
+  catch (e) { console.error('Sign-in error:', e); $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message || 'unknown error'); }
+});
+$('signOutBtn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { me = null; $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  // access_control/{uid}.accessLevels (array). Any signed-in staff member may open the directory.
+  let levels = [];
+  try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn('access_control read failed', e); }
+  me = { uid: user.uid, email: user.email, displayName: user.displayName || user.email, levels, isExec: levels.includes('executive') };
+  $('authScreen').style.display = 'none'; $('app').style.display = 'block';
+  $('whoName').textContent = me.displayName;
+  await loadAll();
+  render();
+});
+
+// ---------- Data ----------
+async function loadAll() {
+  try {
+    // Staff may only list committees marked 'staff'. Executives list everything.
+    const q = me.isExec ? collection(db, 'committees') : query(collection(db, 'committees'), where('directoryVisibility', '==', 'staff'));
+    const snap = await getDocs(q);
+    committees = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    members = {};
+    await Promise.all(committees.map(async (c) => {
+      const ms = await getDocs(query(collection(db, 'committee_members'), where('committeeId', '==', c.id)));
+      members[c.id] = ms.docs.map((d) => ({ id: d.id, ...d.data() }));
+    }));
+  } catch (e) { console.error(e); toast('Could not load committees: ' + (e.message || e), 'error'); }
+}
+const activeMembers = (cid) => (members[cid] || []).filter((m) => m.status === 'active');
+const chairOf = (cid) => activeMembers(cid).find((m) => m.role === 'chair');
+function seatList(c) {
+  // Each seat shows who holds it, or Vacant. Members without a seat appear as extra rows.
+  const act = activeMembers(c.id);
+  const used = new Set();
+  const rows = (c.seats || []).map((s) => {
+    const m = act.find((x) => x.seatId === s.seatId); if (m) used.add(m.id);
+    return { seat: s, member: m || null };
+  });
+  act.filter((m) => !used.has(m.id)).forEach((m) => rows.push({ seat: { seatId: null, role: m.role, title: m.seatTitle || '' }, member: m }));
+  return rows;
+}
+const canReadDocs = (c) => me.isExec || (c.docReadTiers || []).some((t) => me.levels.includes(t));
+async function audit(committeeId, action, before, after) {
+  await addDoc(collection(db, 'committee_audit'), { committeeId, action, by: me.uid, byName: me.displayName, at: serverTimestamp(), before: before ?? null, after: after ?? null });
+}
+
+// ---------- Rendering ----------
+function render() {
+  const c = committees.find((x) => x.slug === state.slug || x.id === state.slug);
+  if (state.slug && c) return renderCommittee(c);
+  state.slug = null; renderDirectory();
+}
+function go(slug) {
+  state.slug = slug; state.docTab = 'current'; state.docType = 'all';
+  history.pushState({}, '', slug ? '?c=' + encodeURIComponent(slug) : location.pathname);
+  render(); window.scrollTo(0, 0);
+}
+window.addEventListener('popstate', () => { state.slug = new URLSearchParams(location.search).get('c'); render(); });
+window.go = go;
+
+function renderDirectory() {
+  const list = committees.filter((c) => (state.status === 'all' || c.status === state.status) && (!state.q || String(c.name).toLowerCase().includes(state.q.toLowerCase())));
+  $('view').innerHTML = `
+    <div class="note">Hospital committees only. Board committees are kept in Board Governance, not here.</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="search" id="q" placeholder="Search committees" value="${esc(state.q)}" />
+        <select id="st"><option value="all">All statuses</option>${['active', 'dormant', 'dissolved'].map((s) => `<option value="${s}" ${state.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+      </div>
+      ${me.isExec ? '<button class="btn solid" id="addC">+ New committee</button>' : ''}
+    </div>
+    ${list.length ? '<div class="grid">' + list.map(cardHtml).join('') + '</div>' : '<div class="empty">No committees to show.</div>'}`;
+  $('q').addEventListener('input', (e) => { state.q = e.target.value; renderDirectory(); $('q').focus(); $('q').setSelectionRange(state.q.length, state.q.length); });
+  $('st').addEventListener('change', (e) => { state.status = e.target.value; renderDirectory(); });
+  if (me.isExec) $('addC').addEventListener('click', () => editCommittee(null));
+  document.querySelectorAll('.card').forEach((el) => el.addEventListener('click', () => go(el.dataset.slug)));
+}
+function cardHtml(c) {
+  const ch = chairOf(c.id);
+  const vac = seatList(c).filter((r) => !r.member).length;
+  return `<div class="card" data-slug="${esc(c.slug || c.id)}">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><h3>${esc(c.name)}</h3><span class="badge ${esc(c.status || 'active')}">${esc(c.status || 'active')}</span></div>
+    <div class="chair"><b>Chair:</b> ${ch ? esc(ch.displayName) : '<span class="badge vacant">Vacant</span>'}</div>
+    <div class="meta">${esc(c.meetingFrequency || 'Meeting frequency not set')} · ${activeMembers(c.id).length} member${activeMembers(c.id).length === 1 ? '' : 's'}${vac ? ` · ${vac} vacant seat${vac === 1 ? '' : 's'}` : ''}</div>
+    ${me.isExec && c.differsFromTor ? '<div class="meta"><span class="badge flag">Differs from terms of reference</span></div>' : ''}
+  </div>`;
+}
+
+function renderCommittee(c) {
+  const rows = seatList(c);
+  const lead = ['chair', 'deputy_chair', 'secretary'].map((r) => {
+    const m = activeMembers(c.id).find((x) => x.role === r);
+    return `<dt>${ROLE_LABELS[r]}</dt><dd>${m ? esc(m.displayName) : '<span class="badge vacant">Vacant</span>'}</dd>`;
+  }).join('');
+  const li = (a) => (a && a.length ? '<ul class="plain">' + a.map((x) => `<li>${esc(x)}</li>`).join('') + '</ul>' : '<span class="muted">Not set</span>');
+  const ended = (members[c.id] || []).filter((m) => m.status === 'ended').sort((a, b) => String(b.endedDate || '').localeCompare(String(a.endedDate || '')));
+  $('view').innerHTML = `
+    <button class="back" id="backBtn">← All committees</button>
+    <div class="page-head">
+      <div><h2>${esc(c.name)}</h2><span class="badge ${esc(c.status || 'active')}">${esc(c.status || 'active')}</span>
+        ${me.isExec && c.differsFromTor ? ' <span class="badge flag">Differs from terms of reference</span>' : ''}</div>
+      ${me.isExec ? '<div class="row-actions"><button class="btn" id="editC">Edit committee</button></div>' : ''}
+    </div>
+    <div class="section"><h3>About</h3>
+      <dl class="kv">
+        <dt>Purpose</dt><dd>${esc(c.purpose || 'Not set')}</dd>
+        <dt>Meets</dt><dd>${esc(c.meetingFrequency || 'Not set')}</dd>
+        <dt>Reports to</dt><dd>${esc((c.reportsTo || []).map((r) => { const t = committees.find((x) => x.id === r); return t ? t.name : String(r).toUpperCase() === r.toUpperCase() && r.length <= 5 ? r.toUpperCase() : r; }).join(', ') || 'Not set')}</dd>
+        <dt>Quorum</dt><dd>${esc(c.quorum || 'Not set')}</dd>
+        <dt>Standing agenda</dt><dd>${li(c.standingAgenda)}</dd>
+        <dt>Outputs</dt><dd>${li(c.outputs)}</dd>
+        <dt>Legal basis</dt><dd>${esc(c.legalBasis || 'Not set')}</dd>
+        <dt>Terms of reference</dt><dd>${esc(c.torPolicyRef || 'Not set')}</dd>
+        <dt>Related policies</dt><dd>${esc((c.relatedPolicies || []).join(', ') || 'None listed')}</dd>
+        <dt>Annexure E items</dt><dd>${esc((c.annexureERefs || []).join(', ') || 'None listed')}</dd>
+        ${me.isExec && c.differsFromTor ? `<dt>Difference note</dt><dd>${esc(c.differsNote || '')}</dd>` : ''}
+      </dl></div>
+    <div class="section"><h3>Leadership</h3><dl class="kv">${lead}</dl></div>
+    <div class="section"><h3>Seats and members ${me.isExec ? '<button class="btn small" id="appointBtn">+ Appoint</button>' : ''}</h3>
+      ${rows.length ? `<table class="reg"><thead><tr><th>Seat</th><th>Role</th><th>Name</th><th>Since</th><th>Term ends</th>${me.isExec ? '<th></th>' : ''}</tr></thead><tbody>
+        ${rows.map((r) => `<tr><td>${esc(r.seat.title || '—')}</td><td>${esc(ROLE_LABELS[r.seat.role] || r.seat.role || '')}</td>
+          <td>${r.member ? esc(r.member.displayName) + (r.member.externalOrg ? ` <span class="muted">(${esc(r.member.externalOrg)})</span>` : '') : '<span class="badge vacant">Vacant</span>'}</td>
+          <td>${esc(r.member ? r.member.appointedDate || '' : '')}</td><td>${esc(r.member ? r.member.termEndDate || '' : '')}</td>
+          ${me.isExec ? `<td><div class="row-actions">${r.member ? `<button class="btn small ghost" data-end="${esc(r.member.id)}">End seat</button>` : `<button class="btn small" data-fill="${esc(r.seat.seatId)}">Appoint</button>`}</div></td>` : ''}</tr>`).join('')}
+      </tbody></table>` : '<div class="muted">No seats set up yet.</div>'}</div>
+    <div class="section" id="docSection"><h3>Documents ${me.isExec ? '<button class="btn small" id="uploadBtn">+ Upload</button>' : ''}</h3><div id="docBody"><span class="muted">Loading…</span></div></div>
+    <div class="section"><h3>History</h3>
+      ${ended.length ? `<table class="reg"><thead><tr><th>Name</th><th>Role</th><th>Seat</th><th>From</th><th>To</th><th>Reason</th></tr></thead><tbody>${ended.map((m) => `<tr><td>${esc(m.displayName)}</td><td>${esc(ROLE_LABELS[m.role] || m.role)}</td><td>${esc(m.seatTitle || '')}</td><td>${esc(m.appointedDate || '')}</td><td>${esc(m.endedDate || '')}</td><td>${esc(m.endedReason || '')}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">No past members recorded.</div>'}
+      ${me.isExec ? '<div id="auditBody" style="margin-top:14px"></div>' : ''}</div>`;
+  $('backBtn').addEventListener('click', () => go(null));
+  if (me.isExec) {
+    $('editC').addEventListener('click', () => editCommittee(c));
+    $('appointBtn').addEventListener('click', () => appoint(c, null));
+    $('uploadBtn').addEventListener('click', () => uploadDoc(c, null));
+    document.querySelectorAll('[data-end]').forEach((b) => b.addEventListener('click', () => endSeat(c, b.dataset.end)));
+    document.querySelectorAll('[data-fill]').forEach((b) => b.addEventListener('click', () => appoint(c, b.dataset.fill)));
+    loadAudit(c);
+  }
+  loadDocs(c);
+}
+
+async function loadAudit(c) {
+  try {
+    const s = await getDocs(query(collection(db, 'committee_audit'), where('committeeId', '==', c.id)));
+    const rows = s.docs.map((d) => d.data()).sort((a, b) => (b.at?.seconds || 0) - (a.at?.seconds || 0)).slice(0, 25);
+    $('auditBody').innerHTML = '<div class="muted" style="margin-bottom:6px">Audit trail (latest 25)</div>' + (rows.length ? '<table class="reg"><tbody>' + rows.map((r) => `<tr><td class="muted">${esc(r.at ? new Date(r.at.seconds * 1000).toLocaleString() : '')}</td><td>${esc(r.byName || '')}</td><td>${esc(r.action)}</td></tr>`).join('') + '</tbody></table>' : '<div class="muted">Nothing recorded yet.</div>');
+  } catch (e) { console.warn(e); }
+}
+
+async function loadDocs(c) {
+  const body = $('docBody');
+  if (!canReadDocs(c)) { body.innerHTML = '<div class="muted">Documents for this committee are restricted.</div>'; return; }
+  try {
+    const s = await getDocs(query(collection(db, 'committee_documents'), where('committeeId', '==', c.id)));
+    const all = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const shown = all.filter((d) => (state.docTab === 'current' ? d.status !== 'superseded' : d.status === 'superseded') && (state.docType === 'all' || d.type === state.docType))
+      .sort((a, b) => String(b.meetingDate || b.title).localeCompare(String(a.meetingDate || a.title)));
+    body.innerHTML = `<div class="tabs"><button class="tab ${state.docTab === 'current' ? 'active' : ''}" data-tab="current">Current</button><button class="tab ${state.docTab === 'archive' ? 'active' : ''}" data-tab="archive">Replaced (archive)</button></div>
+      <div class="toolbar" style="margin-bottom:8px"><div class="toolbar-left"><select id="dt"><option value="all">All types</option>${Object.entries(DOC_TYPES).map(([k, v]) => `<option value="${k}" ${state.docType === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div></div>
+      ${shown.length ? `<table class="reg"><thead><tr><th>Title</th><th>Type</th><th>Meeting date</th><th></th></tr></thead><tbody>${shown.map((d) => `<tr><td>${esc(d.title)}</td><td>${esc(DOC_TYPES[d.type] || d.type)}</td><td>${esc(d.meetingDate || '')}</td>
+        <td><div class="row-actions"><button class="btn small" data-open="${esc(d.id)}">View</button>${me.isExec && d.status !== 'superseded' ? `<button class="btn small ghost" data-sup="${esc(d.id)}">Replace</button>` : ''}</div></td></tr>`).join('')}</tbody></table>` : '<div class="muted">No documents here yet.</div>'}`;
+    body.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { state.docTab = b.dataset.tab; loadDocs(c); }));
+    $('dt').addEventListener('change', (e) => { state.docType = e.target.value; loadDocs(c); });
+    body.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', async () => {
+      const d = all.find((x) => x.id === b.dataset.open);
+      try { const url = await getDownloadURL(ref(storage, d.storagePath)); window.open(url, '_blank', 'noopener'); }
+      catch (e) { console.error(e); toast('Could not open the file: ' + (e.code || e.message), 'error'); }
+    }));
+    body.querySelectorAll('[data-sup]').forEach((b) => b.addEventListener('click', () => uploadDoc(c, all.find((x) => x.id === b.dataset.sup))));
+  } catch (e) { console.error(e); body.innerHTML = '<div class="muted">Documents could not be loaded: ' + esc(e.code || e.message) + '</div>'; }
+}
+
+// ---------- Generic form modal ----------
+function form({ title, sub, fields, submitLabel }) {
+  return new Promise((resolve) => {
+    const m = $('modal');
+    m.innerHTML = `<h2>${esc(title)}</h2>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}<form id="mf">${fields.map(fieldHtml).join('')}<div id="modalError"></div>
+      <div class="modal-actions"><button type="button" class="btn" id="mCancel">Cancel</button><button type="submit" class="btn solid" id="mOk">${esc(submitLabel || 'Save')}</button></div></form>`;
+    $('overlay').classList.add('open');
+    const close = (v) => { $('overlay').classList.remove('open'); m.innerHTML = ''; resolve(v); };
+    $('mCancel').addEventListener('click', () => close(null));
+    $('mf').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const vals = {};
+      for (const f of fields) {
+        if (f.type === 'checks') vals[f.id] = [...document.querySelectorAll(`input[name="${f.id}"]:checked`)].map((x) => x.value);
+        else if (f.type === 'check') vals[f.id] = $('f_' + f.id).checked;
+        else if (f.type === 'file') vals[f.id] = $('f_' + f.id).files[0] || null;
+        else vals[f.id] = $('f_' + f.id).value;
+      }
+      for (const f of fields) if (f.required && !vals[f.id]) { $('modalError').textContent = f.label + ' is required.'; return; }
+      $('mOk').disabled = true; $('modalError').textContent = '';
+      try { close({ vals, ok: true }); } catch (err) { console.error(err); }
+    });
+  });
+}
+function fieldHtml(f) {
+  const v = f.value ?? '';
+  let input = '';
+  if (f.type === 'textarea') input = `<textarea id="f_${f.id}">${esc(v)}</textarea>`;
+  else if (f.type === 'select') input = `<select id="f_${f.id}">${f.options.map((o) => `<option value="${esc(o.v)}" ${String(o.v) === String(v) ? 'selected' : ''}>${esc(o.t)}</option>`).join('')}</select>`;
+  else if (f.type === 'checks') input = `<div class="checks">${f.options.map((o) => `<label><input type="checkbox" name="${f.id}" value="${esc(o)}" ${(f.value || []).includes(o) ? 'checked' : ''}/> ${esc(o)}</label>`).join('')}</div>`;
+  else if (f.type === 'check') input = `<label style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);display:flex;gap:6px;align-items:center"><input type="checkbox" id="f_${f.id}" ${v ? 'checked' : ''}/> ${esc(f.label)}</label>`;
+  else if (f.type === 'file') input = `<input type="file" id="f_${f.id}" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" />`;
+  else input = `<input type="${f.type || 'text'}" id="f_${f.id}" value="${esc(v)}" ${f.list ? `list="${f.list}"` : ''} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ''}/>`;
+  return `<div class="field">${f.type === 'check' ? '' : `<label for="f_${f.id}">${esc(f.label)}</label>`}${input}${f.help ? `<div class="help">${esc(f.help)}</div>` : ''}${f.datalist || ''}</div>`;
+}
+
+// ---------- Admin actions (executive only) ----------
+async function editCommittee(c) {
+  const isNew = !c;
+  const seatsText = (c?.seats || []).map((s) => `${s.role}: ${s.title}`).join('\n');
+  const r = await form({
+    title: isNew ? 'New committee' : 'Edit committee', sub: 'Executive only. Every change is recorded in the audit trail.',
+    fields: [
+      { id: 'name', label: 'Name', value: c?.name, required: true },
+      { id: 'purpose', label: 'Purpose', type: 'textarea', value: c?.purpose },
+      { id: 'status', label: 'Status', type: 'select', value: c?.status || 'active', options: ['active', 'dormant', 'dissolved'].map((x) => ({ v: x, t: x })) },
+      { id: 'meetingFrequency', label: 'Meets', value: c?.meetingFrequency, placeholder: 'e.g. Monthly' },
+      { id: 'reportsTo', label: 'Reports to', value: (c?.reportsTo || []).join(', '), help: 'Comma separated, e.g. coo, ceo, board' },
+      { id: 'quorum', label: 'Quorum', value: c?.quorum },
+      { id: 'standingAgenda', label: 'Standing agenda (one per line)', type: 'textarea', value: (c?.standingAgenda || []).join('\n') },
+      { id: 'outputs', label: 'Outputs (one per line)', type: 'textarea', value: (c?.outputs || []).join('\n') },
+      { id: 'legalBasis', label: 'Legal basis', value: c?.legalBasis },
+      { id: 'torPolicyRef', label: 'Terms of reference reference', value: c?.torPolicyRef, placeholder: 'e.g. ADM-007-CTR_HaE section 5.2' },
+      { id: 'relatedPolicies', label: 'Related policies', value: (c?.relatedPolicies || []).join(', '), help: 'Comma separated policy codes' },
+      { id: 'annexureERefs', label: 'Annexure E items', value: (c?.annexureERefs || []).join(', '), help: 'Comma separated, e.g. RES-01, RES-02' },
+      { id: 'seats', label: 'Seats (one per line: role: seat title)', type: 'textarea', value: seatsText, help: 'Roles: chair, deputy_chair, secretary, member, ex_officio, invited. Example: member: Nursing Services Manager' },
+      { id: 'directoryVisibility', label: 'Who sees this committee in the directory', type: 'select', value: c?.directoryVisibility || 'staff', options: [{ v: 'staff', t: 'All signed-in staff' }, { v: 'executive', t: 'Executives only' }] },
+      { id: 'docReadTiers', label: 'Extra tiers that may read documents (executives always can)', type: 'checks', options: TIERS, value: c?.docReadTiers || [] },
+      { id: 'differsFromTor', label: 'Differs from the terms of reference', type: 'check', value: !!c?.differsFromTor },
+      { id: 'differsNote', label: 'Note on the difference', value: c?.differsNote },
+    ],
+  });
+  if (!r) return;
+  const v = r.vals;
+  const old = c?.seats || [];
+  const seats = lines(v.seats).map((ln, i) => {
+    const idx = ln.indexOf(':'); const role = (idx > 0 ? ln.slice(0, idx) : 'member').trim(); const title = (idx > 0 ? ln.slice(idx + 1) : ln).trim();
+    const keep = old.find((s) => s.role === role && s.title === title);
+    return { seatId: keep ? keep.seatId : 's' + Date.now().toString(36) + i, role: ROLE_LABELS[role] ? role : 'member', title };
+  });
+  const id = c ? c.id : slugify(v.name);
+  const data = {
+    name: v.name.trim(), slug: c?.slug || id, purpose: v.purpose.trim(), status: v.status, meetingFrequency: v.meetingFrequency.trim(),
+    reportsTo: csv(v.reportsTo), quorum: v.quorum.trim(), standingAgenda: lines(v.standingAgenda), outputs: lines(v.outputs), legalBasis: v.legalBasis.trim(),
+    torPolicyRef: v.torPolicyRef.trim(), relatedPolicies: csv(v.relatedPolicies), annexureERefs: csv(v.annexureERefs), seats,
+    directoryVisibility: v.directoryVisibility, docReadTiers: v.docReadTiers, differsFromTor: v.differsFromTor, differsNote: v.differsNote.trim(),
+    updatedAt: serverTimestamp(),
+  };
+  try {
+    if (isNew) { if (committees.some((x) => x.id === id)) { toast('A committee with this name already exists.', 'error'); return; } data.createdAt = serverTimestamp(); await setDoc(doc(db, 'committees', id), data); }
+    else await updateDoc(doc(db, 'committees', id), data);
+    await audit(id, isNew ? 'Committee created: ' + data.name : 'Committee edited: ' + data.name, c ? { name: c.name, status: c.status, seats: c.seats } : null, { name: data.name, status: data.status, seats: data.seats });
+    toast('Saved.'); await loadAll(); state.slug = data.slug; history.replaceState({}, '', '?c=' + encodeURIComponent(data.slug)); render();
+  } catch (e) { console.error(e); toast('Could not save: ' + (e.code || e.message), 'error'); }
+}
+
+async function loadEmployees() {
+  if (employees) return employees;
+  try {
+    const s = await getDocs(collection(db, 'employees'));
+    employees = s.docs.map((d) => { const x = d.data(); const full = x.fullName || ''; const [last, first] = full.includes(',') ? full.split(',').map((t) => t.trim()) : ['', full]; return { id: d.id, name: (first + ' ' + last).trim() }; }).filter((e) => e.name).sort((a, b) => a.name.localeCompare(b.name));
+  } catch (e) { console.warn('employees not readable', e); employees = []; }
+  return employees;
+}
+
+async function appoint(c, seatId) {
+  const emps = await loadEmployees();
+  const seat = (c.seats || []).find((s) => s.seatId === seatId);
+  const r = await form({
+    title: 'Appoint to ' + c.name, sub: 'Choose an employee from the list, or type an outside member\'s name.',
+    fields: [
+      { id: 'seatId', label: 'Seat', type: 'select', value: seatId || '', options: [{ v: '', t: 'No seat (extra member)' }].concat((c.seats || []).map((s) => ({ v: s.seatId, t: `${ROLE_LABELS[s.role] || s.role}: ${s.title}` }))) },
+      { id: 'name', label: 'Name', value: '', list: 'empList', required: true, help: 'Start typing to pick an employee. A name that is not in the list is saved as an outside member.',
+        datalist: `<datalist id="empList">${emps.map((e) => `<option value="${esc(e.name)}"></option>`).join('')}</datalist>` },
+      { id: 'externalOrg', label: 'Organisation (outside members only)', value: '' },
+      { id: 'role', label: 'Role', type: 'select', value: seat?.role || 'member', options: Object.entries(ROLE_LABELS).map(([k, t]) => ({ v: k, t })) },
+      { id: 'appointedDate', label: 'Appointed on', type: 'date', value: today(), required: true },
+      { id: 'termEndDate', label: 'Term ends', type: 'date', value: '' },
+      { id: 'note', label: 'Appointed by (resolution or letter reference)', value: '' },
+    ],
+  });
+  if (!r) return;
+  const v = r.vals; const s2 = (c.seats || []).find((s) => s.seatId === v.seatId);
+  const emp = emps.find((e) => e.name.toLowerCase() === v.name.trim().toLowerCase());
+  const data = {
+    committeeId: c.id, seatId: v.seatId || null, seatTitle: s2 ? s2.title : '', role: s2 ? s2.role : v.role, displayName: emp ? emp.name : v.name.trim(),
+    employeeDocId: emp ? emp.id : null, externalName: emp ? null : v.name.trim(), externalOrg: emp ? null : (v.externalOrg.trim() || null),
+    appointedDate: v.appointedDate, termEndDate: v.termEndDate || null, status: 'active', appointedByNote: v.note.trim(), createdAt: serverTimestamp(),
+  };
+  if (s2 && activeMembers(c.id).some((m) => m.seatId === s2.seatId)) { toast('That seat is already filled. End the current seat first.', 'error'); return; }
+  try {
+    const ref2 = await addDoc(collection(db, 'committee_members'), data);
+    await audit(c.id, `Appointed ${data.displayName} as ${ROLE_LABELS[data.role] || data.role}`, null, { member: ref2.id, seatId: data.seatId });
+    toast('Appointed.'); await loadAll(); render();
+  } catch (e) { console.error(e); toast('Could not save: ' + (e.code || e.message), 'error'); }
+}
+
+async function endSeat(c, memberId) {
+  const m = (members[c.id] || []).find((x) => x.id === memberId); if (!m) return;
+  const r = await form({ title: 'End seat: ' + m.displayName, sub: 'The record is kept in the history. Nothing is deleted.', fields: [
+    { id: 'endedDate', label: 'Ended on', type: 'date', value: today(), required: true },
+    { id: 'endedReason', label: 'Reason', type: 'textarea', value: '' } ], submitLabel: 'End seat' });
+  if (!r) return;
+  try {
+    await updateDoc(doc(db, 'committee_members', memberId), { status: 'ended', endedDate: r.vals.endedDate, endedReason: r.vals.endedReason.trim() });
+    await audit(c.id, `Seat ended: ${m.displayName} (${ROLE_LABELS[m.role] || m.role})`, { status: 'active' }, { status: 'ended', endedDate: r.vals.endedDate });
+    toast('Seat ended.'); await loadAll(); render();
+  } catch (e) { console.error(e); toast('Could not save: ' + (e.code || e.message), 'error'); }
+}
+
+async function uploadDoc(c, replacing) {
+  const r = await form({
+    title: replacing ? 'Replace: ' + replacing.title : 'Upload document', sub: replacing ? 'The old version is moved to the archive and kept.' : 'PDF, Word, Excel or image.',
+    fields: [
+      { id: 'type', label: 'Type', type: 'select', value: replacing?.type || 'minutes', options: Object.entries(DOC_TYPES).map(([k, t]) => ({ v: k, t })) },
+      { id: 'title', label: 'Title', value: replacing?.title || '', required: true },
+      { id: 'meetingDate', label: 'Meeting date (if any)', type: 'date', value: replacing?.meetingDate || '' },
+      { id: 'file', label: 'File', type: 'file', required: true },
+    ], submitLabel: 'Upload' });
+  if (!r) return;
+  const v = r.vals;
+  try {
+    toast('Uploading…');
+    const safe = v.file.name.replace(/[^A-Za-z0-9._-]+/g, '_');
+    const storagePath = `committees/${c.id}/${v.type}/${Date.now()}_${safe}`;
+    await uploadBytes(ref(storage, storagePath), v.file);
+    const downloadUrl = await getDownloadURL(ref(storage, storagePath));
+    const newDoc = await addDoc(collection(db, 'committee_documents'), {
+      committeeId: c.id, type: v.type, title: v.title.trim(), meetingDate: v.meetingDate || null, storagePath, downloadUrl,
+      status: 'current', uploadedBy: me.uid, uploadedAt: serverTimestamp(), supersedes: replacing ? replacing.id : null,
+    });
+    if (replacing) {
+      const { id, ...old } = replacing;
+      await setDoc(doc(db, 'committee_documents_archive', id), { ...old, archivedAt: serverTimestamp(), supersededBy: newDoc.id });
+      await updateDoc(doc(db, 'committee_documents', id), { status: 'superseded', supersededBy: newDoc.id, supersededAt: serverTimestamp() });
+    }
+    await audit(c.id, (replacing ? 'Document replaced: ' : 'Document uploaded: ') + v.title.trim(), replacing ? { id: replacing.id } : null, { id: newDoc.id, storagePath });
+    toast('Uploaded.'); loadDocs(c); loadAudit(c);
+  } catch (e) { console.error(e); toast('Could not upload: ' + (e.code || e.message), 'error'); }
+}
+</script>
+</body>
+</html>

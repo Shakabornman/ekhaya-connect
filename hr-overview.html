@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HR Overview — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0F2A43; --ink-soft:#4A5C70; --paper:#F7F6F2; --line:#E3DFD4; --gold:#B8912F; --gold-soft:#F1E7CD; --green:#1E6F4C; --green-soft:#E4F2EA; --amber:#9A6B12; --amber-soft:#FBEFD8; --danger:#A6303A; --danger-soft:#F8E4E6; --blue:#1E5F8F; --blue-soft:#E8F1F8; --gray-soft:#EDEDED; --radius:3px; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; }
+  #authScreen, #deniedScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; }
+  .seal { width:56px; height:56px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:22px; color:var(--gold); }
+  .auth-card { background:#fff; border:1px solid var(--line); padding:40px; width:340px; max-width:92vw; text-align:center; }
+  .auth-card h1 { font-size:20px; margin:12px 0 4px; } .auth-card p { color:var(--ink-soft); margin:0 0 20px; font-size:13px; }
+  .auth-card input { width:100%; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:var(--radius); font:inherit; }
+  .auth-card button { width:100%; padding:10px 12px; background:var(--ink); color:#fff; border:none; border-radius:var(--radius); font-weight:600; font-size:13px; cursor:pointer; }
+  #authError { color:var(--danger); font-size:12px; min-height:16px; margin-top:6px; }
+  #app { display:none; }
+  header.top { background:var(--ink); color:#fff; padding:22px 36px; display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
+  header.top .eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft); opacity:.85; }
+  header.top h1 { color:#fff; font-size:24px; margin:2px 0 0; }
+  header.top .who { font-size:12px; color:#c7d2df; text-align:right; }
+  header.top .who button { background:none; border:1px solid #3c5a76; color:#dce6ef; padding:4px 10px; border-radius:var(--radius); font-size:11px; margin-top:6px; cursor:pointer; }
+  main { padding:26px 36px 60px; max-width:1180px; margin:0 auto; }
+  .note { background:var(--blue-soft); border:1px solid #c9dcea; color:#234e6e; padding:10px 14px; border-radius:var(--radius); font-size:12px; margin-bottom:18px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px; }
+  .tile { background:#fff; border:1px solid var(--line); border-top:3px solid var(--gold); padding:14px 16px; }
+  .tile .label { font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-soft); }
+  .tile .value { font-family:'Fraunces',serif; font-size:30px; margin-top:4px; }
+  .tile.warn { border-top-color:var(--danger); } .tile.warn .value { color:var(--danger); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:16px; margin-bottom:18px; }
+  .card { background:#fff; border:1px solid var(--line); padding:18px 20px; }
+  .card h3 { margin:0 0 12px; font-size:16px; }
+  .bar { display:grid; grid-template-columns:150px 1fr 40px; gap:8px; align-items:center; margin:5px 0; font-size:12px; }
+  .bar .name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar .track { background:var(--gray-soft); height:12px; border-radius:2px; overflow:hidden; } .bar .fill { background:var(--ink); height:100%; }
+  .bar .num { text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-soft); }
+  .muted { color:var(--ink-soft); font-size:12px; }
+  table.dq { width:100%; border-collapse:collapse; }
+  table.dq th { text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:9px 10px; border-bottom:2px solid var(--ink); }
+  table.dq td { padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px; font-weight:600; }
+  .badge.ok { background:var(--green-soft); color:var(--green); } .badge.bad { background:var(--danger-soft); color:var(--danger); } .badge.mid { background:var(--amber-soft); color:var(--amber); }
+  button.link { background:none; border:none; color:var(--blue); cursor:pointer; font:inherit; font-size:12px; padding:0; }
+  .recs { margin:6px 0 0; padding-left:18px; font-size:12px; color:var(--ink-soft); columns:2; }
+  @media (max-width:720px) { main { padding:16px 14px 50px; } header.top { padding:16px; } .bar { grid-template-columns:110px 1fr 34px; } .recs { columns:1; } }
+</style>
+</head>
+<body>
+<div id="authScreen"><div class="seal">HAE</div><div class="auth-card"><h1>HR Overview</h1><p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+  <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" /><input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" /><button id="loginBtn">Sign in</button><div id="authError"></div></div></div>
+<div id="deniedScreen" style="display:none"><div class="seal" style="border-color:var(--danger);color:var(--danger)">✕</div><div class="auth-card"><h1>Access restricted</h1><p>The HR Overview is for the executive and HR tiers. Contact the COO if you believe this is an error.</p><button id="signOutDenied">Sign out</button></div></div>
+<div id="app">
+  <header class="top"><div><div class="eyebrow">Hospital at Ekhaya — Executive</div><h1>HR Overview</h1></div><div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div></header>
+  <main id="view"><div class="muted">Loading…</div></main>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+$('loginBtn').addEventListener('click', async () => {
+  $('authError').textContent = '';
+  try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); }
+  catch (e) { $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message); }
+});
+$('signOutBtn').addEventListener('click', () => signOut(auth)); $('signOutDenied').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { $('authScreen').style.display = 'flex'; $('deniedScreen').style.display = 'none'; $('app').style.display = 'none'; return; }
+  let levels = [];
+  try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn(e); }
+  if (!(levels.includes('executive') || levels.includes('hr'))) { $('authScreen').style.display = 'none'; $('deniedScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  $('authScreen').style.display = 'none'; $('deniedScreen').style.display = 'none'; $('app').style.display = 'block';
+  $('whoName').textContent = user.displayName || user.email;
+  try {
+    const snap = await getDocs(collection(db, 'employees'));
+    // Keep only what the overview needs. Banking, ID and contact details are never copied out of the record.
+    render(snap.docs.map((d) => slim(d.id, d.data())), snap.docs.map((d) => Object.keys(d.data())));
+  } catch (e) { console.error(e); $('view').innerHTML = '<div class="note">Could not load employee records: ' + esc(e.code || e.message) + '</div>'; }
+});
+
+const blank = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
+function parseDate(s) { if (blank(s) || typeof s !== 'string') return null; const m = s.trim().replace(/\//g, '-').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null; }
+function slim(id, x) {
+  const reg = x.professionalRegistration || {};
+  return {
+    id, num: x.employeeNumber || id, name: x.fullName || ((x.lastName || '') + ', ' + (x.firstName || '')),
+    active: x.active === true, department: x.department, facility: x.facility, contractType: x.contractType, position: x.position,
+    gender: x.gender, equityGroup: x.equityGroup, payFrequency: x.payFrequency, payPoint: x.payPoint, nationality: x.nationality,
+    startDate: x.startDate, appointmentDate: x.appointmentDate, endDate: x.endDate, lastDayOfService: x.lastDayOfService, terminationReason: x.terminationReason,
+    hasEmail: !blank(x.email), hasCell: !blank(x.cellphone), popia: x.popiaConsent === true, bgCheck: x.backgroundCheckConsent === true,
+    regNo: !blank(reg.registrationNumber), regExpiry: reg.expiryDate || null, docsFlag: x.documentsUploaded, onboardFlag: x.hrOnboardingComplete,
+  };
+}
+const NURSE = /registered nurse|enrolled nurse|nursing manager|auxiliary|healthcare worker/i;
+const isNurse = (e) => NURSE.test(e.position || '');
+const monthKey = (d) => d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+
+function count(list, keyFn) { const m = {}; for (const e of list) { const k = keyFn(e); const kk = blank(k) ? '(not set)' : String(k); m[kk] = (m[kk] || 0) + 1; } return Object.entries(m).sort((a, b) => b[1] - a[1]); }
+function bars(entries, total) { const max = Math.max(1, ...entries.map((e) => e[1])); return entries.map(([n, c]) => `<div class="bar"><div class="name" title="${esc(n)}">${esc(n)}</div><div class="track"><div class="fill" style="width:${(c / max) * 100}%"></div></div><div class="num">${c}</div></div>`).join('') || '<div class="muted">Nothing to show.</div>'; }
+
+function render(all, keyLists) {
+  const active = all.filter((e) => e.active); const inactive = all.filter((e) => !e.active);
+  const now = new Date(); const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const nurses = active.filter(isNurse);
+  const checks = [
+    { label: 'Contract type not set (active staff)', list: active.filter((e) => blank(e.contractType)) },
+    { label: 'Pay point not set (active staff)', list: active.filter((e) => blank(e.payPoint)) },
+    { label: 'Start date missing (active staff)', list: active.filter((e) => blank(e.startDate)) },
+    { label: 'Email address missing (active staff)', list: active.filter((e) => !e.hasEmail) },
+    { label: 'Cellphone missing (active staff)', list: active.filter((e) => !e.hasCell) },
+    { label: 'Gender or equity group missing (active staff)', list: active.filter((e) => blank(e.gender) || blank(e.equityGroup)) },
+    { label: 'Active but end date has passed', list: active.filter((e) => { const d = parseDate(e.endDate); return d && d < startOfToday; }) },
+    { label: 'Dates written with "/" instead of "-"', list: all.filter((e) => [e.startDate, e.appointmentDate, e.endDate].some((s) => typeof s === 'string' && s.includes('/'))) },
+    { label: 'Nationality spelled differently ("South Africa")', list: all.filter((e) => e.nationality && e.nationality !== 'South African') },
+    { label: 'Position spelled "Clark" (should be "Clerk")', list: all.filter((e) => /clark/i.test(e.position || '')) },
+    { label: 'Pay frequency "Annual" (check)', list: active.filter((e) => /^annual/i.test(e.payFrequency || '')) },
+    { label: 'Onboarding or documents flag saved as text, not yes/no', list: all.filter((e) => typeof e.docsFlag === 'string' || typeof e.onboardFlag === 'string') },
+  ];
+  const legacy = keyLists.filter((ks) => ks.includes('accesslevel') || ks.includes('managerId') || ks.some((k) => k !== k.trim())).length;
+  const dqTotal = new Set(checks.flatMap((c) => c.list.map((e) => e.id))).size;
+
+  // joiners last 12 months and leavers
+  const joiners = {}; const cutoff = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
+  for (const e of all) { const d = parseDate(e.startDate) || parseDate(e.appointmentDate); if (d && d >= cutoff) joiners[monthKey(d)] = (joiners[monthKey(d)] || 0) + 1; }
+  const leavers = inactive.filter((e) => parseDate(e.endDate) || parseDate(e.lastDayOfService) || e.terminationReason);
+  const regDone = nurses.filter((e) => e.regNo).length; const regExp = nurses.filter((e) => e.regExpiry).length;
+
+  $('view').innerHTML = `
+    <div class="note">Totals and checks only. Banking, ID numbers, dates of birth and addresses are never shown here. Checks are worked out live from the employee records, so they update as you clean the data.</div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Active staff</div><div class="value">${active.length}</div></div>
+      <div class="tile"><div class="label">Inactive records</div><div class="value">${inactive.length}</div></div>
+      <div class="tile"><div class="label">Records with a data issue</div><div class="value">${dqTotal}</div></div>
+      <div class="tile warn"><div class="label">Nurses with no registration no.</div><div class="value">${nurses.length - regDone}</div></div>
+      <div class="tile"><div class="label">Leavers on record</div><div class="value">${leavers.length}</div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Active staff by department</h3>${bars(count(active, (e) => e.department))}</div>
+      <div class="card"><h3>Active staff by facility</h3>${bars(count(active, (e) => e.facility))}<h3 style="margin-top:18px">Contract type</h3>${bars(count(active, (e) => e.contractType))}</div>
+      <div class="card"><h3>Active staff by position</h3>${bars(count(active, (e) => e.position))}</div>
+      <div class="card"><h3>Payroll groups</h3>${bars(count(active, (e) => e.payFrequency))}<h3 style="margin-top:18px">Pay point</h3>${bars(count(active, (e) => e.payPoint))}</div>
+      <div class="card"><h3>Employment equity (active)</h3>${bars(count(active, (e) => e.gender))}<div style="height:10px"></div>${bars(count(active, (e) => e.equityGroup))}</div>
+      <div class="card"><h3>Joiners, last 12 months</h3>${bars(Object.entries(joiners).sort())}<div class="muted" style="margin-top:8px">Based on start or appointment date.</div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px"><h3>Compliance</h3>
+      <table class="dq"><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>
+        <tr><td>Nursing staff with a professional registration number recorded</td><td><span class="badge ${regDone === nurses.length && nurses.length ? 'ok' : 'bad'}">${regDone} of ${nurses.length}</span> <span class="muted">expiry dates recorded: ${regExp}</span></td></tr>
+        <tr><td>POPIA consent recorded on the employee record (active)</td><td><span class="badge ${active.filter((e) => e.popia).length === active.length ? 'ok' : 'mid'}">${active.filter((e) => e.popia).length} of ${active.length}</span></td></tr>
+        <tr><td>Background check consent recorded (active)</td><td><span class="badge ${active.filter((e) => e.bgCheck).length === active.length ? 'ok' : 'mid'}">${active.filter((e) => e.bgCheck).length} of ${active.length}</span></td></tr>
+        <tr><td>Records using old or duplicate field names (cleanup for the HR Portal)</td><td><span class="badge ${legacy ? 'mid' : 'ok'}">${legacy}</span></td></tr>
+      </tbody></table>
+      <div class="muted" style="margin-top:8px">Registration control is policy HUM-018-PRC. Consent flags are only one part of the lawful basis for processing; confirm the approach with the Information Officer.</div></div>
+    <div class="card"><h3>Data quality: what to fix</h3>
+      <table class="dq"><thead><tr><th>Check</th><th>Records</th></tr></thead><tbody>
+      ${checks.map((c, i) => `<tr><td>${esc(c.label)}${c.list.length ? ` <button class="link" data-show="${i}">show</button><ul class="recs" id="recs${i}" style="display:none">${c.list.map((e) => `<li>${esc(e.num)} · ${esc(e.name)}</li>`).join('')}</ul>` : ''}</td><td><span class="badge ${c.list.length ? 'bad' : 'ok'}">${c.list.length}</span></td></tr>`).join('')}
+      </tbody></table></div>`;
+  document.querySelectorAll('[data-show]').forEach((b) => b.addEventListener('click', () => { const ul = $('recs' + b.dataset.show); const open = ul.style.display === 'none'; ul.style.display = open ? 'block' : 'none'; b.textContent = open ? 'hide' : 'show'; }));
+}
+</script>
+</body>
+</html>

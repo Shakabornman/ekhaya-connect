@@ -1052,7 +1052,7 @@ body {
               <span class="item-icon">🏖</span>
               <div><div>Leave Application</div><div class="item-sub">Find the leave application form (HUM-F021)</div></div>
             </div>
-            <a class="info-item" href="https://shakabornman.github.io/hae-pharmacy/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+            <a class="info-item" href="https://shakabornman.github.io/hae-pharmacy/?page=formulary" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
               <span class="item-icon">💊</span>
               <div><div>Drug Formulary</div><div class="item-sub">Approved medication list (nursing, finance and executive sign-in)</div></div>
             </a>
@@ -1648,13 +1648,18 @@ initPPBrowser();
 
 // Quick-find from a tile (e.g. the Leave Application form): fills the P&P search and shows the matches.
 window.ppQuickFind = async function(term) {
+  const docs = await loadPPDocuments();
+  const t = term.toLowerCase();
+  // Open the matching document straight away; fall back to showing it in the search if it cannot be opened.
+  const hit = docs.find(d => (d.docNumber || '').toLowerCase().startsWith(t) || (d.id || '').toLowerCase().startsWith(t));
+  if (hit && hit.storagePath) { showToast('Opening ' + (hit.title || term) + '…'); await openPPDocument(hit); return; }
   const searchEl = document.getElementById('pp-search');
   if (!searchEl) return;
-  await loadPPDocuments();
   searchEl.value = term;
   const vol = document.getElementById('pp-volume-filter'); if (vol) vol.value = '';
   const typ = document.getElementById('pp-type-filter'); if (typ) typ.value = '';
   renderPPResults();
+  showToast('Form not found in the library yet. Search shown instead.');
   searchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 

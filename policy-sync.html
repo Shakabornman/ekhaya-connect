@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Policy Sync — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0F2A43; --ink-soft:#4A5C70; --paper:#F7F6F2; --line:#E3DFD4; --gold:#B8912F; --gold-soft:#F1E7CD; --green:#1E6F4C; --green-soft:#E4F2EA; --amber:#9A6B12; --amber-soft:#FBEFD8; --danger:#A6303A; --danger-soft:#F8E4E6; --blue:#1E5F8F; --blue-soft:#E8F1F8; --gray-soft:#EDEDED; --radius:3px; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; }
+  #authScreen, #deniedScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; }
+  .seal { width:56px; height:56px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:22px; color:var(--gold); }
+  .auth-card { background:#fff; border:1px solid var(--line); padding:40px; width:340px; max-width:92vw; text-align:center; }
+  .auth-card h1 { font-size:20px; margin:12px 0 4px; } .auth-card p { color:var(--ink-soft); margin:0 0 20px; font-size:13px; }
+  .auth-card input { width:100%; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:var(--radius); font:inherit; }
+  .auth-card button { width:100%; padding:10px 12px; background:var(--ink); color:#fff; border:none; border-radius:var(--radius); font-weight:600; font-size:13px; cursor:pointer; }
+  #authError { color:var(--danger); font-size:12px; min-height:16px; margin-top:6px; }
+  #app { display:none; }
+  header.top { background:var(--ink); color:#fff; padding:22px 36px; display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
+  header.top .eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft); opacity:.85; }
+  header.top h1 { color:#fff; font-size:24px; margin:2px 0 0; }
+  header.top .who { font-size:12px; color:#c7d2df; text-align:right; }
+  header.top .who button { background:none; border:1px solid #3c5a76; color:#dce6ef; padding:4px 10px; border-radius:var(--radius); font-size:11px; margin-top:6px; cursor:pointer; }
+  main { padding:26px 36px 60px; max-width:1100px; margin:0 auto; }
+  .card { background:#fff; border:1px solid var(--line); padding:20px 22px; margin-bottom:18px; }
+  .card h3 { margin:0 0 12px; font-size:16px; }
+  .switch-row { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+  .state { font-family:'Fraunces',serif; font-size:30px; }
+  .state.on { color:var(--green); } .state.off { color:var(--danger); }
+  .btn { padding:9px 16px; border-radius:var(--radius); border:1px solid var(--ink); background:#fff; color:var(--ink); font-weight:600; font-size:13px; cursor:pointer; font-family:inherit; }
+  .btn.solid { background:var(--ink); color:#fff; } .btn.danger { background:var(--danger); border-color:var(--danger); color:#fff; } .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .row-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .badge { display:inline-block; font-size:11px; padding:3px 10px; border-radius:20px; font-weight:600; }
+  .badge.ok { background:var(--green-soft); color:var(--green); } .badge.bad { background:var(--danger-soft); color:var(--danger); } .badge.mid { background:var(--amber-soft); color:var(--amber); } .badge.gray { background:var(--gray-soft); color:var(--ink-soft); }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin:12px 0; }
+  .tile { background:var(--paper); border:1px solid var(--line); padding:10px 12px; } .tile .label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); } .tile .value { font-family:'Fraunces',serif; font-size:26px; }
+  .muted { color:var(--ink-soft); font-size:12px; }
+  .note { background:var(--blue-soft); border:1px solid #c9dcea; color:#234e6e; padding:10px 14px; border-radius:var(--radius); font-size:12px; margin-bottom:18px; }
+  .warnbox { background:var(--amber-soft); border:1px solid #ecd9ac; color:var(--amber); padding:10px 14px; border-radius:var(--radius); font-size:13px; margin:10px 0; }
+  table.t { width:100%; border-collapse:collapse; } table.t th { text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:8px 10px; border-bottom:2px solid var(--ink); }
+  table.t td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  details { margin-top:10px; } summary { cursor:pointer; font-weight:600; font-size:13px; }
+  ul.lst { margin:8px 0 0; padding-left:18px; font-size:12px; columns:2; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(15,42,67,.45); align-items:center; justify-content:center; z-index:50; padding:20px; } .overlay.open { display:flex; }
+  .modal { background:#fff; width:520px; max-width:94vw; padding:26px 28px; border-radius:4px; } .modal h2 { margin:0 0 10px; font-size:19px; } .modal p { margin:0 0 10px; font-size:13px; line-height:1.5; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 18px; border-radius:4px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:80; max-width:90vw; } .toast.show { opacity:1; } .toast.error { background:var(--danger); }
+  @media (max-width:720px) { main { padding:16px 14px 50px; } header.top { padding:16px; } ul.lst { columns:1; } }
+</style>
+</head>
+<body>
+<div id="authScreen"><div class="seal">HAE</div><div class="auth-card"><h1>Policy Sync</h1><p>Hospital at Ekhaya — sign in with your executive account</p>
+  <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" /><input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" /><button id="loginBtn">Sign in</button><div id="authError"></div></div></div>
+<div id="deniedScreen" style="display:none"><div class="seal" style="border-color:var(--danger);color:var(--danger)">✕</div><div class="auth-card"><h1>Access restricted</h1><p>Policy Sync is for executives. Contact the COO if you believe this is an error.</p><button id="signOutDenied">Sign out</button></div></div>
+<div id="app">
+  <header class="top"><div><div class="eyebrow">Hospital at Ekhaya — Administration</div><h1>Policy Sync</h1></div><div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div></header>
+  <main id="view"><div class="muted">Loading…</div></main>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const functions = getFunctions(app, 'europe-west1');
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let me = null; let busy = false;
+function toast(msg, type) { const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (type === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { t.className = 'toast'; }, 4500); }
+
+$('loginBtn').addEventListener('click', async () => { $('authError').textContent = ''; try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); } catch (e) { $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message); } });
+$('signOutBtn').addEventListener('click', () => signOut(auth)); $('signOutDenied').addEventListener('click', () => signOut(auth));
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { $('authScreen').style.display = 'flex'; $('deniedScreen').style.display = 'none'; $('app').style.display = 'none'; return; }
+  let levels = []; try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn(e); }
+  if (!levels.includes('executive')) { $('authScreen').style.display = 'none'; $('deniedScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  me = { uid: user.uid, email: user.email }; $('authScreen').style.display = 'none'; $('deniedScreen').style.display = 'none'; $('app').style.display = 'block';
+  $('whoName').textContent = user.displayName || user.email; await load();
+});
+
+let config = { enabled: false, maxChanges: 40 }, status = null, lastRun = null, runs = [];
+async function load() {
+  try {
+    const c = await getDoc(doc(db, 'pp_sync', 'config')); config = { enabled: false, maxChanges: 40, ...(c.exists() ? c.data() : {}) };
+    const s = await getDoc(doc(db, 'pp_sync', 'status')); status = s.exists() ? s.data() : null;
+    lastRun = null; if (status && status.lastRunId) { const r = await getDoc(doc(db, 'pp_sync_runs', status.lastRunId)); lastRun = r.exists() ? r.data() : null; }
+    const rs = await getDocs(query(collection(db, 'pp_sync_runs'), orderBy('startedAt', 'desc'), limit(10))); runs = rs.docs.map((d) => d.data());
+  } catch (e) { console.error(e); $('view').innerHTML = '<div class="note">Could not load the sync status: ' + esc(e.code || e.message) + '</div>'; return; }
+  render();
+}
+const when = (iso) => { try { return iso ? new Date(iso).toLocaleString() : '—'; } catch { return iso || '—'; } };
+const resultBadge = (r) => ({ applied: 'ok', preview: 'gray', held: 'mid', 'applied-with-errors': 'bad' }[r] || 'gray');
+const list = (arr) => (arr && arr.length ? `<ul class="lst">${arr.map((x) => `<li>${esc(x.docNumber || x.name || x)}${x.title ? ' · ' + esc(x.title) : ''}${x.reason ? ' — ' + esc(x.reason) : ''}</li>`).join('')}</ul>` : '<div class="muted">None.</div>');
+
+function render() {
+  const r = lastRun;
+  $('view').innerHTML = `
+    <div class="note">Drive is the source. When the switch is ON, each night the portal is brought in line with Drive: new documents are added, changed ones replace the old copy, and replaced or removed copies go to the archive. Nothing is ever deleted. While the switch is OFF the sync only previews what it would do.</div>
+    <div class="card"><div class="switch-row">
+      <div><div class="muted">Sync switch</div><div class="state ${config.enabled ? 'on' : 'off'}">${config.enabled ? 'ON' : 'OFF'}</div>
+        <div class="muted">${config.updatedBy ? 'Last changed by ' + esc(config.updatedBy) : 'Never switched on'}</div></div>
+      <div><button class="btn ${config.enabled ? '' : 'solid'}" id="toggleBtn">${config.enabled ? 'Switch OFF' : 'Switch ON…'}</button></div></div>
+      <div class="row-actions"><button class="btn solid" id="previewBtn">Preview now</button>${config.enabled ? '<button class="btn danger" id="applyBtn">Apply all pending changes now…</button>' : ''}</div>
+      <div class="muted" style="margin-top:8px">A preview reads Drive and writes nothing to the portal. A normal night stops and waits for you if more than ${esc(config.maxChanges)} changes arrive at once.</div></div>
+    <div class="card"><h3>Latest run</h3>${!r ? '<div class="muted">No run yet. Click "Preview now" to see what the first sync would do.</div>' : `
+      <div><span class="badge ${resultBadge(r.result)}">${esc(r.result)}</span> <span class="muted">${esc(when(r.startedAt))} · ${esc(r.trigger)} · ${esc(r.effectiveMode)}</span></div>
+      ${(r.notes || []).map((n) => `<div class="warnbox">${esc(n)}</div>`).join('')}
+      ${(r.driveListingErrors || []).map((n) => `<div class="warnbox">${esc(n)}</div>`).join('')}
+      <div class="tiles">
+        <div class="tile"><div class="label">Drive files seen</div><div class="value">${esc(r.driveFilesSeen)}</div></div>
+        <div class="tile"><div class="label">On portal before</div><div class="value">${esc(r.portalDocumentsBefore)}</div></div>
+        <div class="tile"><div class="label">${r.effectiveMode === 'apply' ? 'Added' : 'Would add'}</div><div class="value">${esc(r.effectiveMode === 'apply' ? r.applied.added : r.counts.adds)}</div></div>
+        <div class="tile"><div class="label">${r.effectiveMode === 'apply' ? 'Replaced' : 'Would replace'}</div><div class="value">${esc(r.effectiveMode === 'apply' ? r.applied.updated : r.counts.updates)}</div></div>
+        <div class="tile"><div class="label">${r.effectiveMode === 'apply' ? 'Archived (removed)' : 'Would remove'}</div><div class="value">${esc(r.effectiveMode === 'apply' ? r.applied.removed : r.counts.removes)}</div></div>
+        <div class="tile"><div class="label">Skipped files</div><div class="value">${esc(r.counts.skipped)}</div></div>
+        <div class="tile"><div class="label">Errors</div><div class="value">${esc(r.applied.errors)}</div></div></div>
+      <details><summary>New documents (${(r.wouldAdd || []).length})</summary>${list(r.wouldAdd)}</details>
+      <details><summary>Documents with a newer Drive file (${(r.wouldUpdate || []).length})</summary>${list(r.wouldUpdate)}</details>
+      <details><summary>Documents no longer on Drive (${(r.wouldRemove || []).length})</summary>${list(r.wouldRemove)}</details>
+      ${(r.blockedRemovals || []).length ? `<details open><summary>Removals blocked for safety (${r.blockedRemovals.length})</summary>${list(r.blockedRemovals)}</details>` : ''}
+      <details ${r.counts.skipped ? 'open' : ''}><summary>Skipped files: fix the name or type on Drive (${(r.skipped || []).length})</summary>${list(r.skipped)}</details>
+      ${(r.warnings || []).length ? `<details><summary>Warnings (${r.warnings.length})</summary>${list(r.warnings)}</details>` : ''}
+      ${(r.errors || []).length ? `<details open><summary>Errors (${r.errors.length})</summary><ul class="lst">${r.errors.map((e) => `<li>${esc(e.docNumber)} (${esc(e.action)}): ${esc(e.error)}</li>`).join('')}</ul></details>` : ''}`}</div>
+    <div class="card"><h3>Recent runs</h3>${runs.length ? `<table class="t"><thead><tr><th>When</th><th>Trigger</th><th>Result</th><th>Add</th><th>Replace</th><th>Remove</th></tr></thead><tbody>${runs.map((x) => `<tr><td>${esc(when(x.startedAt))}</td><td>${esc(x.trigger)}</td><td><span class="badge ${resultBadge(x.result)}">${esc(x.result)}</span></td><td>${esc(x.effectiveMode === 'apply' ? x.applied.added : x.counts.adds)}</td><td>${esc(x.effectiveMode === 'apply' ? x.applied.updated : x.counts.updates)}</td><td>${esc(x.effectiveMode === 'apply' ? x.applied.removed : x.counts.removes)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing yet.</div>'}</div>`;
+  $('toggleBtn').addEventListener('click', onToggle); $('previewBtn').addEventListener('click', () => runNow('preview'));
+  if ($('applyBtn')) $('applyBtn').addEventListener('click', () => confirmModal('Apply all pending changes now?', 'This copies every pending change from Drive to the portal right now, including large first-time loads. Replaced and removed copies are archived first. It can take several minutes. Do not close this page until it finishes.', 'Apply now', () => runNow('apply', true)));
+}
+
+function confirmModal(title, body, okLabel, onOk) {
+  $('modal').innerHTML = `<h2>${esc(title)}</h2><p>${esc(body)}</p><div class="modal-actions"><button class="btn" id="mNo">Cancel</button><button class="btn solid" id="mYes">${esc(okLabel)}</button></div>`;
+  $('overlay').classList.add('open');
+  $('mNo').onclick = () => $('overlay').classList.remove('open');
+  $('mYes').onclick = () => { $('overlay').classList.remove('open'); onOk(); };
+}
+function onToggle() {
+  if (config.enabled) return setSwitch(false);
+  confirmModal('Switch the sync ON?', 'From the next night, whatever is on Drive in the two published folders goes live on the portal automatically. Replaced and removed copies are archived, never deleted. Only switch it on once the policies are finally reviewed and you have looked at a preview.', 'Switch ON', () => setSwitch(true));
+}
+async function setSwitch(on) {
+  try { await setDoc(doc(db, 'pp_sync', 'config'), { enabled: on, maxChanges: config.maxChanges || 40, updatedBy: me.email, updatedAt: serverTimestamp() }); toast(on ? 'Sync switched ON.' : 'Sync switched OFF.'); await load(); }
+  catch (e) { console.error(e); toast('Could not change the switch: ' + (e.code || e.message), 'error'); }
+}
+async function runNow(mode, bulk) {
+  if (busy) return; busy = true; document.querySelectorAll('.btn').forEach((b) => { b.disabled = true; }); toast(mode === 'apply' ? 'Applying changes… this can take several minutes.' : 'Reading Drive…');
+  try { const call = httpsCallable(functions, 'ppSyncRun', { timeout: 1800000 }); const res = await call({ mode, bulk: !!bulk }); toast('Done: ' + res.data.result); }
+  catch (e) { console.error(e); toast('The run failed: ' + (e.code || e.message), 'error'); }
+  busy = false; await load();
+}
+</script>
+</body>
+</html>

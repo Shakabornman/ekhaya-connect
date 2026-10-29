@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roster — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0F2A43; --ink-soft:#4A5C70; --paper:#F7F6F2; --line:#E3DFD4; --gold:#B8912F; --gold-soft:#F1E7CD; --danger:#A6303A; --danger-soft:#F8E4E6; --amber:#9A6B12; --amber-soft:#FBEFD8; --green:#1E6F4C; --green-soft:#E4F2EA; --blue:#1E5F8F; --blue-soft:#E8F1F8; --gray-soft:#EDEDED; --radius:3px; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; }
+  #authScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; }
+  .seal { width:56px; height:56px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:22px; color:var(--gold); }
+  .auth-card { background:#fff; border:1px solid var(--line); padding:40px; width:340px; max-width:92vw; text-align:center; }
+  .auth-card h1 { font-size:20px; margin:12px 0 4px; } .auth-card p { color:var(--ink-soft); margin:0 0 20px; font-size:13px; }
+  .auth-card input { width:100%; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:var(--radius); font:inherit; }
+  .auth-card button { width:100%; padding:10px 12px; background:var(--ink); color:#fff; border:none; border-radius:var(--radius); font-weight:600; font-size:13px; cursor:pointer; }
+  #authError { color:var(--danger); font-size:12px; min-height:16px; margin-top:6px; }
+  #app { display:none; }
+  header.top { background:var(--ink); color:#fff; padding:16px 36px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  header.top .brand { display:flex; align-items:center; gap:14px; } header.top img { height:46px; background:#fff; padding:4px 8px; border-radius:3px; }
+  header.top .eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft); opacity:.85; } header.top h1 { color:#fff; font-size:22px; margin:2px 0 0; }
+  header.top .who { font-size:12px; color:#c7d2df; text-align:right; } header.top .who button { background:none; border:1px solid #3c5a76; color:#dce6ef; padding:4px 10px; border-radius:var(--radius); font-size:11px; margin-top:6px; cursor:pointer; }
+  main { padding:22px 36px 60px; max-width:1180px; margin:0 auto; }
+  .bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; } .nav { display:flex; align-items:center; gap:8px; } .nav h2 { margin:0; font-size:24px; min-width:190px; text-align:center; }
+  .btn { padding:8px 14px; border-radius:var(--radius); border:1px solid var(--ink); background:#fff; color:var(--ink); font-weight:600; font-size:13px; cursor:pointer; font-family:inherit; } .btn.solid { background:var(--ink); color:#fff; } .btn.ghost { border-color:var(--line); color:var(--ink-soft); } .btn.danger { background:var(--danger); border-color:var(--danger); color:#fff; } .btn.small { padding:4px 10px; font-size:12px; } .btn:disabled { opacity:.5; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .note { background:var(--blue-soft); border:1px solid #c9dcea; color:#234e6e; padding:9px 13px; border-radius:var(--radius); font-size:12px; margin-bottom:14px; }
+  table.roster { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); }
+  table.roster th { background:var(--ink); color:#fff; font-size:12px; padding:7px 8px; text-align:left; border:1px solid var(--ink); }
+  table.roster td { border:1px solid var(--line); padding:5px 8px; font-size:13px; }
+  table.roster tr.sunday td { border-bottom:3px solid var(--ink); } table.roster td.d { white-space:nowrap; font-weight:600; } table.roster tr.we td.d, table.roster tr.we td.w { background:#FBFAF7; }
+  td.cell { position:relative; } td.cell.edit { cursor:pointer; } td.cell.edit:hover { background:var(--blue-soft); }
+  td.cell.ov { background:var(--amber-soft); color:var(--amber); font-weight:600; } td.cell.short { background:var(--danger-soft); color:var(--danger); font-weight:600; } td.cell.empty { color:#B9B4A6; }
+  .legend { font-size:12px; color:var(--ink-soft); margin:8px 0 18px; display:flex; gap:16px; flex-wrap:wrap; } .legend i { display:inline-block; width:12px; height:12px; border:1px solid var(--line); vertical-align:-2px; margin-right:5px; }
+  .card { background:#fff; border:1px solid var(--line); padding:16px 18px; margin-bottom:16px; } .card h3 { margin:0 0 10px; font-size:16px; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; }
+  table.t { width:100%; border-collapse:collapse; } table.t th { text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:8px 8px; border-bottom:2px solid var(--ink); } table.t td { padding:8px; border-bottom:1px solid var(--line); } table.t td.n, table.t th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px; font-weight:600; } .badge.ok { background:var(--green-soft); color:var(--green); } .badge.warn { background:var(--amber-soft); color:var(--amber); } .badge.alert { background:var(--danger-soft); color:var(--danger); } .badge.ext { background:var(--gray-soft); color:var(--ink-soft); }
+  .muted { color:var(--ink-soft); font-size:12px; }
+  select, input[type=text], input[type=date], textarea { padding:8px 10px; border:1px solid var(--line); border-radius:3px; font:inherit; font-size:13px; width:100%; } textarea { min-height:60px; }
+  .field { margin-bottom:11px; } .field label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:4px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(15,42,67,.45); align-items:center; justify-content:center; z-index:50; padding:20px; } .overlay.open { display:flex; }
+  .modal { background:#fff; width:560px; max-width:94vw; max-height:90vh; overflow-y:auto; padding:22px 24px; border-radius:4px; } .modal h2 { margin:0 0 4px; font-size:19px; } .modal .sub { color:var(--ink-soft); font-size:12px; margin-bottom:14px; }
+  .warnbox { background:var(--amber-soft); border:1px solid #ecd9ac; color:var(--amber); padding:8px 12px; border-radius:var(--radius); font-size:12px; margin:8px 0; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; flex-wrap:wrap; } #formError { color:var(--danger); font-size:12px; min-height:16px; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 18px; border-radius:4px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:80; max-width:90vw; } .toast.show { opacity:1; } .toast.error { background:var(--danger); }
+  .printhead { display:none; }
+  @media (max-width:760px) { main { padding:14px 10px 50px; } header.top { padding:12px 14px; } table.roster td, table.roster th { padding:4px 4px; font-size:11px; } .nav h2 { min-width:120px; font-size:18px; } }
+  @media print {
+    @page { size:A4 portrait; margin:12mm; }
+    body { background:#fff; } header.top, .bar, .note, .legend, .noprint, .actions, .toast { display:none !important; }
+    main { padding:0; max-width:none; } .printhead { display:flex; align-items:center; gap:14px; margin-bottom:8px; } .printhead img { height:48px; } .printhead h1 { font-size:18px; margin:0; } .printhead .sub { font-size:12px; }
+    table.roster thead { display:table-header-group; } table.roster tr { page-break-inside:avoid; } table.roster th { background:#fff !important; color:#000 !important; border:1px solid #000; } table.roster td { border:1px solid #888; font-size:11px; padding:3px 6px; }
+    table.roster tr.sunday td { border-bottom:2px solid #000; } td.cell.ov { background:#fff3d6 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; } td.cell.short { background:#f8e4e6 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .card { border:none; padding:0; margin-top:10px; page-break-inside:avoid; } .hours-only-screen { display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="authScreen"><div class="seal">HAE</div><div class="auth-card"><h1>Roster</h1><p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+  <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" /><input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" /><button id="loginBtn">Sign in</button><div id="authError"></div></div></div>
+<div id="app">
+  <header class="top"><div class="brand"><img src="roster-logo.png" alt="Hospital at Ekhaya" /><div><div class="eyebrow">Hospital at Ekhaya — Rosters</div><h1 id="pageTitle">Roster</h1></div></div><div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div></header>
+  <main id="view"><div class="muted">Loading…</div></main>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import * as R from "./roster-core.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const GROUP = new URLSearchParams(location.search).get('g') || 'security';
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DOWN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const MON3 = MONTHS.map((m) => m.slice(0, 3));
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const now = new Date(); let me = null, config = null, overrides = [], extras = [], audit = [], employees = null;
+let st = { y: now.getFullYear(), m: now.getMonth() + 1, period: 'month' };
+function toast(m, t) { const el = $('toast'); el.textContent = m; el.className = 'toast show' + (t === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { el.className = 'toast'; }, 4200); }
+
+$('loginBtn').addEventListener('click', async () => { $('authError').textContent = ''; try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); } catch (e) { $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message); } });
+$('signOutBtn').addEventListener('click', () => signOut(auth));
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  let levels = []; try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn(e); }
+  me = { uid: user.uid, email: user.email, levels, isExec: levels.includes('executive') };
+  $('authScreen').style.display = 'none'; $('app').style.display = 'block'; $('whoName').textContent = user.displayName || user.email;
+  await load(); render();
+});
+
+async function load() {
+  try {
+    const c = await getDoc(doc(db, 'roster_config', GROUP)); config = c.exists() ? c.data() : null;
+    if (!config) { $('view').innerHTML = '<div class="note">This roster has not been set up yet.</div>'; return; }
+    me.canEdit = me.isExec || (config.editTiers || []).some((t) => me.levels.includes(t));
+    $('pageTitle').textContent = config.name || 'Roster'; document.title = (config.name || 'Roster') + ' — Hospital at Ekhaya';
+    overrides = (await getDocs(query(collection(db, 'roster_overrides'), where('groupId', '==', GROUP)))).docs.map((d) => ({ id: d.id, ...d.data() }));
+    extras = (await getDocs(query(collection(db, 'roster_extra_people'), where('groupId', '==', GROUP)))).docs.map((d) => ({ id: d.id, ...d.data() }));
+    audit = me.canEdit ? (await getDocs(query(collection(db, 'roster_audit'), where('groupId', '==', GROUP)))).docs.map((d) => d.data()) : [];
+  } catch (e) { console.error(e); $('view').innerHTML = '<div class="note">Could not load the roster: ' + esc(e.code || e.message) + '</div>'; config = null; }
+}
+const people = () => [...(config.people || []).map((p) => ({ ...p, type: 'Staff' })), ...extras.map((x) => ({ id: 'x-' + x.id, name: x.name, company: x.company, active: x.active !== false, type: 'External' }))];
+const nameOf = (id) => (people().find((p) => p.id === id) || { name: id || '—' }).name;
+const isExternal = (id) => String(id).startsWith('x-');
+const rowsFor = (from, to) => R.effectiveRoster(config, overrides.map((o) => ({ ...o })), from, to);
+
+function monthRange() { const last = R.daysInMonth(st.y, st.m); return { from: R.iso(st.y, st.m, 1), to: R.iso(st.y, st.m, last) }; }
+function render() {
+  if (!config) return; const { from, to } = monthRange(); const rows = rowsFor(R.weekStart(from), R.addDays(R.weekStart(to), 6)); const inMonth = rows.filter((r) => r.date >= from && r.date <= to);
+  const notStarted = inMonth.every((r) => r.noConfig);
+  $('view').innerHTML = `
+    <div class="printhead"><img src="roster-logo.png" alt="" /><div><h1>${esc(config.name)}</h1><div class="sub">${MONTHS[st.m - 1]} ${st.y} · Day 07:00–19:00 · Night 19:00–07:00</div></div></div>
+    <div class="bar"><div class="nav"><button class="btn" id="pm">‹</button><h2>${MONTHS[st.m - 1]} ${st.y}</h2><button class="btn" id="nm">›</button><button class="btn ghost" id="tm">This month</button></div>
+      <div class="actions"><button class="btn" id="printBtn">Print</button>${me.canEdit ? '<button class="btn" id="peopleBtn">People and stand-ins</button><button class="btn" id="patternBtn">Pattern</button>' : ''}</div></div>
+    <div class="note">Day shift 07:00–19:00, night shift 19:00–07:00, 12 hours each. A shift belongs to the month and week it <b>starts</b>: the night of 31 October 19:00 to 1 November 07:00 counts in October. ${me.canEdit ? 'Click a name to mark someone sick, replace or swap.' : 'You can view this roster. Only executives and HR can change it.'}</div>
+    ${notStarted ? '<div class="note">No pattern is in force for this month.</div>' : ''}
+    <table class="roster"><thead><tr><th>Date</th><th>Day</th><th colspan="2">Day shift 07:00–19:00</th><th colspan="2">Night shift 19:00–07:00</th></tr></thead><tbody>
+      ${inMonth.map(rowHtml).join('')}</tbody></table>
+    <div class="legend"><span><i style="background:var(--amber-soft)"></i>Changed from the pattern (hover for the reason)</span><span><i style="background:var(--danger-soft)"></i>Short-staffed</span><span>Thick line = end of the week (Sunday)</span></div>
+    <div id="hoursArea"></div>
+    ${me.canEdit ? `<div class="card noprint"><h3>Change log <span class="muted">latest 15</span></h3>${auditHtml()}</div>` : ''}`;
+  $('pm').onclick = () => { if (st.m === 1) { st.m = 12; st.y--; } else st.m--; render(); }; $('nm').onclick = () => { if (st.m === 12) { st.m = 1; st.y++; } else st.m++; render(); };
+  $('tm').onclick = () => { st.y = now.getFullYear(); st.m = now.getMonth() + 1; render(); }; $('printBtn').onclick = () => window.print();
+  if (me.canEdit) { $('peopleBtn').onclick = managePeople; $('patternBtn').onclick = editPattern; }
+  document.querySelectorAll('[data-slot]').forEach((el) => el.addEventListener('click', () => { const [d, s, pid, ovid] = el.dataset.slot.split('|'); if (me.canEdit) changeDialog(d, s, pid, ovid); }));
+  renderHours(rows);
+}
+function slotCells(r, shift) {
+  const sh = r[shift]; const cells = []; const total = Math.max(sh.expected, 2);
+  const items = [...sh.slots.map((s) => ({ kind: 'slot', s })), ...sh.gaps.map((g) => ({ kind: 'gap', g }))];
+  for (let i = 0; i < (shift === 'day' ? 2 : 2); i++) {
+    const it = items[i];
+    if (!it) { cells.push(`<td class="cell ${shift === 'day' && sh.expected < 2 ? 'empty' : ''} ${(shift === 'night' && r.shortNight) || (shift === 'day' && r.shortDay) ? 'short' : ''}">${(shift === 'night' && r.shortNight) || (shift === 'day' && r.shortDay) ? 'SHORT' : ''}</td>`); continue; }
+    if (it.kind === 'gap') { cells.push(`<td class="cell short ${me.canEdit ? 'edit' : ''}" title="${esc(nameOf(it.g.originalPersonId))} out (${esc(it.g.reason)}); nobody covering. ${esc(it.g.note)}" data-slot="${r.date}|${shift}|${it.g.originalPersonId}|${it.g.overrideId || ''}"><s>${esc(nameOf(it.g.originalPersonId))}</s> ${esc(it.g.reason)}</td>`); continue; }
+    const s = it.s; const ov = !!s.originalPersonId; const o = ov ? overrides.find((x) => x.id === s.overrideId) : null;
+    const tip = ov ? `${nameOf(s.personId)} covers for ${nameOf(s.originalPersonId)} (${s.reason}). ${s.note || ''} ${o && o.createdBy ? '· changed by ' + o.createdBy : ''}` : '';
+    cells.push(`<td class="cell ${ov ? 'ov' : ''} ${me.canEdit ? 'edit' : ''}" ${ov ? `title="${esc(tip)}"` : ''} data-slot="${r.date}|${shift}|${s.personId}|${s.overrideId || ''}">${esc(nameOf(s.personId))}${isExternal(s.personId) ? ' <span class="badge ext">External</span>' : ''}</td>`);
+  }
+  return cells.join('');
+}
+function rowHtml(r) {
+  if (r.noConfig) return `<tr><td class="d">${dd(r.date)}</td><td class="w">${DOWN[r.dow]}</td><td colspan="4" class="muted">no pattern in force</td></tr>`;
+  return `<tr class="${r.dow === 6 ? 'sunday' : ''} ${r.dow >= 5 ? 'we' : ''}"><td class="d">${dd(r.date)}</td><td class="w">${DOWN[r.dow]}</td>${slotCells(r, 'day')}${slotCells(r, 'night')}</tr>`;
+}
+const dd = (d) => { const p = R.parseISO(d); return `${String(p.d).padStart(2, '0')}-${MON3[p.m - 1]}`; };
+function auditHtml() { const a = [...audit].sort((x, y) => (y.at?.seconds || 0) - (x.at?.seconds || 0)).slice(0, 15); return a.length ? '<table class="t"><tbody>' + a.map((x) => `<tr><td class="muted">${esc(x.at ? new Date(x.at.seconds * 1000).toLocaleString() : '')}</td><td>${esc(x.by)}</td><td>${esc(x.action)}</td></tr>`).join('') + '</tbody></table>' : '<div class="muted">No changes yet.</div>'; }
+
+function renderHours(rows) {
+  const periods = R.periodsForMonth(st.y, st.m); const p = periods.find((x) => x.key === st.period) || periods[0];
+  const h = R.hoursSummary(rows, p.from, p.to); const ids = [...new Set([...(config.people || []).map((x) => x.id), ...Object.keys(h)])];
+  const weeks = R.weekStartsOverlapping(R.iso(st.y, st.m, 1), R.iso(st.y, st.m, R.daysInMonth(st.y, st.m))); const wh = R.weeklyHours(rows, weeks);
+  const peak = (id) => Math.max(0, ...weeks.map((w) => wh[w][id] || 0)); const totHours = (id) => weeks.reduce((a, w) => a + (wh[w][id] || 0), 0);
+  const body = ids.map((id) => { const a = h[id] || { day: 0, night: 0, shifts: 0, hours: 0, sick: 0, absent: 0, leave: 0 }; return `<tr><td>${esc(nameOf(id))}${isExternal(id) ? ' <span class="badge ext">External</span>' : ''}</td><td class="n">${a.day}</td><td class="n">${a.night}</td><td class="n">${a.shifts}</td><td class="n"><b>${a.hours}</b></td><td class="n">${a.sick + a.absent}</td><td class="n">${a.leave}</td></tr>`; }).join('');
+  const wk = ids.filter((id) => (config.people || []).some((x) => x.id === id) || peak(id) > 0).map((id) => `<tr><td>${esc(nameOf(id))}</td>${weeks.map((w) => { const v = wh[w][id] || 0; return `<td class="n"><span class="badge ${R.weekLevel(v)}">${v}</span></td>`; }).join('')}<td class="n"><b>${(totHours(id) / weeks.length).toFixed(0)}</b></td></tr>`).join('');
+  $('hoursArea').innerHTML = `
+    <div class="card"><h3>Hours <span class="noprint"><select id="period" style="width:auto">${periods.map((x) => `<option value="${x.key}" ${x.key === st.period ? 'selected' : ''}>${esc(x.label)} (${esc(dd(x.from))} to ${esc(dd(x.to))})</option>`).join('')}</select> ${me.canEdit ? '<button class="btn small solid" id="csvBtn">Export CSV</button>' : ''}</span></h3>
+      <table class="t"><thead><tr><th>Name</th><th class="n">Day shifts</th><th class="n">Night shifts</th><th class="n">Total shifts</th><th class="n">Total hours</th><th class="n">Sick / absent</th><th class="n">Leave</th></tr></thead><tbody>${body}</tbody></table>
+      <div class="muted" style="margin-top:6px">Hours go to the person who worked the shift. Pay periods match the payroll app: 1st to 15th, and 16th to month end.</div></div>
+    <div class="card"><h3>Hours per week <span class="muted">Monday to Sunday, by shift start date. Indicator only: amber above 45 h, red above 55 h (BCEA)</span></h3>
+      <table class="t"><thead><tr><th>Name</th>${weeks.map((w) => `<th class="n">${esc(dd(w))}</th>`).join('')}<th class="n">Average</th></tr></thead><tbody>${wk}</tbody></table></div>`;
+  $('period').onchange = (e) => { st.period = e.target.value; renderHours(rows); };
+  if (me.canEdit) $('csvBtn').onclick = () => exportCsv(rows, p, h);
+}
+
+async function ensureEmployees() { if (employees) return employees; try { const s = await getDocs(collection(db, 'employees')); employees = s.docs.map((d) => { const x = d.data(); const fn = x.fullName || ''; const [last, first] = fn.includes(',') ? fn.split(',').map((t) => t.trim()) : ['', fn]; return { id: d.id, name: (first + ' ' + last).trim(), number: x.employeeNumber || '' }; }); } catch (e) { console.warn(e); employees = []; } return employees; }
+async function exportCsv(rows, p, h) {
+  await ensureEmployees(); const out = [];
+  for (const id of [...new Set([...(config.people || []).map((x) => x.id), ...Object.keys(h)])]) {
+    const a = h[id] || { day: 0, night: 0, shifts: 0, hours: 0, sick: 0, absent: 0, leave: 0 }; const pp = (config.people || []).find((x) => x.id === id); const emp = pp && pp.employeeId ? employees.find((e) => e.id === pp.employeeId) : null;
+    out.push({ periodStart: p.from, periodEnd: p.to, employeeNumber: emp ? emp.number : '', name: nameOf(id), type: isExternal(id) ? 'External' : 'Staff', dayShifts: a.day, nightShifts: a.night, totalShifts: a.shifts, totalHours: a.hours, sickShifts: a.sick, absentShifts: a.absent, leaveShifts: a.leave });
+  }
+  const blob = new Blob([R.buildCsv(out)], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = `${GROUP}-hours-${p.from}-to-${p.to}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  await logAudit(`Hours exported for ${p.from} to ${p.to}`, ''); toast('CSV downloaded.');
+}
+async function logAudit(action, detail) { try { await addDoc(collection(db, 'roster_audit'), { groupId: GROUP, action, by: me.email, at: serverTimestamp(), detail: detail || '' }); } catch (e) { console.warn('audit failed', e); } }
+
+// ---------- modals
+const closeModal = () => { $('overlay').classList.remove('open'); $('modal').innerHTML = ''; };
+$('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) closeModal(); });
+const optionsFor = (excludeId) => people().filter((p) => p.active !== false && p.id !== excludeId).map((p) => `<option value="${esc(p.id)}">${esc(p.name)}${p.type === 'External' ? ' (External)' : ''}</option>`).join('');
+function changeDialog(dateISO, shift, personId, overrideId) {
+  const ovr = overrideId ? overrides.find((o) => o.id === overrideId) : null; const rows = rowsFor(R.addDays(dateISO, -1), R.addDays(dateISO, 1));
+  const label = `${nameOf(personId)}: ${shift} shift on ${dd(dateISO)} (${DOWN[R.dowMon0(dateISO)]})`;
+  const isCover = ovr && ovr.inPersonId === personId;
+  $('modal').innerHTML = `<h2>${esc(label)}</h2><div class="sub">${ovr ? 'This shift was changed from the pattern.' : 'Rostered by the pattern.'}</div>
+    ${ovr ? `<div class="warnbox">${esc(nameOf(ovr.outPersonId))} was rostered; ${ovr.inPersonId ? esc(nameOf(ovr.inPersonId)) + ' covers' : 'nobody covers'} (${esc(ovr.reason)}). ${esc(ovr.note || '')} <button class="btn small" id="undoBtn">Undo this change</button></div>` : ''}
+    <div class="field"><label>What happened to ${esc(nameOf(isCover ? ovr.outPersonId : personId))}?</label><select id="f_reason"><option value="sick">Sick</option><option value="absent">Absent</option><option value="leave">On leave</option><option value="swap">Swap (use Swap below)</option><option value="other">Other</option></select></div>
+    <div class="field"><label>Covered by</label><select id="f_in"><option value="">Nobody (leave the shift short)</option>${optionsFor(isCover ? ovr.outPersonId : personId)}</select><div id="warn"></div></div>
+    <div class="field"><label>Note</label><textarea id="f_note"></textarea></div>
+    <div id="formError"></div>
+    <div class="modal-actions"><button class="btn ghost" id="swapBtn">Swap with someone…</button><button class="btn" id="fCancel">Close</button><button class="btn solid" id="fSave">${ovr ? 'Replace the change' : 'Save change'}</button></div>`;
+  $('overlay').classList.add('open'); $('fCancel').onclick = closeModal;
+  const refreshWarn = () => { const v = $('f_in').value; const msgs = v ? R.conflictsForIn(rows, v, dateISO, shift) : []; $('warn').innerHTML = msgs.map((m) => `<div class="warnbox">${esc(nameOf(v))} ${esc(m)}. This is a warning only.</div>`).join(''); }; $('f_in').onchange = refreshWarn;
+  if ($('undoBtn')) $('undoBtn').onclick = async () => { try { await cancelOverride(ovr); closeModal(); toast('Change undone.'); await load(); render(); } catch (e) { $('formError').textContent = 'Could not undo: ' + (e.code || e.message); } };
+  $('fSave').onclick = async () => {
+    const out = isCover ? ovr.outPersonId : personId; const inP = $('f_in').value || null; const reason = $('f_reason').value;
+    if (reason === 'swap') { $('formError').textContent = 'Use "Swap with someone" for a swap.'; return; }
+    $('fSave').disabled = true;
+    try { if (ovr) await cancelOverride(ovr, true); await addOverride({ date: dateISO, shift, outPersonId: out, inPersonId: inP, reason, note: $('f_note').value.trim() }); await logAudit(`${nameOf(out)} ${reason} on ${dateISO} ${shift}; cover: ${inP ? nameOf(inP) : 'nobody'}`, ''); closeModal(); toast('Saved.'); await load(); render(); }
+    catch (e) { console.error(e); $('formError').textContent = 'Could not save: ' + (e.code || e.message); $('fSave').disabled = false; }
+  };
+  $('swapBtn').onclick = () => swapDialog(dateISO, shift, personId, ovr);
+}
+async function addOverride(o) { await addDoc(collection(db, 'roster_overrides'), { groupId: GROUP, date: o.date, shift: o.shift, outPersonId: o.outPersonId, inPersonId: o.inPersonId ?? null, reason: o.reason, note: o.note || '', swapGroupId: o.swapGroupId || null, createdBy: me.email, createdAt: serverTimestamp(), cancelled: false }); }
+async function cancelOverride(o, quiet) { await updateDoc(doc(db, 'roster_overrides', o.id), { cancelled: true, cancelledBy: me.email, cancelledAt: serverTimestamp() }); if (!quiet) await logAudit(`Change undone: ${nameOf(o.outPersonId)} ${o.reason} on ${o.date} ${o.shift}`, ''); }
+function swapDialog(dateISO, shift, personId) {
+  $('modal').innerHTML = `<h2>Swap ${esc(nameOf(personId))}</h2><div class="sub">${esc(shift)} shift on ${esc(dd(dateISO))}. Choose the other shift to swap with.</div>
+    <div class="two" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="field"><label>Date</label><input type="date" id="s_date" value="${esc(dateISO)}" /></div><div class="field"><label>Shift</label><select id="s_shift"><option value="day" ${shift === 'day' ? 'selected' : ''}>Day</option><option value="night" ${shift === 'night' ? 'selected' : ''}>Night</option></select></div></div>
+    <div class="field"><label>Swap with</label><select id="s_person"></select></div><div id="warn"></div><div id="formError"></div>
+    <div class="modal-actions"><button class="btn" id="sCancel">Cancel</button><button class="btn solid" id="sSave">Swap</button></div>`;
+  const fill = () => { const d = $('s_date').value, s = $('s_shift').value; if (!R.parseISO(d)) return; const rows = rowsFor(d, d); const ps = (rows[0]?.[s]?.slots || []).filter((x) => x.personId !== personId); $('s_person').innerHTML = ps.map((x) => `<option value="${esc(x.personId)}">${esc(nameOf(x.personId))}</option>`).join('') || '<option value="">No one else on that shift</option>'; };
+  $('s_date').onchange = fill; $('s_shift').onchange = fill; fill(); $('sCancel').onclick = closeModal;
+  $('sSave').onclick = async () => {
+    const d2 = $('s_date').value, s2 = $('s_shift').value, other = $('s_person').value; if (!other) { $('formError').textContent = 'Choose who to swap with.'; return; }
+    const gid = 'sw' + Date.now().toString(36); $('sSave').disabled = true;
+    try { await addOverride({ date: dateISO, shift, outPersonId: personId, inPersonId: other, reason: 'swap', swapGroupId: gid }); await addOverride({ date: d2, shift: s2, outPersonId: other, inPersonId: personId, reason: 'swap', swapGroupId: gid }); await logAudit(`Swap: ${nameOf(personId)} (${dateISO} ${shift}) with ${nameOf(other)} (${d2} ${s2})`, gid); closeModal(); toast('Swapped.'); await load(); render(); }
+    catch (e) { console.error(e); $('formError').textContent = 'Could not swap: ' + (e.code || e.message); $('sSave').disabled = false; }
+  };
+}
+
+async function managePeople() {
+  const emps = await ensureEmployees();
+  const staffRows = (config.people || []).map((p, i) => `<tr><td>${esc(p.name)}</td><td><select data-link="${i}"><option value="">Not linked to an employee record yet</option>${emps.map((e) => `<option value="${esc(e.id)}" ${p.employeeId === e.id ? 'selected' : ''}>${esc(e.name)}${e.number ? ' · ' + esc(e.number) : ''}</option>`).join('')}</select></td></tr>`).join('');
+  const exRows = extras.map((x) => `<tr><td>${esc(x.name)}${x.company ? ' <span class="muted">(' + esc(x.company) + ')</span>' : ''}</td><td>${x.active !== false ? '<span class="badge ok">Active</span>' : '<span class="badge ext">Inactive</span>'} <button class="btn small ghost" data-toggle="${esc(x.id)}">${x.active !== false ? 'Deactivate' : 'Activate'}</button></td></tr>`).join('');
+  $('modal').innerHTML = `<h2>People and stand-ins</h2><div class="sub">Names are kept here so everyone can see the roster. Link each person to their employee record so the payroll sheet carries the employee number.</div>
+    <h3 style="font-size:14px;margin:6px 0">On the roster</h3><table class="t"><tbody>${staffRows}</tbody></table>
+    <h3 style="font-size:14px;margin:14px 0 6px">Stand-ins who are not staff (External)</h3><table class="t"><tbody>${exRows || '<tr><td class="muted">None yet.</td></tr>'}</tbody></table>
+    <div class="two" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px;align-items:end"><div class="field" style="margin:0"><label>Name</label><input type="text" id="x_name" /></div><div class="field" style="margin:0"><label>Company (optional)</label><input type="text" id="x_co" /></div><button class="btn" id="x_add">Add</button></div>
+    <div id="formError"></div><div class="modal-actions"><button class="btn" id="pClose">Close</button></div>`;
+  $('overlay').classList.add('open'); $('pClose').onclick = closeModal;
+  document.querySelectorAll('[data-link]').forEach((s) => s.addEventListener('change', async () => { const i = +s.dataset.link; const ppl = (config.people || []).map((p, j) => (j === i ? { ...p, employeeId: s.value || null } : p)); try { await saveConfig({ people: ppl }); await logAudit(`${config.people[i].name} linked to an employee record`, ''); toast('Linked.'); await load(); } catch (e) { $('formError').textContent = 'Could not save: ' + (e.code || e.message); } }));
+  document.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', async () => { const x = extras.find((e) => e.id === b.dataset.toggle); try { await setDoc(doc(db, 'roster_extra_people', x.id), { groupId: GROUP, name: x.name, company: x.company || '', active: x.active === false, createdBy: x.createdBy || me.email, createdAt: x.createdAt || serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: me.email }); await logAudit(`${x.name} ${x.active === false ? 'activated' : 'deactivated'} (stand-in)`, ''); await load(); render(); managePeople(); } catch (e) { $('formError').textContent = 'Could not save: ' + (e.code || e.message); } }));
+  $('x_add').onclick = async () => { const name = $('x_name').value.trim(); if (!name) { $('formError').textContent = 'Please type a name.'; return; } try { await addDoc(collection(db, 'roster_extra_people'), { groupId: GROUP, name, company: $('x_co').value.trim(), active: true, createdBy: me.email, createdAt: serverTimestamp() }); await logAudit(`Stand-in added: ${name}`, ''); await load(); render(); managePeople(); } catch (e) { $('formError').textContent = 'Could not save: ' + (e.code || e.message); } };
+}
+async function saveConfig(patch) { const next = { name: config.name, type: config.type, people: config.people || [], versions: config.versions || [], editTiers: config.editTiers || [], ...patch, updatedAt: serverTimestamp(), updatedBy: me.email }; if (config.createdAt) { next.createdAt = config.createdAt; next.createdBy = config.createdBy; } await setDoc(doc(db, 'roster_config', GROUP), next); }
+
+function editPattern() {
+  const v = R.versionFor(config, R.iso(st.y, st.m, 1)) || (config.versions || [])[0]; const ppl = (config.people || []).filter((p) => p.active !== false);
+  const sel = (id, cur) => `<select id="${id}">${ppl.map((p) => `<option value="${esc(p.id)}" ${p.id === cur ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`;
+  $('modal').innerHTML = `<h2>Pattern</h2><div class="sub">One day guard plus two pairs that swap roles every two weeks (repeats every eight weeks). A change takes effect from a start date and never alters earlier months. Choose the Monday a new two-week cycle begins.</div>
+    <div class="field"><label>Day guard</label>${sel('p_day', v?.dayGuard)}</div>
+    <div class="two" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="field"><label>Pair A, first</label>${sel('p_a1', v?.pairA?.[0])}</div><div class="field"><label>Pair A, second</label>${sel('p_a2', v?.pairA?.[1])}</div><div class="field"><label>Pair B, first</label>${sel('p_b1', v?.pairB?.[0])}</div><div class="field"><label>Pair B, second</label>${sel('p_b2', v?.pairB?.[1])}</div></div>
+    <div class="field"><label>Takes effect from (a Monday)</label><input type="date" id="p_from" value="" /></div>
+    <div class="muted">Pattern now: ${esc(nameOf(v?.dayGuard))}; Pair A ${esc((v?.pairA || []).map(nameOf).join(' + '))}; Pair B ${esc((v?.pairB || []).map(nameOf).join(' + '))}; cycle starts ${esc(v?.anchor || '')}.</div>
+    <div id="formError"></div><div class="modal-actions"><button class="btn" id="pCancel">Cancel</button><button class="btn solid" id="pSave">Save new pattern</button></div>`;
+  $('overlay').classList.add('open'); $('pCancel').onclick = closeModal;
+  $('pSave').onclick = async () => {
+    const from = $('p_from').value; if (!R.parseISO(from) || R.dowMon0(from) !== 0) { $('formError').textContent = 'Choose a Monday for the start date.'; return; }
+    const ids = [$('p_day').value, $('p_a1').value, $('p_a2').value, $('p_b1').value, $('p_b2').value]; if (new Set(ids).size !== 5) { $('formError').textContent = 'Each of the five places needs a different person.'; return; }
+    const nv = { validFrom: from, anchor: from, pattern: 'two-pair-8wk', dayGuard: ids[0], pairA: [ids[1], ids[2]], pairB: [ids[3], ids[4]] };
+    const versions = [...(config.versions || []).filter((x) => x.validFrom !== from), nv].sort((a, b) => a.validFrom.localeCompare(b.validFrom));
+    try { await saveConfig({ versions }); await logAudit(`New pattern from ${from}`, JSON.stringify(nv)); closeModal(); toast('Pattern saved.'); await load(); render(); } catch (e) { $('formError').textContent = 'Could not save: ' + (e.code || e.message); }
+  };
+}
+</script>
+</body>
+</html>

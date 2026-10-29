@@ -402,6 +402,7 @@ import {
 import {
   getStorage, ref, uploadBytesResumable, getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
 // ---------------------------------------------------------------------------
 // FIREBASE CONFIG — same project as the rest of Ekhaya Connect (hae-vuma-92fca)
@@ -420,10 +421,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Shared Cloudflare Worker proxy — same one used by the Motivation Tool,
-// Timesheet Processor, and HR Documents module. Model per existing convention.
-const AI_PROXY = 'https://hae-motivation-proxy.shakabornman.workers.dev';
-const AI_MODEL = 'claude-sonnet-4-6';
+// AI reading goes through the signed-in function aiAssist (EC-049); the prompt and key live on the server.
+const aiAssist = httpsCallable(getFunctions(app, 'europe-west1'), 'aiAssist');
 
 const TYPE_LABELS = { notice: 'Notice', agenda: 'Agenda', minutes: 'Minutes', resolution: 'Resolution' };
 
@@ -681,43 +680,8 @@ async function readDocumentWithAI(file) {
   const isPDF = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
   const mediaType = isPDF ? 'application/pdf' : (file.type || 'image/jpeg');
 
-  const prompt = `You are reading a scanned board governance document for HOSPITAL AT EKHAYA (Vuma Development Solutions (Pty) Ltd).
-
-Identify:
-1. Document type — exactly one of: notice, agenda, minutes, resolution
-2. A short descriptive title (e.g. "Notice of AGM — March 2026", "Minutes — Ordinary Board Meeting")
-3. The meeting date if visible, in YYYY-MM-DD format, or null if not found
-4. 2-4 short suggested tags (committee name, meeting type, subject area)
-5. Your confidence level: High, Medium, or Low
-
-Return ONLY valid JSON, no other text:
-{
-  "type": "notice|agenda|minutes|resolution",
-  "title": "suggested title",
-  "meetingDate": "YYYY-MM-DD or null",
-  "tags": ["tag1", "tag2"],
-  "confidence": "High or Medium or Low",
-  "notes": "any other relevant detail"
-}`;
-
-  const response = await fetch(AI_PROXY, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: isPDF ? 'document' : 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-          { type: 'text', text: prompt }
-        ]
-      }]
-    })
-  });
-  const data = await response.json();
-  const text = (data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
-  return JSON.parse(text);
+  const res = await aiAssist({ task: 'boardDoc', mediaType, data: base64 });
+  return res.data.result;
 }
 
 function fileToBase64(file) {

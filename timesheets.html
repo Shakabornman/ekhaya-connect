@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roster — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0F2A43; --ink-soft:#4A5C70; --paper:#F7F6F2; --line:#E3DFD4; --gold:#B8912F; --gold-soft:#F1E7CD; --danger:#A6303A; --danger-soft:#F8E4E6; --amber:#9A6B12; --amber-soft:#FBEFD8; --green:#1E6F4C; --green-soft:#E4F2EA; --blue:#1E5F8F; --blue-soft:#E8F1F8; --gray-soft:#EDEDED; --radius:3px; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; }
+  #authScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; }
+  .seal { width:56px; height:56px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:22px; color:var(--gold); }
+  .auth-card { background:#fff; border:1px solid var(--line); padding:40px; width:340px; max-width:92vw; text-align:center; }
+  .auth-card h1 { font-size:20px; margin:12px 0 4px; } .auth-card p { color:var(--ink-soft); margin:0 0 20px; font-size:13px; }
+  .auth-card input { width:100%; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:var(--radius); font:inherit; }
+  .auth-card button { width:100%; padding:10px 12px; background:var(--ink); color:#fff; border:none; border-radius:var(--radius); font-weight:600; font-size:13px; cursor:pointer; }
+  #authError { color:var(--danger); font-size:12px; min-height:16px; margin-top:6px; }
+  #app { display:none; }
+  header.top { background:var(--ink); color:#fff; padding:16px 36px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  header.top .brand { display:flex; align-items:center; gap:14px; } header.top img { height:46px; background:#fff; padding:4px 8px; border-radius:3px; }
+  header.top .eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft); opacity:.85; } header.top h1 { color:#fff; font-size:22px; margin:2px 0 0; }
+  header.top .who { font-size:12px; color:#c7d2df; text-align:right; } header.top .who button { background:none; border:1px solid #3c5a76; color:#dce6ef; padding:4px 10px; border-radius:var(--radius); font-size:11px; margin-top:6px; cursor:pointer; }
+  main { padding:22px 36px 60px; max-width:1180px; margin:0 auto; }
+  .bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; } .nav { display:flex; align-items:center; gap:8px; } .nav h2 { margin:0; font-size:24px; min-width:190px; text-align:center; }
+  .btn { padding:8px 14px; border-radius:var(--radius); border:1px solid var(--ink); background:#fff; color:var(--ink); font-weight:600; font-size:13px; cursor:pointer; font-family:inherit; } .btn.solid { background:var(--ink); color:#fff; } .btn.ghost { border-color:var(--line); color:var(--ink-soft); } .btn.danger { background:var(--danger); border-color:var(--danger); color:#fff; } .btn.small { padding:4px 10px; font-size:12px; } .btn:disabled { opacity:.5; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .note { background:var(--blue-soft); border:1px solid #c9dcea; color:#234e6e; padding:9px 13px; border-radius:var(--radius); font-size:12px; margin-bottom:14px; }
+  table.roster { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); }
+  table.roster th { background:var(--ink); color:#fff; font-size:12px; padding:7px 8px; text-align:left; border:1px solid var(--ink); }
+  table.roster td { border:1px solid var(--line); padding:5px 8px; font-size:13px; }
+  table.roster tr.sunday td { border-bottom:3px solid var(--ink); } table.roster td.d { white-space:nowrap; font-weight:600; } table.roster tr.we td.d, table.roster tr.we td.w { background:#FBFAF7; }
+  td.cell { position:relative; } td.cell.edit { cursor:pointer; } td.cell.edit:hover { background:var(--blue-soft); }
+  td.cell.ov { background:var(--amber-soft); color:var(--amber); font-weight:600; } td.cell.short { background:var(--danger-soft); color:var(--danger); font-weight:600; } td.cell.empty { color:#B9B4A6; }
+  .legend { font-size:12px; color:var(--ink-soft); margin:8px 0 18px; display:flex; gap:16px; flex-wrap:wrap; } .legend i { display:inline-block; width:12px; height:12px; border:1px solid var(--line); vertical-align:-2px; margin-right:5px; }
+  .card { background:#fff; border:1px solid var(--line); padding:16px 18px; margin-bottom:16px; } .card h3 { margin:0 0 10px; font-size:16px; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; }
+  table.t { width:100%; border-collapse:collapse; } table.t th { text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:8px 8px; border-bottom:2px solid var(--ink); } table.t td { padding:8px; border-bottom:1px solid var(--line); } table.t td.n, table.t th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px; font-weight:600; } .badge.ok { background:var(--green-soft); color:var(--green); } .badge.warn { background:var(--amber-soft); color:var(--amber); } .badge.alert { background:var(--danger-soft); color:var(--danger); } .badge.ext { background:var(--gray-soft); color:var(--ink-soft); }
+  .muted { color:var(--ink-soft); font-size:12px; }
+  select, input[type=text], input[type=date], textarea { padding:8px 10px; border:1px solid var(--line); border-radius:3px; font:inherit; font-size:13px; width:100%; } textarea { min-height:60px; }
+  .field { margin-bottom:11px; } .field label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:4px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(15,42,67,.45); align-items:center; justify-content:center; z-index:50; padding:20px; } .overlay.open { display:flex; }
+  .modal { background:#fff; width:560px; max-width:94vw; max-height:90vh; overflow-y:auto; padding:22px 24px; border-radius:4px; } .modal h2 { margin:0 0 4px; font-size:19px; } .modal .sub { color:var(--ink-soft); font-size:12px; margin-bottom:14px; }
+  .warnbox { background:var(--amber-soft); border:1px solid #ecd9ac; color:var(--amber); padding:8px 12px; border-radius:var(--radius); font-size:12px; margin:8px 0; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; flex-wrap:wrap; } #formError { color:var(--danger); font-size:12px; min-height:16px; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 18px; border-radius:4px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:80; max-width:90vw; } .toast.show { opacity:1; } .toast.error { background:var(--danger); }
+  .printhead { display:none; }
+  @media (max-width:760px) { main { padding:14px 10px 50px; } header.top { padding:12px 14px; } table.roster td, table.roster th { padding:4px 4px; font-size:11px; } .nav h2 { min-width:120px; font-size:18px; } }
+  .drop { border:2px dashed #b9c3cf; background:#fff; padding:22px; text-align:center; border-radius:4px; margin-bottom:14px; } .drop.over { border-color:var(--blue); background:var(--blue-soft); }
+  .sheet { background:#fff; border:1px solid var(--line); margin-bottom:16px; } .sheet .hd { display:flex; gap:12px; align-items:center; padding:10px 14px; border-bottom:1px solid var(--line); flex-wrap:wrap; } .sheet .bd { padding:12px 14px; display:grid; grid-template-columns:230px 1fr; gap:16px; } @media (max-width:900px){ .sheet .bd { grid-template-columns:1fr; } }
+  .sheet img.thumb { width:100%; border:1px solid var(--line); cursor:zoom-in; } .sheet.done { border-color:#9fd1b7; } .sheet.err { border-color:#e4a8ad; }
+  table.rows { width:100%; border-collapse:collapse; font-size:12px; } table.rows th { text-align:left; font-size:10px; text-transform:uppercase; color:var(--ink-soft); padding:4px; border-bottom:2px solid var(--ink); } table.rows td { padding:2px 3px; border-bottom:1px solid var(--line); } table.rows input[type=text] { padding:3px 5px; font-size:12px; width:100%; } table.rows tr.struck td { opacity:.45; text-decoration:line-through; } table.rows tr.out td { background:#F3F3F3; }
+  .st { font-size:11px; font-weight:600; padding:1px 7px; border-radius:20px; white-space:nowrap; } .st.match { background:var(--green-soft); color:var(--green); } .st.bad { background:var(--danger-soft); color:var(--danger); } .st.warn { background:var(--amber-soft); color:var(--amber); } .st.na { background:var(--gray-soft); color:var(--ink-soft); }
+  .flags { margin:6px 0; padding:0 0 0 16px; font-size:12px; color:var(--amber); } .kv { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin-bottom:8px; } .kv div { font-size:11px; color:var(--ink-soft); } .kv b { display:block; font-size:15px; color:var(--ink); }
+  @media print { header.top, .noprint { display:none !important; } }
+</style>
+</head>
+<body>
+<div id="authScreen"><div class="seal">HAE</div><div class="auth-card"><h1>Signed hours sheets</h1><p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+  <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" /><input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" /><button id="loginBtn">Sign in</button><div id="authError"></div></div></div>
+<div id="app">
+  <header class="top"><div class="brand"><img src="roster-logo.png" alt="Hospital at Ekhaya" /><div><div class="eyebrow">Hospital at Ekhaya — Hourly staff</div><h1>Signed hours sheets</h1></div></div><div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div></header>
+  <main id="view"><div class="muted">Loading…</div></main>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+import * as R from "./roster-core.js";
+import * as T from "./timesheet-core.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const extract = httpsCallable(getFunctions(app, 'europe-west1'), 'timesheetExtract');
+const GROUPS = ['nursing-wards', 'nursing-psych'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; const MON3 = MONTHS.map((m) => m.slice(0, 3));
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dm = (d) => { const p = R.parseISO(d); return p ? `${p.d} ${MON3[p.m - 1]} ${p.y}` : d; };
+const mins = (m) => (m == null ? '' : String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
+const rand = () => Math.random().toString(36).slice(2, 9);
+let me = null, rates = null, groups = {}, people = [], win = null, cards = [], saved = [];
+function toast(m, t) { const el = $('toast'); el.textContent = m; el.className = 'toast show' + (t === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { el.className = 'toast'; }, 4500); }
+
+$('loginBtn').addEventListener('click', async () => { $('authError').textContent = ''; try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); } catch (e) { $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message); } });
+$('signOutBtn').addEventListener('click', () => signOut(auth));
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  let levels = []; try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn(e); }
+  me = { uid: user.uid, email: user.email, levels, isExec: levels.includes('executive') };
+  $('authScreen').style.display = 'none'; $('app').style.display = 'block'; $('whoName').textContent = user.displayName || user.email;
+  if (!levels.some((l) => ['executive', 'hr', 'finance'].includes(l))) { $('view').innerHTML = '<div class="note">This tool is for executive, HR and finance. Ask the COO for access.</div>'; return; }
+  const today = new Date(); const ps = R.periodsForMonth(today.getFullYear(), today.getMonth() + 1); const t = R.iso(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  const pp = t <= ps[1].to ? ps[1] : ps[2]; win = { start: pp.from, end: pp.to };
+  const qs = new URLSearchParams(location.search); if (/^\d{4}-\d\d-\d\d$/.test(qs.get('start') || '') && /^\d{4}-\d\d-\d\d$/.test(qs.get('end') || '')) win = { start: qs.get('start'), end: qs.get('end') };
+  await loadAll(); render();
+});
+
+async function loadAll() {
+  try { const r = await getDoc(doc(db, 'timesheet_config', 'rates')); rates = r.exists() ? r.data().rates : null; } catch (e) { console.warn(e); }
+  groups = {}; people = [];
+  for (const g of GROUPS) {
+    try { const c = await getDoc(doc(db, 'roster_config', g)); if (!c.exists()) continue; const cfg = c.data(); const canEdit = me.isExec || (cfg.editTiers || []).some((t) => me.levels.includes(t));
+      const q = canEdit ? query(collection(db, 'roster_periods'), where('groupId', '==', g)) : query(collection(db, 'roster_periods'), where('groupId', '==', g), where('status', '==', 'published'));
+      const per = (await getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() })); groups[g] = { cfg, periods: per, name: cfg.name || g };
+      for (const r of cfg.people || []) if (!people.find((p) => p.id === r.personId)) people.push({ id: r.personId, name: r.name });
+    } catch (e) { console.warn('roster', g, e); }
+  }
+  people.sort((a, b) => a.name.localeCompare(b.name)); await loadSaved();
+}
+async function loadSaved() { try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()); } catch (e) { saved = []; console.warn(e); } }
+const allPeriods = () => Object.values(groups).flatMap((g) => g.periods);
+function rosterFor(personId) { const m = new Map(); for (const g of Object.values(groups)) for (const [d, s] of T.rosterMap(g.cfg, g.periods, personId)) { if (!m.has(d)) m.set(d, new Set()); for (const x of s) m.get(d).add(x); } return m; }
+
+function render() {
+  const ps = []; for (let k = -1; k <= 1; k++) { const d = new Date(); d.setMonth(d.getMonth() + k); const y = d.getFullYear(), m = d.getMonth() + 1; const x = R.periodsForMonth(y, m); ps.push(x[1], x[2]); }
+  const sel = ps.map((p) => `<option value="${p.from}|${p.to}" ${p.from === win.start && p.to === win.end ? 'selected' : ''}>${dm(p.from)} to ${dm(p.to)}</option>`).join('');
+  const custom = !ps.find((p) => p.from === win.start && p.to === win.end) ? `<option value="${win.start}|${win.end}" selected>${dm(win.start)} to ${dm(win.end)}</option>` : '';
+  $('view').innerHTML = `<div class="bar"><div class="nav"><b>Pay run</b> <select id="winSel" style="width:auto">${custom}${sel}</select></div><div class="muted">Hourly pay runs: 1st to 15th and 16th to month end (payroll app)</div></div>
+    ${rates ? '' : '<div class="warnbox">Hourly rates are not set up yet, so amounts cannot be checked. An executive must create the rates (RN, EN, ENA) first.</div>'}
+    <div class="note">Scan the signed sheets (photo or PDF, one sheet per person), drop them here, then check each one against what was written. Nothing is saved until you press <b>Accept</b>. Pictures are not stored; keep the paper.</div>
+    <div class="drop" id="drop">Drop scanned sheets here or <button class="btn small" id="pick">choose files</button><input type="file" id="file" accept="image/*,application/pdf" multiple style="display:none"></div>
+    <div id="cards"></div><div id="summary"></div>`;
+  $('winSel').onchange = async (e) => { const [a, b] = e.target.value.split('|'); win = { start: a, end: b }; await loadSaved(); cards.forEach((c) => (c.saved = false)); render(); drawCards(); };
+  const drop = $('drop'); $('pick').onclick = () => $('file').click(); $('file').onchange = (e) => addFiles([...e.target.files]);
+  drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); }; drop.ondragleave = () => drop.classList.remove('over'); drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); };
+  drawCards(); drawSummary();
+}
+async function shrink(file) {
+  if (file.type === 'application/pdf') return { mediaType: 'application/pdf', data: await b64(file), url: URL.createObjectURL(file) };
+  const bmp = await createImageBitmap(file); const k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height)); const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.85)); return { mediaType: 'image/jpeg', data: await b64(blob), url: URL.createObjectURL(blob) };
+}
+const b64 = (blob) => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result).split(',')[1]); f.onerror = rej; f.readAsDataURL(blob); });
+async function addFiles(files) {
+  for (const f of files) { if (!/^image\/|application\/pdf/.test(f.type)) continue; const card = { id: rand(), file: f.name, state: 'reading', sheets: [] }; cards.push(card); drawCards();
+    try { const s = await shrink(f); card.url = s.url; card.isPdf = s.mediaType === 'application/pdf'; const res = await extract({ mediaType: s.mediaType, data: s.data }); card.state = 'ready';
+      card.sheets = (res.data.sheets || []).map((raw) => makeSheet(raw)); if (!card.sheets.length) { card.state = 'err'; card.msg = 'No sheet found on this scan.'; } }
+    catch (e) { card.state = 'err'; card.msg = (e.message || 'Could not read this scan').replace(/^functions\//, ''); }
+    drawCards(); }
+}
+function makeSheet(raw) {
+  const best = T.matchPerson(raw.name, people); return { id: rand(), raw: { ...raw, shifts: raw.shifts.map((s) => ({ ...s })) }, personId: best.length && (best.length === 1 || best[0].score - best[1].score > 0.15) ? best[0].id : '', cands: best.slice(0, 3), saved: false };
+}
+function analyse(sh) {
+  const n = T.normaliseSheet(sh.raw, { rates: rates || {} }); const sp = T.splitByPeriod(n, win); let cmp = null; const flags = [...n.flags];
+  if (sh.personId) { cmp = T.compareToRoster(sp.inside, rosterFor(sh.personId), win, T.coveredDays(allPeriods())); if (cmp.noRoster && cmp.noRoster === sp.inside.length) flags.push('No roster entered for these dates, so they cannot be compared'); }
+  if (sp.outside.length) flags.push(`${sp.outside.length} shift(s) fall outside this pay run and are left out: ${sp.outside.map((r) => r.date ? dm(r.date) : r.rawDate).join(', ')}`);
+  return { n, sp, cmp, flags, amount: n.rate != null ? T.money(sp.hours * n.rate) : null };
+}
+const stCls = { match: 'match', 'worked-not-rostered': 'bad', 'different-shift': 'warn', 'rostered-not-worked': 'bad', 'no-roster': 'na' };
+const stTxt = { match: 'Matches roster', 'worked-not-rostered': 'Not on roster', 'different-shift': 'Rostered for the other shift', 'rostered-not-worked': 'Rostered, not on sheet', 'no-roster': 'No roster' };
+function drawCards() {
+  const el = $('cards'); if (!el) return;
+  el.innerHTML = cards.map((c) => {
+    if (c.state === 'reading') return `<div class="sheet"><div class="hd">Reading ${esc(c.file)}… about 15 seconds</div></div>`;
+    if (c.state === 'err') return `<div class="sheet err"><div class="hd"><b>${esc(c.file)}</b><span class="badge alert">${esc(c.msg)}</span><button class="btn small ghost" data-rm="${c.id}">Remove</button></div></div>`;
+    return c.sheets.map((sh) => sheetHtml(c, sh)).join('');
+  }).join(''); wireCards(); drawSummary();
+}
+function sheetHtml(c, sh) {
+  const a = analyse(sh); const n = a.n; const opts = people.map((p) => `<option value="${esc(p.id)}" ${p.id === sh.personId ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  const rows = n.rows.map((r, i) => { const inWin = !r.struck && T.inPeriod(r.date, win); const line = a.cmp && inWin ? a.cmp.lines.find((l) => l.date === r.date && l.shift === r.shift && l.status !== 'rostered-not-worked') : null; const s = sh.raw.shifts[i];
+    return `<tr class="${r.struck ? 'struck' : ''} ${!r.struck && !inWin ? 'out' : ''}"><td><input type="text" data-f="date" data-i="${i}" value="${esc(s.date)}"></td><td><input type="text" data-f="in" data-i="${i}" value="${esc(s.in)}"></td><td><input type="text" data-f="out" data-i="${i}" value="${esc(s.out)}"></td><td><input type="text" data-f="hours" data-i="${i}" value="${esc(s.hours)}"></td><td><input type="checkbox" data-f="struck" data-i="${i}" ${s.struck ? 'checked' : ''} title="Struck out on the sheet"></td>
+      <td>${r.shift ? (r.extension ? 'extra hours' : r.shift) : ''}</td><td>${r.struck ? '' : inWin ? '<span class="st match">in pay run</span>' : '<span class="st na">outside</span>'}</td><td>${line ? `<span class="st ${stCls[line.status]}">${stTxt[line.status]}</span>` : ''}</td></tr>`; }).join('');
+  const missed = a.cmp ? a.cmp.lines.filter((l) => l.status === 'rostered-not-worked') : [];
+  return `<div class="sheet ${sh.saved ? 'done' : ''}" data-sheet="${sh.id}"><div class="hd"><b>${esc(c.file)}</b><span class="muted">sheet says: ${esc(sh.raw.name || '?')} · ${esc(sh.raw.rank || '?')} · ${esc(sh.raw.month || '')}</span><span style="flex:1"></span>${sh.saved ? '<span class="badge ok">Accepted</span>' : ''}<button class="btn small ghost" data-rm="${c.id}">Remove</button></div>
+   <div class="bd"><div>${c.url ? (c.isPdf ? `<a href="${c.url}" target="_blank">Open the PDF</a>` : `<a href="${c.url}" target="_blank"><img class="thumb" src="${c.url}" alt="scan"></a>`) : ''}</div>
+   <div><div class="field"><label>Staff member (matched to the roster list)</label><select data-pid><option value="">Choose…</option>${opts}</select></div>
+    <div class="kv"><div>Hours in this pay run<b>${a.sp.hours}</b></div><div>Rate<b>${n.rate ?? '—'}</b></div><div>Amount<b>${a.amount != null ? 'R ' + a.amount.toFixed(2) : '—'}</b></div><div>Sheet total hours<b>${n.totalHours ?? '—'}</b></div><div>Sheet amount<b>${n.writtenAmount ?? '—'}</b></div>${a.cmp ? `<div>Roster check<b>${a.cmp.match} of ${a.sp.inside.length} match</b></div>` : ''}</div>
+    ${a.flags.length ? `<ul class="flags">${a.flags.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : '<div class="badge ok" style="margin:4px 0">No problems found</div>'}
+    <table class="rows"><thead><tr><th>Date</th><th>In</th><th>Out</th><th>Hours</th><th>Struck</th><th>Shift</th><th>Pay run</th><th>Roster</th></tr></thead><tbody>${rows}</tbody></table>
+    ${missed.length ? `<div class="warnbox">Rostered but not on this sheet: ${missed.map((l) => dm(l.date) + ' ' + l.shift).join(', ')}</div>` : ''}
+    <div class="modal-actions"><button class="btn solid" data-accept ${sh.personId && a.sp.inside.length ? '' : 'disabled'}>${sh.saved ? 'Save changes' : 'Accept for this pay run'}</button></div></div></div></div>`;
+}
+function wireCards() {
+  document.querySelectorAll('[data-rm]').forEach((b) => { b.onclick = () => { cards = cards.filter((c) => c.id !== b.dataset.rm); drawCards(); }; });
+  document.querySelectorAll('[data-sheet]').forEach((el) => {
+    const sh = cards.flatMap((c) => c.sheets).find((s) => s.id === el.dataset.sheet); if (!sh) return;
+    el.querySelector('[data-pid]').onchange = (e) => { sh.personId = e.target.value; sh.saved = false; drawCards(); };
+    el.querySelectorAll('input[data-f]').forEach((inp) => { inp.onchange = () => { const s = sh.raw.shifts[+inp.dataset.i]; s[inp.dataset.f] = inp.type === 'checkbox' ? inp.checked : inp.value; sh.saved = false; drawCards(); }; });
+    el.querySelector('[data-accept]').onclick = () => accept(sh);
+  });
+}
+async function accept(sh) {
+  const a = analyse(sh); const p = people.find((x) => x.id === sh.personId); const id = `${win.start}_${sh.personId}`;
+  if (saved.find((s) => s.personId === sh.personId) && !sh.saved && !confirm(`${p.name} already has hours saved for this pay run. Replace them?`)) return;
+  const entry = { payStart: win.start, payEnd: win.end, personId: sh.personId, name: p.name, rank: a.n.rank || '', rankKey: a.n.rankKey || '', rate: a.n.rate ?? 0, hours: a.sp.hours, amount: a.amount ?? 0, sheetHours: a.n.totalHours ?? 0, sheetAmount: a.n.writtenAmount ?? 0,
+    shifts: a.sp.inside.map((r) => ({ date: r.date, shift: r.shift || '', hours: r.hours, extension: !!r.extension })), flags: a.flags.slice(0, 20), roster: a.cmp ? { match: a.cmp.match, workedNotRostered: a.cmp.workedNotRostered, differentShift: a.cmp.differentShift, rosteredNotWorked: a.cmp.rosteredNotWorked, noRoster: a.cmp.noRoster } : null, status: 'verified', verifiedBy: me.email, verifiedAt: serverTimestamp() };
+  try { await setDoc(doc(db, 'timesheet_entries', id), entry); sh.saved = true; await loadSaved(); toast(`${p.name}: ${a.sp.hours} hours saved.`); drawCards(); } catch (e) { toast('Could not save: ' + (e.code || e.message), 'error'); }
+}
+function drawSummary() {
+  const el = $('summary'); if (!el) return; const have = new Set(saved.map((s) => s.personId));
+  const onRoster = people.filter((p) => { const m = rosterFor(p.id); for (const d of m.keys()) if (d >= win.start && d <= win.end) return true; return false; });
+  const missing = onRoster.filter((p) => !have.has(p.id)); const tot = saved.reduce((a, s) => a + s.hours, 0);
+  el.innerHTML = `<div class="card"><h3>This pay run: ${dm(win.start)} to ${dm(win.end)}</h3><div class="kv"><div>Sheets accepted<b>${saved.length}</b></div><div>Hours accepted<b>${T.money(tot)}</b></div><div>On the roster, no sheet yet<b>${missing.length}</b></div></div>
+   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
+   ${missing.length ? `<div class="warnbox" style="margin-top:10px">On the roster in this pay run but no sheet accepted: ${missing.map((p) => esc(p.name)).join(', ')}</div>` : ''}</div>`;
+}
+</script>
+</body>
+</html>

@@ -106,3 +106,49 @@ export function periodsForMonth(y, m) {
 export const CSV_COLUMNS = ['periodStart', 'periodEnd', 'employeeNumber', 'name', 'type', 'dayShifts', 'nightShifts', 'totalShifts', 'totalHours', 'sickShifts', 'absentShifts', 'leaveShifts'];
 export function csvEscape(v) { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 export function buildCsv(rowsOut) { return [CSV_COLUMNS.join(','), ...rowsOut.map((r) => CSV_COLUMNS.map((c) => csvEscape(r[c])).join(','))].join('\r\n') + '\r\n'; }
+
+// =====================================================================================================
+// Manual grid rosters (nursing "Off Duty"). A person is either on or off duty each day; the section a row sits in
+// (day or night) decides the shift and its hours. A roster period stores, for every row, one character per day:
+// '1' = on duty, '0' = off duty, starting at the period's start date.
+// config.people rows: { id: rowId, personId, name, rank, sectionId, employeeId, active }
+// config.sections:   [{ id, label, shift: 'day'|'night', onCode, offCode, hours }]
+// =====================================================================================================
+export function periodDays(start, end) { const out = []; for (let d = start; d <= end; d = addDays(d, 1)) out.push(d); return out; }
+export const periodLength = (p) => daysBetween(p.start, p.end) + 1;
+export function cellOn(period, rowId, dateISO) { const i = daysBetween(period.start, dateISO); const s = (period.cells || {})[rowId]; return !!s && i >= 0 && i < s.length && s[i] === '1'; }
+export function setCellString(period, rowId, dateISO, on) {
+  const n = periodLength(period); const i = daysBetween(period.start, dateISO); if (i < 0 || i >= n) return (period.cells || {})[rowId] || '0'.repeat(n);
+  const cur = ((period.cells || {})[rowId] || '').padEnd(n, '0').slice(0, n).split(''); cur[i] = on ? '1' : '0'; return cur.join('');
+}
+export const emptyCells = (rows, n) => Object.fromEntries(rows.map((r) => [r.id, '0'.repeat(n)]));
+export function periodsOverlap(a, b) { return a.start <= b.end && b.start <= a.end; }
+export function nextPeriodStart(periods) { if (!periods.length) return null; return addDays(periods.map((p) => p.end).sort().pop(), 1); }
+
+// every (row, date) that is on duty in the given periods, as a Map rowId -> Set(dates)
+export function onDutyMap(periods) {
+  const m = new Map();
+  for (const p of [...periods].sort((a, b) => a.start.localeCompare(b.start))) {
+    for (const [rowId, str] of Object.entries(p.cells || {})) { if (!m.has(rowId)) m.set(rowId, new Set()); const set = m.get(rowId); for (let i = 0; i < str.length; i++) { const d = addDays(p.start, i); if (str[i] === '1') set.add(d); else set.delete(d); } }
+  }
+  return m;
+}
+const sectionOf = (config, row) => (config.sections || []).find((s) => s.id === row.sectionId) || { shift: 'day', hours: SHIFT_HOURS };
+// per person (all of their rows added together) between two dates, counted by shift start date
+export function gridSummary(config, periods, fromISO, toISO) {
+  const on = onDutyMap(periods); const res = {};
+  for (const row of config.people || []) {
+    const sec = sectionOf(config, row); const a = (res[row.personId] ||= { name: row.name, rank: row.rank, day: 0, night: 0, shifts: 0, hours: 0 });
+    for (const d of on.get(row.id) || []) if (d >= fromISO && d <= toISO) { a[sec.shift]++; a.shifts++; a.hours += sec.hours || SHIFT_HOURS; }
+  }
+  return res;
+}
+export function rowShiftCount(config, periods, rowId, fromISO, toISO) { const on = onDutyMap(periods).get(rowId) || new Set(); let n = 0; for (const d of on) if (d >= fromISO && d <= toISO) n++; return n; }
+export function coverCount(config, periods, sectionId, dateISO) { const on = onDutyMap(periods); let n = 0; for (const row of config.people || []) if (row.sectionId === sectionId && row.active !== false && (on.get(row.id) || new Set()).has(dateISO)) n++; return n; }
+export function gridWeeklyHours(config, periods, weekStarts) {
+  const on = onDutyMap(periods); const res = Object.fromEntries(weekStarts.map((w) => [w, {}]));
+  for (const row of config.people || []) { const sec = sectionOf(config, row); for (const d of on.get(row.id) || []) { const w = weekStart(d); if (w in res) res[w][row.personId] = (res[w][row.personId] || 0) + (sec.hours || SHIFT_HOURS); } }
+  return res;
+}
+// what changed between two cell strings, for the audit trail: [{ date, from, to }]
+export function diffCells(start, before, after) { const out = []; const n = Math.max((before || '').length, (after || '').length); for (let i = 0; i < n; i++) { const a = (before || '')[i] || '0', b = (after || '')[i] || '0'; if (a !== b) out.push({ date: addDays(start, i), from: a === '1' ? 'on' : 'off', to: b === '1' ? 'on' : 'off' }); } return out; }

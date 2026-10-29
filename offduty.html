@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roster — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0F2A43; --ink-soft:#4A5C70; --paper:#F7F6F2; --line:#E3DFD4; --gold:#B8912F; --gold-soft:#F1E7CD; --danger:#A6303A; --danger-soft:#F8E4E6; --amber:#9A6B12; --amber-soft:#FBEFD8; --green:#1E6F4C; --green-soft:#E4F2EA; --blue:#1E5F8F; --blue-soft:#E8F1F8; --gray-soft:#EDEDED; --radius:3px; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; font-weight:600; letter-spacing:-0.01em; }
+  #authScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; }
+  .seal { width:56px; height:56px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:22px; color:var(--gold); }
+  .auth-card { background:#fff; border:1px solid var(--line); padding:40px; width:340px; max-width:92vw; text-align:center; }
+  .auth-card h1 { font-size:20px; margin:12px 0 4px; } .auth-card p { color:var(--ink-soft); margin:0 0 20px; font-size:13px; }
+  .auth-card input { width:100%; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:var(--radius); font:inherit; }
+  .auth-card button { width:100%; padding:10px 12px; background:var(--ink); color:#fff; border:none; border-radius:var(--radius); font-weight:600; font-size:13px; cursor:pointer; }
+  #authError { color:var(--danger); font-size:12px; min-height:16px; margin-top:6px; }
+  #app { display:none; }
+  header.top { background:var(--ink); color:#fff; padding:16px 36px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  header.top .brand { display:flex; align-items:center; gap:14px; } header.top img { height:46px; background:#fff; padding:4px 8px; border-radius:3px; }
+  header.top .eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft); opacity:.85; } header.top h1 { color:#fff; font-size:22px; margin:2px 0 0; }
+  header.top .who { font-size:12px; color:#c7d2df; text-align:right; } header.top .who button { background:none; border:1px solid #3c5a76; color:#dce6ef; padding:4px 10px; border-radius:var(--radius); font-size:11px; margin-top:6px; cursor:pointer; }
+  main { padding:22px 36px 60px; max-width:1180px; margin:0 auto; }
+  .bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; } .nav { display:flex; align-items:center; gap:8px; } .nav h2 { margin:0; font-size:24px; min-width:190px; text-align:center; }
+  .btn { padding:8px 14px; border-radius:var(--radius); border:1px solid var(--ink); background:#fff; color:var(--ink); font-weight:600; font-size:13px; cursor:pointer; font-family:inherit; } .btn.solid { background:var(--ink); color:#fff; } .btn.ghost { border-color:var(--line); color:var(--ink-soft); } .btn.danger { background:var(--danger); border-color:var(--danger); color:#fff; } .btn.small { padding:4px 10px; font-size:12px; } .btn:disabled { opacity:.5; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .note { background:var(--blue-soft); border:1px solid #c9dcea; color:#234e6e; padding:9px 13px; border-radius:var(--radius); font-size:12px; margin-bottom:14px; }
+  table.roster { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); }
+  table.roster th { background:var(--ink); color:#fff; font-size:12px; padding:7px 8px; text-align:left; border:1px solid var(--ink); }
+  table.roster td { border:1px solid var(--line); padding:5px 8px; font-size:13px; }
+  table.roster tr.sunday td { border-bottom:3px solid var(--ink); } table.roster td.d { white-space:nowrap; font-weight:600; } table.roster tr.we td.d, table.roster tr.we td.w { background:#FBFAF7; }
+  td.cell { position:relative; } td.cell.edit { cursor:pointer; } td.cell.edit:hover { background:var(--blue-soft); }
+  td.cell.ov { background:var(--amber-soft); color:var(--amber); font-weight:600; } td.cell.short { background:var(--danger-soft); color:var(--danger); font-weight:600; } td.cell.empty { color:#B9B4A6; }
+  .legend { font-size:12px; color:var(--ink-soft); margin:8px 0 18px; display:flex; gap:16px; flex-wrap:wrap; } .legend i { display:inline-block; width:12px; height:12px; border:1px solid var(--line); vertical-align:-2px; margin-right:5px; }
+  .card { background:#fff; border:1px solid var(--line); padding:16px 18px; margin-bottom:16px; } .card h3 { margin:0 0 10px; font-size:16px; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; }
+  table.t { width:100%; border-collapse:collapse; } table.t th { text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:8px 8px; border-bottom:2px solid var(--ink); } table.t td { padding:8px; border-bottom:1px solid var(--line); } table.t td.n, table.t th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px; font-weight:600; } .badge.ok { background:var(--green-soft); color:var(--green); } .badge.warn { background:var(--amber-soft); color:var(--amber); } .badge.alert { background:var(--danger-soft); color:var(--danger); } .badge.ext { background:var(--gray-soft); color:var(--ink-soft); }
+  .muted { color:var(--ink-soft); font-size:12px; }
+  select, input[type=text], input[type=date], textarea { padding:8px 10px; border:1px solid var(--line); border-radius:3px; font:inherit; font-size:13px; width:100%; } textarea { min-height:60px; }
+  .field { margin-bottom:11px; } .field label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:4px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(15,42,67,.45); align-items:center; justify-content:center; z-index:50; padding:20px; } .overlay.open { display:flex; }
+  .modal { background:#fff; width:560px; max-width:94vw; max-height:90vh; overflow-y:auto; padding:22px 24px; border-radius:4px; } .modal h2 { margin:0 0 4px; font-size:19px; } .modal .sub { color:var(--ink-soft); font-size:12px; margin-bottom:14px; }
+  .warnbox { background:var(--amber-soft); border:1px solid #ecd9ac; color:var(--amber); padding:8px 12px; border-radius:var(--radius); font-size:12px; margin:8px 0; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; flex-wrap:wrap; } #formError { color:var(--danger); font-size:12px; min-height:16px; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 18px; border-radius:4px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:80; max-width:90vw; } .toast.show { opacity:1; } .toast.error { background:var(--danger); }
+  .printhead { display:none; }
+  @media (max-width:760px) { main { padding:14px 10px 50px; } header.top { padding:12px 14px; } table.roster td, table.roster th { padding:4px 4px; font-size:11px; } .nav h2 { min-width:120px; font-size:18px; } }
+  .gridwrap { overflow-x:auto; background:#fff; border:1px solid var(--line); margin-bottom:14px; }
+  table.grid { border-collapse:collapse; width:100%; font-size:12px; } table.grid th, table.grid td { border:1px solid var(--line); padding:3px 2px; text-align:center; min-width:30px; }
+  table.grid th { background:var(--ink); color:#fff; font-size:11px; } table.grid th.nm, table.grid td.nm { text-align:left; min-width:150px; padding:3px 8px; white-space:nowrap; position:sticky; left:0; background:#fff; z-index:1; } table.grid th.nm { background:var(--ink); }
+  table.grid th.we { background:#34536F; } table.grid td.on { background:var(--green-soft); color:var(--green); font-weight:700; } table.grid td.off { color:#B9B4A6; } table.grid td.edit { cursor:pointer; } table.grid td.edit:hover { outline:2px solid var(--blue); }
+  table.grid th.wk, table.grid td.wk { border-left:3px solid var(--ink); } table.grid td.tot { font-weight:700; min-width:44px; } table.grid tr.cover td { background:#FBFAF7; font-weight:600; color:var(--ink-soft); } table.grid tr.low td.cv { background:var(--danger-soft); color:var(--danger); }
+  table.grid td.inactive { color:#999; text-decoration:line-through; } .sec { font-family:'Fraunces',serif; font-weight:600; font-size:16px; margin:16px 0 6px; } .pill { font-size:11px; padding:2px 9px; border-radius:20px; font-weight:600; margin-left:8px; } .pill.draft { background:var(--amber-soft); color:var(--amber); } .pill.pub { background:var(--green-soft); color:var(--green); }
+  @media print {
+    @page { size:A4 landscape; margin:8mm; }
+    body { background:#fff; } header.top, .bar, .note, .legend, .noprint, .actions, .toast, #hoursArea { display:none !important; }
+    main { padding:0; max-width:none; } .printhead { display:flex; align-items:center; gap:14px; margin-bottom:6px; } .printhead img { height:44px; } .printhead h1 { font-size:16px; margin:0; } .printhead .sub { font-size:11px; }
+    .gridwrap { border:none; overflow:visible; margin-bottom:8px; } table.grid { font-size:9px; } table.grid th, table.grid td { padding:1px; min-width:0; border:1px solid #666; } table.grid th { background:#fff !important; color:#000 !important; } table.grid th.nm, table.grid td.nm { position:static; min-width:110px; }
+    table.grid td.on { background:#dff0e6 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; } .sec { margin:6px 0 2px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<div id="authScreen"><div class="seal">HAE</div><div class="auth-card"><h1>Off Duty roster</h1><p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+  <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" /><input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" /><button id="loginBtn">Sign in</button><div id="authError"></div></div></div>
+<div id="app">
+  <header class="top"><div class="brand"><img src="roster-logo.png" alt="Hospital at Ekhaya" /><div><div class="eyebrow">Hospital at Ekhaya — Nursing rosters</div><h1 id="pageTitle">Off Duty</h1></div></div><div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div></header>
+  <main id="view"><div class="muted">Loading…</div></main>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import * as R from "./roster-core.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const GROUP = new URLSearchParams(location.search).get('g') || 'nursing-wards';
+const DEFAULT_NAMES = { 'nursing-wards': 'Medical Wards — Off Duty', 'nursing-psych': 'Psychiatric Ward — Off Duty' };
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DOW1 = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const RANKS = ['R/N', 'ST/N', 'ENA'];
+const MON3 = MONTHS.map((m) => m.slice(0, 3));
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let me = null, config = null, periods = [], cur = null, employees = null, sumPeriod = null;
+function toast(m, t) { const el = $('toast'); el.textContent = m; el.className = 'toast show' + (t === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { el.className = 'toast'; }, 4200); }
+const dm = (d) => { const p = R.parseISO(d); return `${p.d} ${MON3[p.m - 1]}`; };
+
+$('loginBtn').addEventListener('click', async () => { $('authError').textContent = ''; try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); } catch (e) { $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message); } });
+$('signOutBtn').addEventListener('click', () => signOut(auth));
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  let levels = []; try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn(e); }
+  me = { uid: user.uid, email: user.email, levels, isExec: levels.includes('executive') };
+  $('authScreen').style.display = 'none'; $('app').style.display = 'block'; $('whoName').textContent = user.displayName || user.email;
+  await load(); render();
+});
+
+async function load() {
+  try {
+    const c = await getDoc(doc(db, 'roster_config', GROUP)); config = c.exists() ? c.data() : null;
+    if (!config) {
+      $('view').innerHTML = '<div class="note">This roster has not been set up yet.' + (me.isExec ? ' <button class="btn solid small" id="setupBtn">Set it up now</button>' : ' Ask an executive to set it up.') + '</div>';
+      const b = $('setupBtn'); if (b) b.onclick = async () => { b.disabled = true; try { await setDoc(doc(db, 'roster_config', GROUP), defaultConfig()); toast('Roster set up.'); await load(); render(); } catch (e) { toast('Could not set up: ' + (e.code || e.message), 'error'); b.disabled = false; } };
+      return;
+    }
+    me.canEdit = me.isExec || (config.editTiers || []).some((t) => me.levels.includes(t));
+    $('pageTitle').textContent = config.name || 'Off Duty'; document.title = (config.name || 'Off Duty') + ' — Hospital at Ekhaya';
+    const q = me.canEdit ? query(collection(db, 'roster_periods'), where('groupId', '==', GROUP)) : query(collection(db, 'roster_periods'), where('groupId', '==', GROUP), where('status', '==', 'published'));
+    periods = (await getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.start.localeCompare(b.start));
+    if (!cur || !periods.find((p) => p.id === cur)) { const t = R.iso(...[new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()]); const hit = periods.find((p) => p.start <= t && t <= p.end) || periods[periods.length - 1]; cur = hit ? hit.id : null; }
+  } catch (e) { console.error(e); $('view').innerHTML = '<div class="note">Could not load the roster: ' + esc(e.code || e.message) + '</div>'; config = null; }
+}
+function defaultConfig() {
+  return { name: DEFAULT_NAMES[GROUP] || 'Nursing Off Duty', type: 'manual', people: [], versions: [], editTiers: ['hr'], settings: {},
+    sections: [{ id: 'day', label: 'Day staff', shift: 'day', onCode: '7/19', offCode: 'D', hours: 12 }, { id: 'night', label: 'Night staff', shift: 'night', onCode: '19/7', offCode: 'N', hours: 12 }],
+    createdAt: serverTimestamp(), createdBy: me.email, updatedAt: serverTimestamp(), updatedBy: me.email };
+}
+const sections = () => config.sections || [];
+const period = () => periods.find((p) => p.id === cur) || null;
+const activeRows = (sid) => (config.people || []).filter((r) => r.sectionId === sid && r.active !== false);
+async function logAudit(action, detail) { try { await addDoc(collection(db, 'roster_audit'), { groupId: GROUP, action, by: me.email, at: serverTimestamp(), detail: detail || '' }); } catch (e) { console.warn('audit failed', e); } }
+async function ensureEmployees() { if (employees) return employees; try { const s = await getDocs(collection(db, 'employees')); employees = s.docs.map((d) => { const x = d.data(); const fn = x.fullName || ''; const [last, first] = fn.includes(',') ? fn.split(',').map((t) => t.trim()) : ['', fn]; return { id: d.id, name: (first + ' ' + last).trim(), number: x.employeeNumber || '' }; }).sort((a, b) => a.name.localeCompare(b.name)); } catch (e) { console.warn(e); employees = []; } return employees; }
+
+function render() {
+  if (!config) return; const p = period();
+  const hdr = `<div class="printhead"><img src="roster-logo.png" alt="" /><div><h1>${esc(config.name)}</h1><div class="sub">${p ? dm(p.start) + ' to ' + dm(p.end) + ' ' + R.parseISO(p.end).y : ''} · Day 7/19 (D = off) · Night 19/7 (N = off) · 12 hours a shift</div></div></div>`;
+  const opts = periods.map((x) => `<option value="${esc(x.id)}" ${x.id === cur ? 'selected' : ''}>${dm(x.start)} to ${dm(x.end)} ${R.parseISO(x.end).y}${x.status === 'draft' ? ' (draft)' : ''}</option>`).join('');
+  const bar = `<div class="bar"><div class="nav">${periods.length ? `<select id="perSel" style="width:auto">${opts}</select>` : ''}${p ? `<span class="pill ${p.status === 'published' ? 'pub' : 'draft'}">${p.status === 'published' ? 'Approved and published' : 'Draft (staff cannot see it yet)'}</span>` : ''}</div>
+    <div class="actions"><button class="btn" id="printBtn">Print</button>${me.canEdit ? '<button class="btn" id="newBtn">New roster period</button><button class="btn" id="peopleBtn">People</button>' : ''}${me.canEdit && p ? (p.status === 'draft' ? '<button class="btn solid" id="pubBtn">Approve and publish</button>' : '<button class="btn" id="unpubBtn">Back to draft</button>') : ''}</div></div>`;
+  let main;
+  if (!p) main = `<div class="note">${me.canEdit ? 'No roster period yet. Click <b>New roster period</b> to start the next one.' : 'No roster has been published yet.'}</div>`;
+  else {
+    const days = R.periodDays(p.start, p.end);
+    main = `<div class="note">Green = on duty (7/19 day, 19/7 night). Grey letter = off duty (D day staff, N night staff). Every shift is 12 hours and counts on the date it starts.${me.canEdit ? ' Click a block to switch someone on or off; changes save at once.' : ''}</div>` + sections().map((s) => sectionHtml(s, p, days)).join('') +
+      `<div class="legend"><span><i style="background:var(--green-soft)"></i>On duty</span><span><i style="background:var(--danger-soft)"></i>Cover below the minimum${config.settings && config.settings.minCover ? ' (' + config.settings.minCover + ')' : ' (not set)'}</span><span>Thick line = start of a week (Monday)</span></div><div id="hoursArea"></div>`;
+  }
+  $('view').innerHTML = hdr + bar + main; wire(); if (p) renderHours();
+}
+function sectionHtml(s, p, days) {
+  const rows = activeRows(s.id); const min = (config.settings && config.settings.minCover) || 0;
+  const head = `<tr><th class="nm">${esc(s.label)}</th>${days.map((d) => { const dw = R.dowMon0(d); return `<th class="${dw === 0 ? 'wk' : ''} ${dw >= 5 ? 'we' : ''}">${R.parseISO(d).d}<br>${DOW1[dw]}</th>`; }).join('')}<th>Shifts</th><th>Hours</th></tr>`;
+  const body = rows.map((r) => { const str = (p.cells || {})[r.id] || ''; let n = 0;
+    const tds = days.map((d, i) => { const on = str[i] === '1'; if (on) n++; const dw = R.dowMon0(d); return `<td class="${on ? 'on' : 'off'} ${me.canEdit ? 'edit' : ''} ${dw === 0 ? 'wk' : ''}" data-row="${esc(r.id)}" data-date="${d}">${on ? esc(s.onCode) : esc(s.offCode)}</td>`; }).join('');
+    return `<tr><td class="nm">${esc(r.name)} <span class="muted">${esc(r.rank || '')}</span></td>${tds}<td class="tot">${n}</td><td class="tot">${n * (s.hours || 12)}</td></tr>`; }).join('');
+  const cover = `<tr class="cover"><td class="nm">On duty</td>${days.map((d) => { const c = rows.filter((r) => R.cellOn(p, r.id, d)).length; const dw = R.dowMon0(d); return `<td class="cv ${dw === 0 ? 'wk' : ''}" ${min && c < min ? 'style="background:var(--danger-soft);color:var(--danger)"' : ''}>${c}</td>`; }).join('')}<td></td><td></td></tr>`;
+  return `<div class="sec">${esc(s.label)}</div><div class="gridwrap"><table class="grid"><thead>${head}</thead><tbody>${body || `<tr><td class="nm muted" colspan="${days.length + 3}">No one added yet. ${me.canEdit ? 'Use People.' : ''}</td></tr>`}${cover}</tbody></table></div>`;
+}
+function payPeriods() {
+  const all = new Set(); for (const p of periods) for (let d = p.start; d <= p.end; d = R.addDays(d, 14)) { const q = R.parseISO(d); all.add(`${q.y}-${String(q.m).padStart(2, '0')}`); }
+  const out = []; for (const ym of [...all].sort()) { const [y, m] = ym.split('-').map(Number); const ps = R.periodsForMonth(y, m); out.push(ps[1], ps[2]); }
+  for (const p of periods) for (const d of [p.start, p.end]) { const q = R.parseISO(d); const ps = R.periodsForMonth(q.y, q.m); for (const x of [ps[1], ps[2]]) if (!out.find((o) => o.from === x.from)) out.push(x); }
+  return out.sort((a, b) => a.from.localeCompare(b.from)).map((x) => ({ ...x, label: `${dm(x.from)} to ${dm(x.to)} ${R.parseISO(x.to).y}` }));
+}
+function renderHours() {
+  const p = period(); const pps = payPeriods(); if (!sumPeriod || !pps.find((x) => x.from === sumPeriod)) sumPeriod = (pps.find((x) => x.from <= p.start && p.start <= x.to) || pps[0]).from;
+  const pp = pps.find((x) => x.from === sumPeriod); const visible = periods; const sum = R.gridSummary(config, visible, pp.from, pp.to);
+  const ids = Object.keys(sum).sort((a, b) => sum[a].name.localeCompare(sum[b].name));
+  const ws = R.weekStartsOverlapping(pp.from, pp.to); const wh = R.gridWeeklyHours(config, visible, ws);
+  const covered = visible.some((x) => x.start <= pp.from) && visible.some((x) => x.end >= pp.to); const full = R.periodDays(pp.from, pp.to).every((d) => visible.some((x) => x.start <= d && d <= x.end));
+  $('hoursArea').innerHTML = `<div class="card"><h3><span>Hours for the pay period</span><span class="actions"><select id="ppSel" style="width:auto">${pps.map((x) => `<option value="${x.from}" ${x.from === sumPeriod ? 'selected' : ''}>${x.label}</option>`).join('')}</select>${me.canEdit ? '<button class="btn small" id="csvBtn">Export CSV for payroll</button>' : ''}</span></h3>
+    ${full ? '' : '<div class="warnbox">Some days in this pay period are not on a saved roster period yet, so these totals are incomplete.</div>'}
+    <table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Day shifts</th><th class="n">Night shifts</th><th class="n">Total shifts</th><th class="n">Total hours</th>${ws.map((w) => `<th class="n">Week of ${dm(w)}</th>`).join('')}</tr></thead><tbody>
+    ${ids.map((id) => { const a = sum[id]; return `<tr><td>${esc(a.name)}</td><td>${esc(a.rank || '')}</td><td class="n">${a.day}</td><td class="n">${a.night}</td><td class="n">${a.shifts}</td><td class="n"><b>${a.hours}</b></td>${ws.map((w) => { const h = (wh[w] || {})[id] || 0; const lv = R.weekLevel(h); return `<td class="n">${h ? `<span class="badge ${lv}">${h} h</span>` : '<span class="muted">0</span>'}</td>`; }).join('')}</tr>`; }).join('') || `<tr><td colspan="${6 + ws.length}" class="muted">No one on duty in this pay period.</td></tr>`}</tbody></table>
+    <div class="muted" style="margin-top:8px">Pay periods: 1st to 15th and 16th to month end. A shift counts on the date it starts. Weekly hours run Monday to Sunday and include days outside the pay period (amber above ${R.WEEK_WARN} h, red above ${R.WEEK_ALERT} h; indicators only, nothing is blocked).</div></div>`;
+  $('ppSel').onchange = (e) => { sumPeriod = e.target.value; renderHours(); };
+  const cb = $('csvBtn'); if (cb) cb.onclick = () => exportCsv(pp, sum);
+}
+async function exportCsv(pp, sum) {
+  const emps = await ensureEmployees(); const out = []; const byPerson = {}; for (const r of config.people || []) byPerson[r.personId] ||= r;
+  for (const id of Object.keys(sum).sort((a, b) => sum[a].name.localeCompare(sum[b].name))) { const a = sum[id]; const emp = byPerson[id] && byPerson[id].employeeId ? emps.find((e) => e.id === byPerson[id].employeeId) : null;
+    out.push({ periodStart: pp.from, periodEnd: pp.to, employeeNumber: emp ? emp.number : '', name: a.name, type: 'Staff', dayShifts: a.day, nightShifts: a.night, totalShifts: a.shifts, totalHours: a.hours, sickShifts: 0, absentShifts: 0, leaveShifts: 0 }); }
+  const blob = new Blob([R.buildCsv(out)], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = `${GROUP}-hours-${pp.from}-to-${pp.to}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); logAudit('csv-export', `${pp.from} to ${pp.to}`);
+}
+function wire() {
+  const s = $('perSel'); if (s) s.onchange = (e) => { cur = e.target.value; render(); };
+  $('printBtn').onclick = () => window.print();
+  const nb = $('newBtn'); if (nb) nb.onclick = newPeriodDialog; const pb = $('peopleBtn'); if (pb) pb.onclick = peopleDialog;
+  const pub = $('pubBtn'); if (pub) pub.onclick = () => setStatus('published'); const unp = $('unpubBtn'); if (unp) unp.onclick = () => setStatus('draft');
+  if (me.canEdit) document.querySelectorAll('td.edit').forEach((td) => { td.onclick = () => toggle(td.dataset.row, td.dataset.date); });
+}
+let saving = false;
+async function toggle(rowId, date) {
+  if (saving) return; const p = period(); const was = R.cellOn(p, rowId, date); const before = (p.cells || {})[rowId] || '0'.repeat(R.periodLength(p)); const after = R.setCellString(p, rowId, date, !was);
+  saving = true; const cells = { ...(p.cells || {}), [rowId]: after };
+  try { await updateDoc(doc(db, 'roster_periods', p.id), { cells, updatedAt: serverTimestamp(), updatedBy: me.email }); p.cells = cells; const row = (config.people || []).find((r) => r.id === rowId);
+    logAudit(p.status === 'published' ? 'edit-published' : 'edit', `${row ? row.name : rowId}: ${R.diffCells(p.start, before, after).map((c) => `${c.date} ${c.from}->${c.to}`).join(', ')}`); render(); }
+  catch (e) { toast('Could not save: ' + (e.code || e.message), 'error'); } finally { saving = false; }
+}
+async function setStatus(status) {
+  const p = period(); if (!confirm(status === 'published' ? 'Approve this roster and make it visible to all staff?' : 'Take this roster back to draft? Staff will no longer see it.')) return;
+  try { const patch = { status, updatedAt: serverTimestamp(), updatedBy: me.email }; if (status === 'published') { patch.publishedAt = serverTimestamp(); patch.publishedBy = me.email; } await updateDoc(doc(db, 'roster_periods', p.id), patch); p.status = status; logAudit(status === 'published' ? 'publish' : 'unpublish', `${p.start} to ${p.end}`); toast(status === 'published' ? 'Roster published.' : 'Roster is a draft again.'); render(); }
+  catch (e) { toast('Could not change status: ' + (e.code || e.message), 'error'); }
+}
+function openModal(html) { $('modal').innerHTML = html; $('overlay').classList.add('open'); } function closeModal() { $('overlay').classList.remove('open'); }
+function newPeriodDialog() {
+  const next = R.nextPeriodStart(periods) || R.iso(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()); const last = periods[periods.length - 1];
+  openModal(`<h2>New roster period</h2><div class="sub">Usually the next 4 to 5 weeks. Pick any start and end date. Start from a copy of the last period if the pattern repeats.</div>
+    <div class="field"><label>Starts</label><input type="date" id="npStart" value="${next}"></div><div class="field"><label>Ends</label><input type="date" id="npEnd" value="${R.addDays(next, 27)}"></div>
+    ${last ? '<div class="field"><label><input type="checkbox" id="npCopy" style="width:auto"> Continue the pattern of the last period (the same weekly cycle carries on; check it before approving)</label></div>' : ''}
+    <div id="formError"></div><div class="modal-actions"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn solid" id="mSave">Create draft</button></div>`);
+  $('mCancel').onclick = closeModal;
+  $('mSave').onclick = async () => {
+    const start = $('npStart').value, end = $('npEnd').value; const err = (m) => { $('formError').textContent = m; };
+    if (!start || !end || end < start) return err('Choose a start date and an end date after it.'); if (R.daysBetween(start, end) > 62) return err('A period can be at most 63 days.');
+    const cand = { start, end }; const clash = periods.find((p) => R.periodsOverlap(p, cand)); if (clash) return err(`This overlaps the roster period ${dm(clash.start)} to ${dm(clash.end)}.`);
+    const n = R.periodLength(cand); let cells = R.emptyCells(config.people || [], n);
+    if ($('npCopy') && $('npCopy').checked && last) { const m = R.periodLength(last); const L = Math.floor(m / 7) * 7 || m; for (const r of config.people || []) { const src = (last.cells || {})[r.id] || ''; let s = ''; for (let i = 0; i < n; i++) { const j = ((R.daysBetween(last.start, R.addDays(start, i)) % L) + L) % L; s += src[j] === '1' ? '1' : '0'; } cells[r.id] = s; } }
+    try { const id = `${GROUP}_${start}`; await setDoc(doc(db, 'roster_periods', id), { groupId: GROUP, start, end, status: 'draft', cells, createdAt: serverTimestamp(), createdBy: me.email, updatedAt: serverTimestamp(), updatedBy: me.email }); logAudit('new-period', `${start} to ${end}`); closeModal(); cur = id; await load(); cur = id; render(); toast('Draft created.'); }
+    catch (e) { err('Could not create: ' + (e.code || e.message)); }
+  };
+}
+async function saveConfig(patch) { const next = { name: config.name, type: config.type, people: config.people || [], versions: config.versions || [], editTiers: config.editTiers || [], sections: config.sections || [], settings: config.settings || {}, ...patch, updatedAt: serverTimestamp(), updatedBy: me.email }; if (config.createdAt) { next.createdAt = config.createdAt; next.createdBy = config.createdBy; } await setDoc(doc(db, 'roster_config', GROUP), next); }
+async function peopleDialog() {
+  const emps = await ensureEmployees(); const ppl = config.people || []; const min = (config.settings && config.settings.minCover) || '';
+  const rowHtml = (r) => `<tr><td>${esc(r.name)}</td><td>${esc(r.rank || '')}</td><td>${esc((sections().find((s) => s.id === r.sectionId) || {}).label || '')}</td><td>${r.active === false ? '<span class="badge ext">Inactive</span>' : ''}</td><td><button class="btn small ghost" data-act="${esc(r.id)}">${r.active === false ? 'Reactivate' : 'Remove from roster'}</button></td></tr>`;
+  openModal(`<h2>People on this roster</h2><div class="sub">Add a nurse from the employee list to the day or night section. The same nurse can be in both sections. Removing keeps past rosters intact.</div>
+    <table class="t"><thead><tr><th>Name</th><th>Rank</th><th>Section</th><th></th><th></th></tr></thead><tbody>${ppl.map(rowHtml).join('') || '<tr><td colspan="5" class="muted">No one yet.</td></tr>'}</tbody></table>
+    <h3 style="font-size:15px;margin:16px 0 6px">Add a nurse</h3>
+    <div class="field"><label>Employee</label><select id="apEmp"><option value="">Choose…</option>${emps.map((e) => `<option value="${esc(e.id)}">${esc(e.name)}${e.number ? ' (' + esc(e.number) + ')' : ''}</option>`).join('')}</select></div>
+    <div class="field"><label>Rank</label><select id="apRank">${RANKS.map((r) => `<option>${r}</option>`).join('')}</select></div>
+    <div class="field"><label>Section</label><select id="apSec">${sections().map((s) => `<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('')}</select></div>
+    <div class="field"><label>Minimum people on duty per shift (optional, flags days below it in red)</label><input type="text" id="apMin" value="${esc(min)}" placeholder="not set"></div>
+    <div id="formError"></div><div class="modal-actions"><button class="btn ghost" id="mCancel">Close</button><button class="btn" id="apMinSave">Save minimum</button><button class="btn solid" id="mAdd">Add nurse</button></div>`);
+  $('mCancel').onclick = closeModal;
+  document.querySelectorAll('[data-act]').forEach((b) => { b.onclick = async () => { const id = b.dataset.act; const next = ppl.map((r) => (r.id === id ? { ...r, active: r.active === false } : r)); try { await saveConfig({ people: next }); config.people = next; logAudit('person-toggle', id); render(); peopleDialog(); } catch (e) { toast('Could not save: ' + (e.code || e.message), 'error'); } }; });
+  $('apMinSave').onclick = async () => { const v = parseInt($('apMin').value, 10); const settings = { ...(config.settings || {}) }; if (Number.isFinite(v) && v > 0) settings.minCover = v; else delete settings.minCover; try { await saveConfig({ settings }); config.settings = settings; render(); toast('Saved.'); } catch (e) { $('formError').textContent = 'Could not save: ' + (e.code || e.message); } };
+  $('mAdd').onclick = async () => {
+    const eid = $('apEmp').value; const sid = $('apSec').value; const rank = $('apRank').value; const emp = emps.find((e) => e.id === eid); if (!emp) return ($('formError').textContent = 'Choose an employee.');
+    if (ppl.find((r) => r.employeeId === eid && r.sectionId === sid)) return ($('formError').textContent = 'That nurse is already in this section.');
+    const row = { id: `${eid}:${sid}`, personId: eid, name: emp.name, rank, sectionId: sid, employeeId: eid, active: true };
+    try { const next = [...ppl, row]; await saveConfig({ people: next }); config.people = next;
+      // add an all-off row to every draft period so the grid lines up
+      for (const p of periods) { if (!(p.cells || {})[row.id]) { const cells = { ...(p.cells || {}), [row.id]: '0'.repeat(R.periodLength(p)) }; await updateDoc(doc(db, 'roster_periods', p.id), { cells, updatedAt: serverTimestamp(), updatedBy: me.email }); p.cells = cells; } }
+      logAudit('person-add', `${emp.name} (${rank}) to ${sid}`); render(); peopleDialog(); toast(emp.name + ' added.'); }
+    catch (e) { $('formError').textContent = 'Could not add: ' + (e.code || e.message); }
+  };
+}
+$('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) closeModal(); });
+</script>
+</body>
+</html>

@@ -66,6 +66,7 @@
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -139,12 +140,35 @@ async function shrink(file) {
   c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.85)); return { mediaType: 'image/jpeg', data: await b64(blob), url: URL.createObjectURL(blob) };
 }
 const b64 = (blob) => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result).split(',')[1]); f.onerror = rej; f.readAsDataURL(blob); });
+// A scanner PDF is often too big to send whole and holds one sheet per page: split it into one small PDF per page in the browser
+async function pdfPages(file) {
+  if (!window.PDFLib) return null;
+  const src = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true }); const n = src.getPageCount(); const out = [];
+  for (let i = 0; i < n; i++) { const one = await PDFLib.PDFDocument.create(); const [pg] = await one.copyPages(src, [i]); one.addPage(pg); out.push(new Blob([await one.save()], { type: 'application/pdf' })); }
+  return out;
+}
+const newCard = (name, blob) => { const card = { id: rand(), file: name, state: 'queued', sheets: [], blob }; cards.push(card); return card; };
+async function readCard(card) {
+  card.state = 'reading'; drawCards();
+  try { const s = await shrink(card.blob); card.url = s.url; card.isPdf = s.mediaType === 'application/pdf'; const res = await extract({ mediaType: s.mediaType, data: s.data }); card.state = 'ready';
+    card.sheets = (res.data.sheets || []).map((raw) => makeSheet(raw)); if (!card.sheets.length) { card.state = 'err'; card.msg = 'No sheet found on this page or scan.'; } }
+  catch (e) { card.state = 'err'; card.msg = (e.message || 'Could not read this scan').replace(/^functions\//, ''); }
+  card.blob = null; drawCards();
+}
 async function addFiles(files) {
-  for (const f of files) { if (!/^image\/|application\/pdf/.test(f.type)) continue; const card = { id: rand(), file: f.name, state: 'reading', sheets: [] }; cards.push(card); drawCards();
-    try { const s = await shrink(f); card.url = s.url; card.isPdf = s.mediaType === 'application/pdf'; const res = await extract({ mediaType: s.mediaType, data: s.data }); card.state = 'ready';
-      card.sheets = (res.data.sheets || []).map((raw) => makeSheet(raw)); if (!card.sheets.length) { card.state = 'err'; card.msg = 'No sheet found on this scan.'; } }
-    catch (e) { card.state = 'err'; card.msg = (e.message || 'Could not read this scan').replace(/^functions\//, ''); }
-    drawCards(); }
+  const jobs = [];
+  for (const f of files) {
+    if (!/^image\/|application\/pdf/.test(f.type)) continue;
+    if (f.type === 'application/pdf') {
+      const note = { id: rand(), file: f.name, state: 'prep', sheets: [] }; cards.push(note); drawCards(); let pages = null;
+      try { pages = await pdfPages(f); } catch (e) { pages = null; }
+      cards.splice(cards.indexOf(note), 1);
+      if (pages && pages.length) pages.forEach((bl, i) => jobs.push(newCard(pages.length > 1 ? `${f.name} (page ${i + 1} of ${pages.length})` : f.name, bl)));
+      else jobs.push(newCard(f.name, f));
+    } else jobs.push(newCard(f.name, f));
+  }
+  drawCards(); let i = 0;
+  await Promise.all(Array.from({ length: 3 }, async () => { while (i < jobs.length) await readCard(jobs[i++]); }));
 }
 function makeSheet(raw) {
   const best = T.matchPerson(raw.name, people); return { id: rand(), raw: { ...raw, shifts: raw.shifts.map((s) => ({ ...s })) }, personId: best.length && (best.length === 1 || best[0].score - best[1].score > 0.15) ? best[0].id : '', cands: best.slice(0, 3), saved: false };
@@ -160,6 +184,8 @@ const stTxt = { match: 'Matches roster', 'worked-not-rostered': 'Not on roster',
 function drawCards() {
   const el = $('cards'); if (!el) return;
   el.innerHTML = cards.map((c) => {
+    if (c.state === 'prep') return `<div class="sheet"><div class="hd">Opening ${esc(c.file)} and splitting it into pages…</div></div>`;
+    if (c.state === 'queued') return `<div class="sheet"><div class="hd">Waiting to be read: ${esc(c.file)}</div></div>`;
     if (c.state === 'reading') return `<div class="sheet"><div class="hd">Reading ${esc(c.file)}… about 15 seconds</div></div>`;
     if (c.state === 'err') return `<div class="sheet err"><div class="hd"><b>${esc(c.file)}</b><span class="badge alert">${esc(c.msg)}</span><button class="btn small ghost" data-rm="${c.id}">Remove</button></div></div>`;
     return c.sheets.map((sh) => sheetHtml(c, sh)).join('');

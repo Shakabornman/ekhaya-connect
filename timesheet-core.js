@@ -31,7 +31,7 @@ export const shiftOfStart = (inMin) => (inMin == null ? null : inMin < 12 * 60 ?
 // ---- normalise one scanned sheet -------------------------------------------------------------------------
 // raw: { name, rank, month, rate, totalHours, totalAmount, managerSigned, shifts:[{date,in,out,hours,struck,managerSigned}] }
 // opts: { rates: { RN: 99, EN: .., ENA: .. }, rankKey(rank) -> key }
-export const RANK_KEYS = [[/h\s*\/?\s*c\s*\/?\s*w|health\s*care|healthcare|care\s*worker|care\s*giver/i, 'HCW'], [/^e\s*\/?\s*n\s*\/?\s*a|ena|enrolled nursing a|auxiliar/i, 'ENA'], [/^e\s*\/?\s*n$|enrolled nurse|^en\b/i, 'EN'], [/^r\s*\/?\s*n$|^rn\b|registered|prof/i, 'RN']];
+export const RANK_KEYS = [[/h\s*\/?\s*c\s*\/?\s*w|health\s*care|healthcare|care\s*worker|care\s*giver/i, 'HCW'], [/^e\s*\/?\s*n\s*\/?\s*a|ena|enrolled nursing a|auxiliar/i, 'ENA'], [/^e\s*\/?\s*n$|enrolled\s*n|^en\b|^st\s*\/?\s*n\b|staff\s*nurse/i, 'EN'], [/^r\s*\/?\s*n$|^rn\b|registered|prof/i, 'RN']];
 export function rankKey(rank) { const r = String(rank ?? '').trim(); for (const [re, k] of RANK_KEYS) if (re.test(r)) return k; return null; }
 export const money = (n) => Math.round(n * 100) / 100;
 
@@ -60,12 +60,14 @@ export function normaliseSheet(raw, opts = {}) {
   if (dates.length >= 3) { const sorted = [...new Set(dates)].sort(); for (const r of counted) { if (!r.date) continue; const near = sorted.filter((d) => d !== r.date).map((d) => Math.abs(daysBetween(d, r.date))); if (near.length && Math.min(...near) > 14) r.notes.push('date is far from the other dates on the sheet'); } }
   const sum = money(counted.reduce((a, r) => a + r.hours, 0)); const total = raw.totalHours == null ? null : Number(raw.totalHours);
   if (total != null && Math.abs(total - sum) > 0.01) flags.push(`Total hours on the sheet is ${total} but the shifts add up to ${sum}`);
-  const key = rankKey(raw.rank); const table = opts.rates || {}; const expected = key && table[key] != null ? table[key] : null;
+  const sheetKey = rankKey(raw.rank); const personKey = rankKey(opts.personRank); const key = sheetKey || personKey; const table = opts.rates || {}; const expected = key && table[key] != null ? table[key] : null;
   const rate = raw.rate == null || raw.rate === '' ? null : Number(raw.rate);
   if (rate != null && expected != null && Math.abs(rate - expected) > 0.005) flags.push(`Rate written ${rate} but the ${key} rate is ${expected}`);
   const useRate = rate ?? expected; const amount = useRate != null ? money(sum * useRate) : null; const writtenAmount = raw.totalAmount == null ? null : Number(raw.totalAmount);
   if (amount != null && writtenAmount != null && Math.abs(amount - writtenAmount) > 0.5) flags.push(`Total amount written ${writtenAmount} but ${sum} hours at ${useRate} is ${amount}`);
   if (key == null) flags.push('Rank not recognised');
+  else if (!sheetKey) flags.push(`Rank on the sheet ("${raw.rank || ''}") not recognised: using ${key} from the roster`);
+  else if (personKey && personKey !== sheetKey) flags.push(`The sheet says ${sheetKey} but the roster has this person as ${personKey}; the sheet rank is used`);
   if (!raw.managerSigned) flags.push('Manager signature not seen');
   if (rows.some((r) => r.struck)) flags.push(`${rows.filter((r) => r.struck).length} struck-out line(s) ignored`);
   for (const r of rows) for (const n of r.notes) flags.push(`${r.rawDate}: ${n}`);
@@ -113,4 +115,35 @@ export function compareToRoster(sheetRows, rostered, window, covered) {
   for (const [d, rs] of [...rostered.entries()].sort()) { if (d < window.start || d > window.end || !covered.has(d)) continue; for (const sh of rs) if (!(worked.get(d) && worked.get(d).has(sh))) lines.push({ date: d, shift: sh, hours: 0, status: 'rostered-not-worked' }); }
   const count = (s) => lines.filter((l) => l.status === s).length;
   return { lines: lines.sort((a, b) => a.date.localeCompare(b.date)), match: count('match'), workedNotRostered: count('worked-not-rostered'), differentShift: count('different-shift'), rosteredNotWorked: count('rostered-not-worked'), noRoster: count('no-roster') };
+}
+
+// ---- draft roster built from accepted sheets, for days that have no roster yet ---------------------------------
+// groups: { groupId: { cfg, periods } }; entries: saved timesheet entries ({ personId, name, shifts:[{date, shift}] }); win: { start, end }
+// Only days not already covered by a period of that group are filled. Nothing is overwritten.
+export function retroRoster({ groups, entries, win }) {
+  const plans = []; const unplaced = []; let skippedCovered = 0;
+  for (const [gid, g] of Object.entries(groups)) {
+    const rows = g.cfg.people || []; const covered = coveredDays(g.periods || []); const secIds = (g.cfg.sections || []).map((x) => x.id); const placed = []; const names = new Set();
+    for (const e of entries) {
+      if (!rows.some((r) => r.personId === e.personId)) continue;
+      for (const sh of e.shifts || []) {
+        if (!sh.date || sh.date < win.start || sh.date > win.end) continue;
+        if (covered.has(sh.date)) { skippedCovered++; continue; }
+        const row = secIds.includes(sh.shift) ? rows.find((r) => r.personId === e.personId && r.sectionId === sh.shift) : null;
+        if (!row) { unplaced.push({ name: e.name, date: sh.date, shift: sh.shift || '?', why: sh.shift ? `${e.name} has no ${sh.shift} row on the roster` : 'shift not day or night' }); continue; }
+        placed.push({ rowId: row.id, date: sh.date }); names.add(e.name);
+      }
+    }
+    if (!placed.length) continue;
+    const days = []; for (let d = win.start; d <= win.end; d = addDays(d, 1)) if (!covered.has(d)) days.push(d);
+    let seg = [];
+    const flush = () => { if (!seg.length) return; const start = seg[0], end = seg[seg.length - 1]; const inSeg = placed.filter((x) => x.date >= start && x.date <= end);
+      if (inSeg.length) { const n = daysBetween(start, end) + 1; const cells = Object.fromEntries(rows.map((r) => [r.id, '0'.repeat(n)]));
+        for (const x of inSeg) { const i = daysBetween(start, x.date); const c = cells[x.rowId]; cells[x.rowId] = c.slice(0, i) + '1' + c.slice(i + 1); }
+        plans.push({ groupId: gid, start, end, cells, shifts: inSeg.length, people: [...new Set(inSeg.map((x) => rows.find((r) => r.id === x.rowId).name))] }); }
+      seg = []; };
+    for (const d of days) { if (seg.length && (daysBetween(seg[seg.length - 1], d) !== 1 || seg.length >= 63)) flush(); seg.push(d); }
+    flush();
+  }
+  return { plans, unplaced, skippedCovered };
 }

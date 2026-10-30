@@ -70,7 +70,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 import * as R from "./roster-core.js";
 import * as T from "./timesheet-core.js";
@@ -117,6 +117,8 @@ async function loadAll() {
   people.sort((a, b) => a.name.localeCompare(b.name)); await loadSaved();
 }
 async function loadSaved() { try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()); } catch (e) { saved = []; console.warn(e); } }
+const personRank = (pid) => { for (const g of Object.values(groups)) { const r = (g.cfg.people || []).find((x) => x.personId === pid && x.rank); if (r) return r.rank; } return ''; };
+const canEditAny = () => Object.values(groups).some((g) => me.isExec || (g.cfg.editTiers || []).some((t) => me.levels.includes(t)));
 const allPeriods = () => Object.values(groups).flatMap((g) => g.periods);
 function rosterFor(personId) { const m = new Map(); for (const g of Object.values(groups)) for (const [d, s] of T.rosterMap(g.cfg, g.periods, personId)) { if (!m.has(d)) m.set(d, new Set()); for (const x of s) m.get(d).add(x); } return m; }
 
@@ -174,7 +176,7 @@ function makeSheet(raw) {
   const best = T.matchPerson(raw.name, people); return { id: rand(), raw: { ...raw, shifts: raw.shifts.map((s) => ({ ...s })) }, personId: best.length && (best.length === 1 || best[0].score - best[1].score > 0.15) ? best[0].id : '', cands: best.slice(0, 3), saved: false };
 }
 function analyse(sh) {
-  const n = T.normaliseSheet(sh.raw, { rates: rates || {} }); const sp = T.splitByPeriod(n, win); let cmp = null; const flags = [...n.flags];
+  const n = T.normaliseSheet(sh.raw, { rates: rates || {}, personRank: sh.personId ? personRank(sh.personId) : '' }); const sp = T.splitByPeriod(n, win); let cmp = null; const flags = [...n.flags];
   if (sh.personId) { cmp = T.compareToRoster(sp.inside, rosterFor(sh.personId), win, T.coveredDays(allPeriods())); if (cmp.noRoster && cmp.noRoster === sp.inside.length) flags.push('No roster entered for these dates, so they cannot be compared'); }
   if (sp.outside.length) flags.push(`${sp.outside.length} shift(s) fall outside this pay run and are left out: ${sp.outside.map((r) => r.date ? dm(r.date) : r.rawDate).join(', ')}`);
   return { n, sp, cmp, flags, amount: n.rate != null ? T.money(sp.hours * n.rate) : null };
@@ -227,8 +229,23 @@ function drawSummary() {
   const onRoster = people.filter((p) => { const m = rosterFor(p.id); for (const d of m.keys()) if (d >= win.start && d <= win.end) return true; return false; });
   const missing = onRoster.filter((p) => !have.has(p.id)); const tot = saved.reduce((a, s) => a + s.hours, 0);
   el.innerHTML = `<div class="card"><h3>This pay run: ${dm(win.start)} to ${dm(win.end)}</h3><div class="kv"><div>Sheets accepted<b>${saved.length}</b></div><div>Hours accepted<b>${T.money(tot)}</b></div><div>On the roster, no sheet yet<b>${missing.length}</b></div></div>
-   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
+   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rankKey || s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
+   ${saved.length && canEditAny() ? `<div style="margin-top:12px"><button class="btn small" id="retroBtn">Build a draft roster from these sheets</button> <span class="muted">Fills only days that have no roster yet, as a draft for HR to check and publish on the Off Duty page.</span></div>` : ''}
    ${missing.length ? `<div class="warnbox" style="margin-top:10px">On the roster in this pay run but no sheet accepted: ${missing.map((p) => esc(p.name)).join(', ')}</div>` : ''}</div>`;
+  const rb = $('retroBtn'); if (rb) rb.onclick = retro;
+}
+async function retro() {
+  const r = T.retroRoster({ groups, entries: saved, win });
+  if (!r.plans.length) { alert('Nothing to build. ' + (r.skippedCovered ? 'The days on these sheets already have a roster.' : 'No accepted shifts were found for days without a roster.') + (r.unplaced.length ? '\n\nCould not place:\n' + r.unplaced.slice(0, 12).map((u) => `${u.name} ${u.date}: ${u.why}`).join('\n') : '')); return; }
+  const msg = r.plans.map((p) => `${groups[p.groupId].name}: ${dm(p.start)} to ${dm(p.end)}, ${p.shifts} shifts, ${p.people.length} people`).join('\n') + (r.unplaced.length ? `\n\n${r.unplaced.length} shift(s) cannot be placed (the person has no row for that shift):\n` + r.unplaced.slice(0, 8).map((u) => `${u.name} ${u.date} ${u.shift}`).join('\n') : '') + (r.skippedCovered ? `\n\n${r.skippedCovered} shift(s) fall on days that already have a roster and are left alone.` : '');
+  if (!confirm('Create these DRAFT roster periods from the accepted sheets?\n\n' + msg + '\n\nNothing is published. HR checks and publishes them on the Off Duty page.')) return;
+  try {
+    for (const p of r.plans) {
+      await setDoc(doc(db, 'roster_periods', `${p.groupId}_${p.start}`), { groupId: p.groupId, start: p.start, end: p.end, status: 'draft', cells: p.cells, createdAt: serverTimestamp(), createdBy: me.email, updatedAt: serverTimestamp(), updatedBy: me.email });
+      await addDoc(collection(db, 'roster_audit'), { groupId: p.groupId, action: 'retro-from-sheets', by: me.email, at: serverTimestamp(), detail: `Draft period ${p.start} to ${p.end} built from ${p.shifts} shifts on accepted signed sheets (pay run ${win.start} to ${win.end})` });
+    }
+    await loadAll(); render(); toast(`${r.plans.length} draft roster period(s) created. Open Off Duty to check and publish.`);
+  } catch (e) { toast('Could not create the roster: ' + (e.code || e.message), 'error'); }
 }
 </script>
 </body>

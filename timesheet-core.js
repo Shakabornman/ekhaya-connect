@@ -147,3 +147,16 @@ export function retroRoster({ groups, entries, win }) {
   }
   return { plans, unplaced, skippedCovered };
 }
+
+// ---- adding a second sheet to hours already saved for a run; late claims are paid in the next run ------------
+// existing/incoming: [{ date, shift, hours, extension }]. Lines already counted (same date, shift and extension) are skipped, so nothing is paid twice.
+export function mergeShifts(existing, incoming, { late = false, payRun = null } = {}) {
+  const key = (x) => `${x.date}|${x.shift || ''}|${x.extension ? 1 : 0}`; const have = new Set((existing || []).map(key)); const out = (existing || []).map((x) => ({ ...x })); let added = 0, skipped = 0;
+  for (const x of incoming || []) { if (have.has(key(x))) { skipped++; continue; } have.add(key(x)); added++; out.push(late ? { ...x, late: true, payRun } : { ...x }); }
+  out.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.shift || '').localeCompare(b.shift || ''));
+  return { shifts: out, added, skipped, hours: money(out.reduce((a, x) => a + (Number(x.hours) || 0), 0)) };
+}
+// hours in an entry that are late claims (paid in the next run), and late hours from earlier entries that are paid in the run starting at runStart
+export const lateHours = (entry) => money((entry.shifts || []).filter((x) => x.late).reduce((a, x) => a + (Number(x.hours) || 0), 0));
+export const lateHoursPaidIn = (entries, runStart) => money(entries.reduce((a, e) => a + (e.shifts || []).filter((x) => x.late && x.payRun === runStart).reduce((b, x) => b + (Number(x.hours) || 0), 0), 0));
+export const payHours = (entry) => money((Number(entry.hours) || 0) - lateHours(entry));

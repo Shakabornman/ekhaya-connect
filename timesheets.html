@@ -116,7 +116,11 @@ async function loadAll() {
   }
   people.sort((a, b) => a.name.localeCompare(b.name)); await loadSaved();
 }
-async function loadSaved() { try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()); } catch (e) { saved = []; console.warn(e); } }
+let earlier = [];
+async function loadSaved() {
+  try { const e = R.parseISO(R.addDays(win.start, -1)); const prev = R.iso(e.y, e.m, e.d <= 15 ? 1 : 16); earlier = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', prev)))).docs.map((d) => d.data()); } catch (e) { earlier = []; }
+  try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()); } catch (e) { saved = []; console.warn(e); }
+}
 const personRank = (pid) => { for (const g of Object.values(groups)) { const r = (g.cfg.people || []).find((x) => x.personId === pid && x.rank); if (r) return r.rank; } return ''; };
 const canEditAny = () => Object.values(groups).some((g) => me.isExec || (g.cfg.editTiers || []).some((t) => me.levels.includes(t)));
 const allPeriods = () => Object.values(groups).flatMap((g) => g.periods);
@@ -131,7 +135,7 @@ function render() {
     <div class="note">Scan the signed sheets (photo or PDF, one sheet per person), drop them here, then check each one against what was written. Nothing is saved until you press <b>Accept</b>. Pictures are not stored; keep the paper.</div>
     <div class="drop" id="drop">Drop scanned sheets here or <button class="btn small" id="pick">choose files</button><input type="file" id="file" accept="image/*,application/pdf" multiple style="display:none"></div>
     <div id="cards"></div><div id="summary"></div>`;
-  $('winSel').onchange = async (e) => { const [a, b] = e.target.value.split('|'); win = { start: a, end: b }; await loadSaved(); cards.forEach((c) => (c.saved = false)); render(); drawCards(); };
+  $('winSel').onchange = async (e) => { const [a, b] = e.target.value.split('|'); win = { start: a, end: b }; await loadSaved(); cards.forEach((c) => (c.sheets || []).forEach((x) => { x.saved = false; x.merged = false; })); render(); drawCards(); };
   const drop = $('drop'); $('pick').onclick = () => $('file').click(); $('file').onchange = (e) => addFiles([...e.target.files]);
   drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); }; drop.ondragleave = () => drop.classList.remove('over'); drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); };
   drawCards(); drawSummary();
@@ -206,7 +210,7 @@ function sheetHtml(c, sh) {
     ${a.flags.length ? `<ul class="flags">${a.flags.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : '<div class="badge ok" style="margin:4px 0">No problems found</div>'}
     <table class="rows"><thead><tr><th>Date</th><th>In</th><th>Out</th><th>Hours</th><th>Struck</th><th>Shift</th><th>Pay run</th><th>Roster</th></tr></thead><tbody>${rows}</tbody></table>
     ${missed.length ? `<div class="warnbox">Rostered but not on this sheet: ${missed.map((l) => dm(l.date) + ' ' + l.shift).join(', ')}</div>` : ''}
-    <div class="modal-actions"><button class="btn solid" data-accept ${sh.personId && a.sp.inside.length ? '' : 'disabled'}>${sh.saved ? 'Save changes' : 'Accept for this pay run'}</button></div></div></div></div>`;
+    <div class="modal-actions"><button class="btn solid" data-accept ${sh.personId && a.sp.inside.length && !sh.merged ? '' : 'disabled'}>${sh.merged ? 'Added to saved hours' : sh.saved ? 'Save changes' : 'Accept for this pay run'}</button></div></div></div></div>`;
 }
 function wireCards() {
   document.querySelectorAll('[data-rm]').forEach((b) => { b.onclick = () => { cards = cards.filter((c) => c.id !== b.dataset.rm); drawCards(); }; });
@@ -217,19 +221,42 @@ function wireCards() {
     el.querySelector('[data-accept]').onclick = () => accept(sh);
   });
 }
+function choose(title, body, options) {
+  return new Promise((res) => {
+    $('modal').innerHTML = `<h2>${esc(title)}</h2><div class="sub">${body}</div><div class="modal-actions">${options.map((o, i) => `<button class="btn ${o.cls || ''}" data-o="${i}">${esc(o.label)}</button>`).join('')}<button class="btn ghost" data-o="x">Cancel</button></div>`;
+    $('overlay').classList.add('open'); $('modal').onclick = (e) => { const bt = e.target.closest('[data-o]'); if (!bt) return; $('overlay').classList.remove('open'); res(bt.dataset.o === 'x' ? null : options[+bt.dataset.o].key); };
+  });
+}
 async function accept(sh) {
-  const a = analyse(sh); const p = people.find((x) => x.id === sh.personId); const id = `${win.start}_${sh.personId}`;
-  if (saved.find((s) => s.personId === sh.personId) && !sh.saved && !confirm(`${p.name} already has hours saved for this pay run. Replace them?`)) return;
-  const entry = { payStart: win.start, payEnd: win.end, personId: sh.personId, name: p.name, rank: a.n.rank || '', rankKey: a.n.rankKey || '', rate: a.n.rate ?? 0, hours: a.sp.hours, amount: a.amount ?? 0, sheetHours: a.n.totalHours ?? 0, sheetAmount: a.n.writtenAmount ?? 0,
-    shifts: a.sp.inside.map((r) => ({ date: r.date, shift: r.shift || '', hours: r.hours, extension: !!r.extension })), flags: a.flags.slice(0, 20), roster: a.cmp ? { match: a.cmp.match, workedNotRostered: a.cmp.workedNotRostered, differentShift: a.cmp.differentShift, rosteredNotWorked: a.cmp.rosteredNotWorked, noRoster: a.cmp.noRoster } : null, status: 'verified', verifiedBy: me.email, verifiedAt: serverTimestamp() };
-  try { await setDoc(doc(db, 'timesheet_entries', id), entry); sh.saved = true; await loadSaved(); toast(`${p.name}: ${a.sp.hours} hours saved.`); drawCards(); } catch (e) { toast('Could not save: ' + (e.code || e.message), 'error'); }
+  const a = analyse(sh); const p = people.find((x) => x.id === sh.personId); const id = `${win.start}_${sh.personId}`; const old = saved.find((s) => s.personId === sh.personId); let mode = 'new';
+  const lines = a.sp.inside.map((r) => ({ date: r.date, shift: r.shift || '', hours: r.hours, extension: !!r.extension }));
+  if (old && !sh.saved) {
+    mode = await choose(`${p.name} already has hours saved for this pay run`, `Saved: <b>${old.hours} hours</b> (${(old.shifts || []).length} lines). This sheet has ${lines.length} line(s) in this run. Adding skips any date and shift that is already counted. A late claim is paid in the <b>next</b> pay run (from ${dm(R.addDays(win.end, 1))}) but stays on the roster on the date it was worked.`,
+      [{ key: 'late', label: 'Add as late claim (paid next run)', cls: 'solid' }, { key: 'add', label: 'Add to the saved hours (same run)' }, { key: 'replace', label: 'Replace the saved hours' }]);
+    if (!mode) return;
+  }
+  let entry;
+  if (mode === 'late' || mode === 'add') {
+    const m = T.mergeShifts(old.shifts, lines, { late: mode === 'late', payRun: R.addDays(win.end, 1) });
+    if (!m.added) { toast('Nothing to add: every line on this sheet is already counted.'); return; }
+    if (m.shifts.length > 60) { toast('Too many lines for one entry (60 at most).', 'error'); return; }
+    const rate = old.rate || a.n.rate || 0; const stamp = new Date().toISOString().slice(0, 10);
+    entry = { payStart: win.start, payEnd: win.end, personId: sh.personId, name: p.name, rank: old.rank || a.n.rank || '', rankKey: old.rankKey || a.n.rankKey || '', rate, hours: m.hours, amount: T.money(m.hours * rate), sheetHours: (old.sheetHours || 0) + (a.n.totalHours ?? 0), sheetAmount: (old.sheetAmount || 0) + (a.n.writtenAmount ?? 0),
+      shifts: m.shifts, flags: [...new Set([...(old.flags || []), ...a.flags])].slice(0, 20), roster: old.roster || null, status: 'verified', verifiedBy: me.email, verifiedAt: serverTimestamp(),
+      note: ((old.note ? old.note + ' | ' : '') + `${stamp}: ${m.added} line(s) added from a second sheet${mode === 'late' ? ' as late claims (paid in the next run)' : ''}, ${m.skipped} already counted`).slice(0, 500) };
+    if (old.groupId) entry.groupId = old.groupId;
+  } else {
+    entry = { payStart: win.start, payEnd: win.end, personId: sh.personId, name: p.name, rank: a.n.rank || '', rankKey: a.n.rankKey || '', rate: a.n.rate ?? 0, hours: a.sp.hours, amount: a.amount ?? 0, sheetHours: a.n.totalHours ?? 0, sheetAmount: a.n.writtenAmount ?? 0,
+      shifts: lines, flags: a.flags.slice(0, 20), roster: a.cmp ? { match: a.cmp.match, workedNotRostered: a.cmp.workedNotRostered, differentShift: a.cmp.differentShift, rosteredNotWorked: a.cmp.rosteredNotWorked, noRoster: a.cmp.noRoster } : null, status: 'verified', verifiedBy: me.email, verifiedAt: serverTimestamp() };
+  }
+  try { await setDoc(doc(db, 'timesheet_entries', id), entry); sh.saved = true; sh.merged = mode === 'late' || mode === 'add'; await loadSaved(); toast(sh.merged ? `${p.name}: lines added, now ${entry.hours} hours saved.` : `${p.name}: ${a.sp.hours} hours saved.`); drawCards(); } catch (e) { toast('Could not save: ' + (e.code || e.message), 'error'); }
 }
 function drawSummary() {
   const el = $('summary'); if (!el) return; const have = new Set(saved.map((s) => s.personId));
   const onRoster = people.filter((p) => { const m = rosterFor(p.id); for (const d of m.keys()) if (d >= win.start && d <= win.end) return true; return false; });
   const missing = onRoster.filter((p) => !have.has(p.id)); const tot = saved.reduce((a, s) => a + s.hours, 0);
-  el.innerHTML = `<div class="card"><h3>This pay run: ${dm(win.start)} to ${dm(win.end)}</h3><div class="kv"><div>Sheets accepted<b>${saved.length}</b></div><div>Hours accepted<b>${T.money(tot)}</b></div><div>On the roster, no sheet yet<b>${missing.length}</b></div></div>
-   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rankKey || s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
+  el.innerHTML = `<div class="card"><h3>This pay run: ${dm(win.start)} to ${dm(win.end)}</h3><div class="kv"><div>Sheets accepted<b>${saved.length}</b></div><div>Hours accepted<b>${T.money(tot)}</b></div>${T.lateHoursPaidIn(earlier, win.start) ? `<div>Late claims from the earlier run, paid in this one<b>${T.lateHoursPaidIn(earlier, win.start)}</b></div>` : ''}${saved.some((s) => T.lateHours(s)) ? `<div>Of the hours accepted, late claims paid in the next run<b>${T.money(saved.reduce((a, s) => a + T.lateHours(s), 0))}</b></div>` : ''}<div>On the roster, no sheet yet<b>${missing.length}</b></div></div>
+   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rankKey || s.rank)}</td><td class="n">${s.hours}${T.lateHours(s) ? ` <span class="muted">(${T.lateHours(s)} late)</span>` : ''}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
    ${saved.length && canEditAny() ? `<div style="margin-top:12px"><button class="btn small" id="retroBtn">Build a draft roster from these sheets</button> <span class="muted">Fills only days that have no roster yet, as a draft for HR to check and publish on the Off Duty page.</span></div>` : ''}
    ${missing.length ? `<div class="warnbox" style="margin-top:10px">On the roster in this pay run but no sheet accepted: ${missing.map((p) => esc(p.name)).join(', ')}</div>` : ''}</div>`;
   const rb = $('retroBtn'); if (rb) rb.onclick = retro;

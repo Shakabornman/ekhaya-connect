@@ -125,7 +125,7 @@ function render() {
   const sel = ps.map((p) => `<option value="${p.from}|${p.to}" ${p.from === win.start && p.to === win.end ? 'selected' : ''}>${dm(p.from)} to ${dm(p.to)}</option>`).join('');
   const custom = !ps.find((p) => p.from === win.start && p.to === win.end) ? `<option value="${win.start}|${win.end}" selected>${dm(win.start)} to ${dm(win.end)}</option>` : '';
   $('view').innerHTML = `<div class="bar"><div class="nav"><b>Pay run</b> <select id="winSel" style="width:auto">${custom}${sel}</select></div><div class="muted">Hourly pay runs: 1st to 15th and 16th to month end (payroll app)</div></div>
-    ${rates ? '' : '<div class="warnbox">Hourly rates are not set up yet, so amounts cannot be checked. An executive must create the rates (RN, EN, ENA) first.</div>'}
+    ${rates ? '' : '<div class="warnbox">Hourly rates are not set up yet, so amounts cannot be checked. An executive must create the rates (RN, EN, ENA, HCW) first.</div>'}
     <div class="note">Scan the signed sheets (photo or PDF, one sheet per person), drop them here, then check each one against what was written. Nothing is saved until you press <b>Accept</b>. Pictures are not stored; keep the paper.</div>
     <div class="drop" id="drop">Drop scanned sheets here or <button class="btn small" id="pick">choose files</button><input type="file" id="file" accept="image/*,application/pdf" multiple style="display:none"></div>
     <div id="cards"></div><div id="summary"></div>`;

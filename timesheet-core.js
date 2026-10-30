@@ -31,7 +31,7 @@ export const shiftOfStart = (inMin) => (inMin == null ? null : inMin < 12 * 60 ?
 // ---- normalise one scanned sheet -------------------------------------------------------------------------
 // raw: { name, rank, month, rate, totalHours, totalAmount, managerSigned, shifts:[{date,in,out,hours,struck,managerSigned}] }
 // opts: { rates: { RN: 99, EN: .., ENA: .. }, rankKey(rank) -> key }
-export const RANK_KEYS = [[/^e\s*\/?\s*n\s*\/?\s*a|ena|enrolled nursing a|auxiliar/i, 'ENA'], [/^e\s*\/?\s*n$|enrolled nurse|^en\b/i, 'EN'], [/^r\s*\/?\s*n$|^rn\b|registered|prof/i, 'RN']];
+export const RANK_KEYS = [[/h\s*\/?\s*c\s*\/?\s*w|health\s*care|healthcare|care\s*worker|care\s*giver/i, 'HCW'], [/^e\s*\/?\s*n\s*\/?\s*a|ena|enrolled nursing a|auxiliar/i, 'ENA'], [/^e\s*\/?\s*n$|enrolled nurse|^en\b/i, 'EN'], [/^r\s*\/?\s*n$|^rn\b|registered|prof/i, 'RN']];
 export function rankKey(rank) { const r = String(rank ?? '').trim(); for (const [re, k] of RANK_KEYS) if (re.test(r)) return k; return null; }
 export const money = (n) => Math.round(n * 100) / 100;
 

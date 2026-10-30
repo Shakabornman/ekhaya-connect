@@ -126,16 +126,18 @@ const canEditAny = () => Object.values(groups).some((g) => me.isExec || (g.cfg.e
 const allPeriods = () => Object.values(groups).flatMap((g) => g.periods);
 function rosterFor(personId) { const m = new Map(); for (const g of Object.values(groups)) for (const [d, s] of T.rosterMap(g.cfg, g.periods, personId)) { if (!m.has(d)) m.set(d, new Set()); for (const x of s) m.get(d).add(x); } return m; }
 
+async function setWin(a, b) { win = { start: a, end: b }; await loadSaved(); cards.forEach((c) => (c.sheets || []).forEach((x) => { x.saved = false; x.merged = false; })); render(); drawCards(); }
 function render() {
   const ps = []; for (let k = -1; k <= 1; k++) { const d = new Date(); d.setMonth(d.getMonth() + k); const y = d.getFullYear(), m = d.getMonth() + 1; const x = R.periodsForMonth(y, m); ps.push(x[1], x[2]); }
   const sel = ps.map((p) => `<option value="${p.from}|${p.to}" ${p.from === win.start && p.to === win.end ? 'selected' : ''}>${dm(p.from)} to ${dm(p.to)}</option>`).join('');
   const custom = !ps.find((p) => p.from === win.start && p.to === win.end) ? `<option value="${win.start}|${win.end}" selected>${dm(win.start)} to ${dm(win.end)}</option>` : '';
-  $('view').innerHTML = `<div class="bar"><div class="nav"><b>Pay run</b> <select id="winSel" style="width:auto">${custom}${sel}</select></div><div class="muted">Hourly pay runs: 1st to 15th and 16th to month end (payroll app)</div></div>
+  $('view').innerHTML = `<div class="bar"><div class="nav"><b>Pay run</b> <select id="winSel" style="width:auto">${custom}${sel}</select> <span class="muted" style="margin-left:10px">Earlier run:</span> <select id="oldMonth" style="width:auto">${MONTHS.map((m, i) => `<option value="${i + 1}" ${R.parseISO(win.start).m === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}</select> <select id="oldYear" style="width:auto">${Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 4 + i).map((y) => `<option ${R.parseISO(win.start).y === y ? 'selected' : ''}>${y}</option>`).join('')}</select> <select id="oldHalf" style="width:auto"><option value="1" ${R.parseISO(win.start).d === 1 ? 'selected' : ''}>1st to 15th</option><option value="2" ${R.parseISO(win.start).d === 16 ? 'selected' : ''}>16th to month end</option></select> <button class="btn small" id="oldGo">Open</button></div><div class="muted">Hourly pay runs: 1st to 15th and 16th to month end (payroll app)</div></div>
     ${rates ? '' : '<div class="warnbox">Hourly rates are not set up yet, so amounts cannot be checked. An executive must create the rates (RN, EN, ENA, HCW) first.</div>'}
     <div class="note">Scan the signed sheets (photo or PDF, one sheet per person), drop them here, then check each one against what was written. Nothing is saved until you press <b>Accept</b>. Pictures are not stored; keep the paper.</div>
     <div class="drop" id="drop">Drop scanned sheets here or <button class="btn small" id="pick">choose files</button><input type="file" id="file" accept="image/*,application/pdf" multiple style="display:none"></div>
     <div id="cards"></div><div id="summary"></div>`;
-  $('winSel').onchange = async (e) => { const [a, b] = e.target.value.split('|'); win = { start: a, end: b }; await loadSaved(); cards.forEach((c) => (c.sheets || []).forEach((x) => { x.saved = false; x.merged = false; })); render(); drawCards(); };
+  $('winSel').onchange = (e) => { const [a, b] = e.target.value.split('|'); setWin(a, b); };
+  $('oldGo').onclick = () => { const x = R.periodsForMonth(+$('oldYear').value, +$('oldMonth').value)[+$('oldHalf').value === 1 ? 1 : 2]; setWin(x.from, x.to); };
   const drop = $('drop'); $('pick').onclick = () => $('file').click(); $('file').onchange = (e) => addFiles([...e.target.files]);
   drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); }; drop.ondragleave = () => drop.classList.remove('over'); drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); };
   drawCards(); drawSummary();

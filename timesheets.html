@@ -79,7 +79,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
   storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
 };
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const extract = httpsCallable(getFunctions(app, 'europe-west1'), 'timesheetExtract');
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const extract = httpsCallable(getFunctions(app, 'europe-west1'), 'timesheetExtract'); const payrollPreview = httpsCallable(getFunctions(app, 'europe-west1'), 'payrollHoursPreview');
 const GROUPS = ['nursing-wards', 'nursing-psych'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; const MON3 = MONTHS.map((m) => m.slice(0, 3));
 const $ = (id) => document.getElementById(id);
@@ -120,6 +120,7 @@ async function loadSaved() {
   try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()); } catch (e) { saved = []; console.warn(e); }
 }
 const personRank = (pid) => { for (const g of Object.values(groups)) { const r = (g.cfg.people || []).find((x) => x.personId === pid && x.rank); if (r) return r.rank; } return ''; };
+const canPreview = () => me.levels.some((l) => ['executive', 'payroll_admin'].includes(l));
 const canEditAny = () => Object.values(groups).some((g) => me.isExec || (g.cfg.editTiers || []).some((t) => me.levels.includes(t)));
 const allPeriods = () => Object.values(groups).flatMap((g) => g.periods);
 function rosterFor(personId) { const m = new Map(); for (const g of Object.values(groups)) for (const [d, s] of T.rosterMap(g.cfg, g.periods, personId)) { if (!m.has(d)) m.set(d, new Set()); for (const x of s) m.get(d).add(x); } return m; }
@@ -257,9 +258,22 @@ function drawSummary() {
   const missing = onRoster.filter((p) => !have.has(p.id)); const tot = saved.reduce((a, s) => a + s.hours, 0);
   el.innerHTML = `<div class="card"><h3>This pay run: ${dm(win.start)} to ${dm(win.end)}</h3><div class="kv"><div>Sheets accepted<b>${saved.length}</b></div><div>Hours accepted<b>${T.money(tot)}</b></div><div>On the roster, no sheet yet<b>${missing.length}</b></div></div>
    ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rankKey || s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
+   ${saved.length && canPreview() ? `<div style="margin-top:12px"><button class="btn small" id="ppBtn">Preview payroll hours</button> <span class="muted">Test only: shows what the payroll app holds and what an export would change. Nothing is sent to payroll.</span></div><div id="ppOut"></div>` : ''}
    ${saved.length && canEditAny() ? `<div style="margin-top:12px"><button class="btn small" id="retroBtn">Build a draft roster from these sheets</button> <span class="muted">Fills only days that have no roster yet, as a draft for HR to check and publish on the Off Duty page.</span></div>` : ''}
    ${missing.length ? `<div class="warnbox" style="margin-top:10px">On the roster in this pay run but no sheet accepted: ${missing.map((p) => esc(p.name)).join(', ')}</div>` : ''}</div>`;
-  const rb = $('retroBtn'); if (rb) rb.onclick = retro;
+  const rb = $('retroBtn'); if (rb) rb.onclick = retro; const pb = $('ppBtn'); if (pb) pb.onclick = previewPayroll;
+}
+async function previewPayroll() {
+  const btn = $('ppBtn'), out = $('ppOut'); btn.disabled = true; btn.textContent = 'Reading the payroll app…'; out.innerHTML = '';
+  try {
+    const d = (await payrollPreview({ payStart: win.start, payEnd: win.end })).data; const t = d.totals; const fm = (n) => (n == null ? '—' : 'R ' + Number(n).toFixed(2));
+    if (!d.run) { out.innerHTML = `<div class="warnbox" style="margin-top:10px">PREVIEW ONLY. The payroll app has no Two Weekly pay run for ${dm(win.start)} to ${dm(win.end)}, so there is nothing to compare with.</div>`; return; }
+    out.innerHTML = `<div class="card" style="margin-top:12px"><div class="warnbox">PREVIEW ONLY. Nothing has been sent to payroll. Payroll run: ${dm(d.run.start)} to ${dm(d.run.end)}, <b>${esc(d.run.status)}</b>, pay date ${dm(d.run.payDate)}.</div>
+      <div class="kv" style="margin-top:8px"><div>Sheets accepted<b>${t.entries}</b></div><div>Ready to export<b>${t.exportable}</b></div><div>Need attention<b>${t.entries - t.exportable}</b></div><div>Hours ready to export<b>${T.money(d.rows.filter((r) => r.canExport).reduce((a, r) => a + r.hoursNew, 0))}</b></div><div>Gross for the ready ones<b>${fm(d.rows.filter((r) => r.canExport).reduce((a, r) => a + r.grossNew, 0))}</b></div></div>
+      <table class="t"><thead><tr><th>Name on the sheet</th><th>Payroll</th><th class="n">Hours now</th><th class="n">Hours new</th><th class="n">Payroll rate</th><th class="n">Gross new</th><th>Check</th></tr></thead><tbody>${d.rows.map((r) => `<tr><td>${esc(r.sheetName)}</td><td>${esc(r.employeeNumber)} ${esc(r.payrollName || '')}<br><span class="muted">${esc(r.jobTitle || '')}</span></td><td class="n">${r.hoursNow}</td><td class="n">${r.hoursNew}</td><td class="n">${r.ratePayroll ?? '—'}</td><td class="n">${fm(r.grossNew)}</td><td>${r.canExport && !r.flags.length ? '<span class="st match">Ready</span>' : r.flags.map((f) => `<span class="st ${r.canExport ? 'warn' : 'bad'}" style="display:block;margin-bottom:2px">${esc(f)}</span>`).join('')}</td></tr>`).join('')}</tbody></table>
+      ${d.notCaptured.length ? `<div class="warnbox" style="margin-top:10px">On the payroll run but no sheet accepted: ${d.notCaptured.map((x) => esc(x.name)).join('; ')}</div>` : ''}</div>`;
+  } catch (e) { out.innerHTML = `<div class="warnbox" style="margin-top:10px">Could not read the payroll app: ${esc(e.message || e.code)}</div>`; }
+  finally { btn.disabled = false; btn.textContent = 'Preview payroll hours'; }
 }
 async function retro() {
   const r = T.retroRoster({ groups, entries: saved, win });

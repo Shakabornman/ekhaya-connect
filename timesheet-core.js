@@ -160,3 +160,7 @@ export function mergeShifts(existing, incoming, { late = false, payRun = null } 
 export const lateHours = (entry) => money((entry.shifts || []).filter((x) => x.late).reduce((a, x) => a + (Number(x.hours) || 0), 0));
 export const lateHoursPaidIn = (entries, runStart) => money(entries.reduce((a, e) => a + (e.shifts || []).filter((x) => x.late && x.payRun === runStart).reduce((b, x) => b + (Number(x.hours) || 0), 0), 0));
 export const payHours = (entry) => money((Number(entry.hours) || 0) - lateHours(entry));
+
+// Payment follows the form (owner rule, 2026-11-02): every line that is not struck is paid in the pay run being captured, whatever date is written on it.
+// offRun lists the lines whose date is outside that run (or unreadable): shown as a note only, never left out of the amount.
+export function payLines(sheet, period) { const inside = sheet.rows.filter((r) => !r.struck); const offRun = inside.filter((r) => !r.date || !inPeriod(r.date, period)); return { inside, outside: [], offRun, hours: money(inside.reduce((a, r) => a + r.hours, 0)) }; }

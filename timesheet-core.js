@@ -99,6 +99,11 @@ export function nameScore(written, full) {
   return total / a.length;
 }
 // candidates sorted best first; people: [{ id, name }]
+// the employee number written on the register ("0019", "EMP0019", "19") against the roster person ids (EMP0019)
+export function personByNumber(written, people) {
+  const d = String(written ?? '').replace(/\D/g, ''); if (!d) return null; const n = parseInt(d, 10);
+  const hit = people.filter((p) => { const x = String(p.id || '').replace(/\D/g, ''); return x && parseInt(x, 10) === n; }); return hit.length === 1 ? hit[0] : null;
+}
 export function matchPerson(written, people) { return people.map((p) => ({ ...p, score: nameScore(written, p.name) })).filter((p) => p.score >= 0.5).sort((a, b) => b.score - a.score); }
 
 // ---- compare with the roster -------------------------------------------------------------------------------

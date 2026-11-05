@@ -79,7 +79,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc", authDomain: "hae-vuma-92fca.firebaseapp.com", projectId: "hae-vuma-92fca",
   storageBucket: "hae-vuma-92fca.firebasestorage.app", messagingSenderId: "1052424261313", appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
 };
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const extract = httpsCallable(getFunctions(app, 'europe-west1'), 'timesheetExtract'); const payrollPreview = httpsCallable(getFunctions(app, 'europe-west1'), 'payrollHoursPreview');
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const extract = httpsCallable(getFunctions(app, 'europe-west1'), 'timesheetExtract', { timeout: 210000 }); const payrollPreview = httpsCallable(getFunctions(app, 'europe-west1'), 'payrollHoursPreview');
 const GROUPS = ['nursing-wards', 'nursing-psych'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; const MON3 = MONTHS.map((m) => m.slice(0, 3));
 const $ = (id) => document.getElementById(id);

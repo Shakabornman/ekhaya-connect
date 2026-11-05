@@ -5,10 +5,19 @@ import { addDays, daysBetween, daysInMonth, iso } from './roster-core.js';
 
 // ---- reading what was written -----------------------------------------------------------------------------
 // "1/7/26", "01/07/2026", "28.6.26", "30,7,26" -> "2026-07-01". Two-digit years are 20xx. Returns null if not a date.
+// Dates as written on the registers: "23.03.26", "17/3/26", "13/03/2026", "2026-03-16", "2026/03/16". Day first is the form's
+// normal order; a 4-digit year first is read year-month-day. A 2-digit year outside 2024-2035 (a misread such as "26.03.16") is
+// tried as year-month-day before giving up.
 export function parseSheetDate(s) {
-  const m = /^\s*(\d{1,2})\s*[\/.,\-\s]\s*(\d{1,2})\s*[\/.,\-\s]\s*(\d{2}|\d{4})\s*$/.exec(String(s ?? ''));
-  if (!m) return null; const d = +m[1], mo = +m[2]; let y = +m[3]; if (y < 100) y += 2000;
-  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null; if (d > daysInMonth(y, mo)) return null; return iso(y, mo, d);
+  const m = /^\s*(\d{1,4})\s*[\/.,\-\s]\s*(\d{1,2})\s*[\/.,\-\s]\s*(\d{1,4})\s*$/.exec(String(s ?? '')); if (!m) return null;
+  const ok = (y, mo, d) => mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y >= 2000 && y <= 2099 && d <= daysInMonth(y, mo);
+  const a = m[1], b = +m[2], c = m[3]; const inRange = (y) => y >= 2024 && y <= 2035;
+  if (a.length === 4) { const y = +a, d = +c; return c.length <= 2 && ok(y, b, d) ? iso(y, b, d) : null; }       // 2026-03-16
+  if (a.length > 2) return null;
+  if (c.length === 4) { const d = +a, y = +c; return ok(y, b, d) ? iso(y, b, d) : null; }                          // 13/03/2026
+  if (c.length > 2) return null;
+  const d1 = +a, y1 = +c + 2000; if (!ok(y1, b, d1)) return null; if (inRange(y1)) return iso(y1, b, d1);          // 23.03.26
+  const y2 = +a + 2000, d2 = +c; return ok(y2, b, d2) && inRange(y2) ? iso(y2, b, d2) : iso(y1, b, d1);              // 26.03.16 read as year first
 }
 // "19h00", "19:00", "19.00", "0645", "06h45", "7", "07hoo" -> minutes after midnight, or null
 export function parseSheetTime(s) {
@@ -20,7 +29,7 @@ export function parseSheetTime(s) {
 // "12h00", "12hrs", "12.00", "12", "1.5", "73,5" -> number of hours, or null
 export function parseHoursWritten(v) {
   if (v == null || v === '') return null; if (typeof v === 'number') return Number.isFinite(v) ? v : null;
-  const m = /^(\d+(?:[.,]\d+)?)\s*(?:h|hrs?|hours?)?\s*(\d{2})?$/.exec(String(v).trim().toLowerCase().replace(/o/g, '0')); if (!m) return null;
+  const m = /^(\d+(?:[.,]\d+)?)\s*(?:h|hrs?|hs|hours?)?\s*(\d{2})?$/.exec(String(v).trim().toLowerCase().replace(/o/g, '0')); if (!m) return null;
   const n = parseFloat(m[1].replace(',', '.')); return m[2] && /h/i.test(String(v)) ? n + (+m[2]) / 60 : n;
 }
 // hours between in and out; an out at or before the in is the next day (a night shift)
@@ -32,7 +41,7 @@ export const shiftOfStart = (inMin) => (inMin == null ? null : inMin < 12 * 60 ?
 // raw: { name, rank, month, rate, totalHours, totalAmount, managerSigned, shifts:[{date,in,out,hours,struck,managerSigned}] }
 // opts: { rates: { RN: 99, EN: .., ENA: .. }, rankKey(rank) -> key }
 export const RANK_KEYS = [[/h\s*\/?\s*c\s*\/?\s*w|health\s*care|healthcare|care\s*worker|care\s*giver/i, 'HCW'], [/^e\s*\/?\s*n\s*\/?\s*a|ena|enrolled nursing a|auxiliar/i, 'ENA'], [/^e\s*\/?\s*n$|enrolled\s*n|^en\b|^st\s*\/?\s*n\b|staff\s*nurse/i, 'EN'], [/^r\s*\/?\s*n$|^rn\b|registered|prof/i, 'RN']];
-export function rankKey(rank) { const r = String(rank ?? '').trim(); for (const [re, k] of RANK_KEYS) if (re.test(r)) return k; return null; }
+export function rankKey(rank) { const r = String(rank ?? '').replace(/\./g, ' ').replace(/\s+/g, ' ').trim(); for (const [re, k] of RANK_KEYS) if (re.test(r)) return k; return null; }
 export const money = (n) => Math.round(n * 100) / 100;
 
 export function normaliseSheet(raw, opts = {}) {

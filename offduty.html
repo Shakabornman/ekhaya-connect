@@ -87,7 +87,7 @@ const GROUP = new URLSearchParams(location.search).get('g') || 'nursing-wards';
 const DEFAULT_NAMES = { 'nursing-wards': 'Medical Wards — Off Duty', 'nursing-psych': 'Psychiatric Ward — Off Duty' };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DOW1 = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const RANKS = ['R/N', 'ST/N', 'ENA'];
+const RANKS = ['R/N', 'ST/N', 'ENA', 'HCW'];
 const MON3 = MONTHS.map((m) => m.slice(0, 3));
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -114,6 +114,9 @@ async function loadAll() {
       for (const r of cfg.people || []) if (!people.find((p) => p.id === r.personId)) people.push({ id: r.personId, name: r.name });
     } catch (e) { console.warn('roster', g, e); }
   }
+  // every employee can be chosen, not only the nurses on a roster (executive, HR and finance may read the employee list)
+  try { const s = await getDocs(collection(db, 'employees')); for (const d of s.docs) { const x = d.data(); const fn = x.fullName || ''; const [last, first] = fn.includes(',') ? fn.split(',').map((q) => q.trim()) : ['', fn]; const name = (first + ' ' + last).trim(); const number = x.employeeNumber || '';
+      const have = people.find((p) => p.id === d.id); if (have) have.number = number; else if (name) people.push({ id: d.id, name, number, other: true }); } } catch (e) { console.warn('employees', e); }
   people.sort((a, b) => a.name.localeCompare(b.name)); await loadSaved();
 }
 async function loadSaved() {
@@ -203,7 +206,7 @@ function drawCards() {
   }).join(''); wireCards(); drawSummary();
 }
 function sheetHtml(c, sh) {
-  const a = analyse(sh); const n = a.n; const opts = people.map((p) => `<option value="${esc(p.id)}" ${p.id === sh.personId ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  const a = analyse(sh); const n = a.n; const opts = people.map((p) => `<option value="${esc(p.id)}" ${p.id === sh.personId ? 'selected' : ''}>${esc(p.name)}${p.number ? ' (' + esc(p.number) + ')' : ''}</option>`).join('');
   const rows = n.rows.map((r, i) => { const inWin = !r.struck && T.inPeriod(r.date, win); const line = a.cmp && inWin ? a.cmp.lines.find((l) => l.date === r.date && l.shift === r.shift && l.status !== 'rostered-not-worked') : null; const s = sh.raw.shifts[i];
     return `<tr class="${r.struck ? 'struck' : ''}"><td><input type="text" data-f="date" data-i="${i}" value="${esc(s.date)}"></td><td><input type="text" data-f="in" data-i="${i}" value="${esc(s.in)}"></td><td><input type="text" data-f="out" data-i="${i}" value="${esc(s.out)}"></td><td><input type="text" data-f="hours" data-i="${i}" value="${esc(s.hours)}"></td><td><input type="checkbox" data-f="struck" data-i="${i}" ${s.struck ? 'checked' : ''} title="Struck out on the sheet"></td>
       <td>${r.shift ? (r.extension ? 'extra hours' : r.shift) : ''}</td><td>${r.struck ? '' : inWin ? '<span class="st match">paid in this run</span>' : '<span class="st warn" title="The date is outside this run: paid here because it is on this sheet">paid here, date outside run</span>'}</td><td>${line ? `<span class="st ${stCls[line.status]}">${stTxt[line.status]}</span>` : ''}</td></tr>`; }).join('');

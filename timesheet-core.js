@@ -182,7 +182,7 @@ export function retroRoster({ groups, entries, win }) {
     for (const e of entries) {
       if (!rows.some((r) => r.personId === e.personId)) continue;
       for (const sh of e.shifts || []) {
-        if (!sh.date || sh.date < win.start || sh.date > win.end) continue;
+        if (!sh.date) continue;                                                        // the roster follows the date worked, whatever pay run pays it
         if (covered.has(sh.date)) { skippedCovered++; continue; }
         const row = secIds.includes(sh.shift) ? rows.find((r) => r.personId === e.personId && r.sectionId === sh.shift) : null;
         if (!row) { unplaced.push({ name: e.name, date: sh.date, shift: sh.shift || '?', why: sh.shift ? `${e.name} has no ${sh.shift} row on the roster` : 'shift not day or night' }); continue; }
@@ -190,7 +190,8 @@ export function retroRoster({ groups, entries, win }) {
       }
     }
     if (!placed.length) continue;
-    const days = []; for (let d = win.start; d <= win.end; d = addDays(d, 1)) if (!covered.has(d)) days.push(d);
+    const lo = placed.reduce((m, x) => (x.date < m ? x.date : m), win.start), hi = placed.reduce((m, x) => (x.date > m ? x.date : m), win.end);
+    const days = []; for (let d = lo; d <= hi; d = addDays(d, 1)) if (!covered.has(d)) days.push(d);
     let seg = [];
     const flush = () => { if (!seg.length) return; const start = seg[0], end = seg[seg.length - 1]; const inSeg = placed.filter((x) => x.date >= start && x.date <= end);
       if (inSeg.length) { const n = daysBetween(start, end) + 1; const cells = Object.fromEntries(rows.map((r) => [r.id, '0'.repeat(n)]));
@@ -219,3 +220,26 @@ export const payHours = (entry) => money((Number(entry.hours) || 0) - lateHours(
 // Payment follows the form (owner rule, 2026-11-02): every line that is not struck is paid in the pay run being captured, whatever date is written on it.
 // offRun lists the lines whose date is outside that run (or unreadable): shown as a note only, never left out of the amount.
 export function payLines(sheet, period) { const inside = sheet.rows.filter((r) => !r.struck); const offRun = inside.filter((r) => !r.date || !inPeriod(r.date, period)); return { inside, outside: [], offRun, hours: money(inside.reduce((a, r) => a + r.hours, 0)) }; }
+
+// ---- roster differences: where a signed sheet disagrees with a roster that already exists ----------------------------------
+// They are kept as open records until HR adds the day to the roster (with the audit trail) or dismisses it with a reason.
+export const DIFF_KINDS = { 'worked-not-rostered': 'Worked, not on the roster', 'different-shift': 'Worked a different shift from the roster', 'rostered-not-worked': 'On the roster, not on the sheet' };
+export const diffId = (payStart, personId, date, shift, kind) => `${payStart}_${personId}_${date}_${shift || 'x'}_${kind}`;
+// from the comparison of one sheet with the rosters: the lines that need someone to look
+export function rosterDifferences({ cmp, personId, name, win, groupId = '' }) {
+  if (!cmp) return [];
+  return cmp.lines.filter((l) => ['worked-not-rostered', 'different-shift', 'rostered-not-worked'].includes(l.status)).map((l) => ({ id: diffId(win.start, personId, l.date, l.shift, l.status), payStart: win.start, payEnd: win.end, personId, name, groupId, date: l.date, shift: l.shift || '', kind: l.status, hours: l.hours || 0, rostered: l.rostered || [], status: 'open' }));
+}
+// where a worked day would go on an existing roster: the period that covers the date and the person's row for that shift
+export function findRosterSlot(groups, personId, date, shift) {
+  let why = `No roster period covers ${date}: use "Build a draft roster from these sheets"`;
+  for (const [gid, g] of Object.entries(groups)) {
+    const period = (g.periods || []).find((p) => date >= p.start && date <= p.end); if (!period) continue;
+    const rows = (g.cfg.people || []).filter((r) => r.personId === personId);
+    if (!rows.length) { why = `${personId} is not on the ${g.name || gid} roster: add them under People first`; continue; }
+    const row = rows.find((r) => r.sectionId === shift); if (!row) { why = `${rows[0].name} has no ${shift || 'day or night'} row on the ${g.name || gid} roster: add one under People first`; continue; }
+    return { groupId: gid, period, row, index: daysBetween(period.start, date) };
+  }
+  return { why };
+}
+export function cellsWithDay(cells, rowId, index, n) { const cur = (cells || {})[rowId] || '0'.repeat(n); const c = cur.length >= n ? cur : cur + '0'.repeat(n - cur.length); return { ...(cells || {}), [rowId]: c.slice(0, index) + '1' + c.slice(index + 1) }; }

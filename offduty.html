@@ -91,7 +91,7 @@ const RANKS = ['R/N', 'ST/N', 'ENA', 'HCW'];
 const MON3 = MONTHS.map((m) => m.slice(0, 3));
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let me = null, config = null, periods = [], cur = null, employees = null, sumPeriod = null;
+let me = null, config = null, periods = [], cur = null, employees = null, sumPeriod = null, openDiffs = 0;
 function toast(m, t) { const el = $('toast'); el.textContent = m; el.className = 'toast show' + (t === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { el.className = 'toast'; }, 4200); }
 const dm = (d) => { const p = R.parseISO(d); return `${p.d} ${MON3[p.m - 1]}`; };
 
@@ -117,6 +117,7 @@ async function load() {
     $('pageTitle').textContent = config.name || 'Off Duty'; document.title = (config.name || 'Off Duty') + ' — Hospital at Ekhaya';
     const q = me.canEdit ? query(collection(db, 'roster_periods'), where('groupId', '==', GROUP)) : query(collection(db, 'roster_periods'), where('groupId', '==', GROUP), where('status', '==', 'published'));
     periods = (await getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.start.localeCompare(b.start));
+    openDiffs = 0; if (me.canEdit) { try { openDiffs = (await getDocs(query(collection(db, 'roster_differences'), where('groupId', '==', GROUP), where('status', '==', 'open')))).size; } catch (e) { console.warn('differences', e); } }
     if (!cur || !periods.find((p) => p.id === cur)) { const t = R.iso(...[new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()]); const hit = periods.find((p) => p.start <= t && t <= p.end) || periods[periods.length - 1]; cur = hit ? hit.id : null; }
   } catch (e) { console.error(e); $('view').innerHTML = '<div class="note">Could not load the roster: ' + esc(e.code || e.message) + '</div>'; config = null; }
 }
@@ -137,6 +138,7 @@ function render() {
   const opts = periods.map((x) => `<option value="${esc(x.id)}" ${x.id === cur ? 'selected' : ''}>${dm(x.start)} to ${dm(x.end)} ${R.parseISO(x.end).y}${x.status === 'draft' ? ' (draft)' : ''}</option>`).join('');
   const bar = `<div class="bar"><div class="nav">${periods.length ? `<select id="perSel" style="width:auto">${opts}</select>` : ''}${p ? `<span class="pill ${p.status === 'published' ? 'pub' : 'draft'}">${p.status === 'published' ? 'Approved and published' : 'Draft (staff cannot see it yet)'}</span>` : ''}</div>
     <div class="actions"><button class="btn" id="printBtn">Print</button>${me.canEdit ? '<button class="btn" id="newBtn">New roster period</button><button class="btn" id="peopleBtn">People</button>' : ''}${me.canEdit && p ? (p.status === 'draft' ? '<button class="btn solid" id="pubBtn">Approve and publish</button>' : '<button class="btn" id="unpubBtn">Back to draft</button>') : ''}</div></div>`;
+  const diffNote = openDiffs ? `<div class="note" style="border-color:var(--amber);background:var(--amber-soft)"><b>${openDiffs} roster difference(s) from signed hours sheets are still open.</b> A signed sheet shows a nurse working a day or shift this roster does not have, or the reverse. <a href="timesheets.html">Open Signed Hours Sheets, then Review</a> to add them to the roster (with the audit trail) or dismiss them with a reason.</div>` : '';
   let main;
   if (!p) main = `<div class="note">${me.canEdit ? 'No roster period yet. Click <b>New roster period</b> to start the next one.' : 'No roster has been published yet.'}</div>`;
   else {
@@ -144,7 +146,7 @@ function render() {
     main = `<div class="note">Green = on duty (7/19 day, 19/7 night). Grey letter = off duty (D day staff, N night staff). Every shift is 12 hours and counts on the date it starts.${me.canEdit ? ' Click a block to switch someone on or off; changes save at once.' : ''}</div>` + sections().map((s) => sectionHtml(s, p, days)).join('') +
       `<div class="legend"><span><i style="background:var(--green-soft)"></i>On duty</span><span><i style="background:var(--danger-soft)"></i>Cover below the minimum${config.settings && config.settings.minCover ? ' (' + config.settings.minCover + ')' : ' (not set)'}</span><span>Thick line = start of a week (Monday)</span></div><div id="hoursArea"></div>`;
   }
-  $('view').innerHTML = hdr + bar + main; wire(); if (p) renderHours();
+  $('view').innerHTML = hdr + diffNote + bar + main; wire(); if (p) renderHours();
 }
 function sectionHtml(s, p, days) {
   const rows = activeRows(s.id); const min = (config.settings && config.settings.minCover) || 0;

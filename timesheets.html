@@ -121,7 +121,7 @@ async function loadAll() {
 }
 async function loadDiffs() { try { diffs = (await getDocs(query(collection(db, 'roster_differences'), where('status', '==', 'open')))).docs.map((d) => ({ id: d.id, ...d.data() })); } catch (e) { diffs = []; console.warn('differences', e); } }
 async function loadSaved() {
-  try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()); } catch (e) { saved = []; console.warn(e); }
+  try { saved = (await getDocs(query(collection(db, 'timesheet_entries'), where('payStart', '==', win.start)))).docs.map((d) => d.data()).filter((e) => e.status !== 'moved'); } catch (e) { saved = []; console.warn(e); }
 }
 const personRank = (pid) => { for (const g of Object.values(groups)) { const r = (g.cfg.people || []).find((x) => x.personId === pid && x.rank); if (r) return r.rank; } return ''; };
 const canPreview = () => me.levels.some((l) => ['executive', 'payroll_admin'].includes(l));
@@ -306,16 +306,41 @@ async function dismissDiff(d) {
   try { await updateDoc(doc(db, 'roster_differences', d.id), { status: 'dismissed', resolvedAt: serverTimestamp(), resolvedBy: me.email, reason: reason.slice(0, 300) }); await loadDiffs(); reviewDiffs(); }
   catch (e) { $('formError').textContent = 'Could not dismiss: ' + (e.code || e.message); }
 }
+
+// ---- move a saved entry to another pay run (a sheet accepted into the wrong run). Nothing is deleted: the old entry is marked moved. ----
+const runOf = (d) => { const p = R.parseISO(d); if (!p) return null; const x = R.periodsForMonth(p.y, p.m)[p.d <= 15 ? 1 : 2]; return x ? { start: x.from, end: x.to, y: p.y, m: p.m, half: p.d <= 15 ? 1 : 2 } : null; };
+function moveEntry(personId) {
+  const e = saved.find((x) => x.personId === personId); if (!e) return; const lines = e.shifts || []; const tally = new Map();
+  for (const l of lines) { const r = runOf(l.date); if (r) tally.set(r.start, { r, n: (tally.get(r.start) || { n: 0 }).n + 1 }); }
+  const best = [...tally.values()].sort((a, b) => b.n - a.n)[0]; const sug = best ? best.r : runOf(win.start);
+  const yrs = []; for (let y = 2024; y <= new Date().getFullYear() + 1; y++) yrs.push(y);
+  $('modal').innerHTML = `<h2>Move ${esc(e.name)} to another pay run</h2><div class="sub">Now in ${dm(e.payStart)} to ${dm(e.payEnd)}: ${e.hours} hours, ${lines.length} line(s), dates ${esc(lines.map((l) => dm(l.date)).sort().join(', ') || 'none')}. ${best ? `<b>${best.n} of ${lines.length} line(s) fall in ${dm(best.r.start)} to ${dm(best.r.end)}.</b>` : ''} The hours move with the sheet; the old entry is kept and marked as moved, nothing is deleted.</div>
+    <div class="two" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="field"><label>Month</label><select id="mvM">${MONTHS.map((m, i) => `<option value="${i + 1}" ${sug && sug.m === i + 1 ? 'selected' : ''}>${m}</option>`).join('')}</select></div><div class="field"><label>Year</label><select id="mvY">${yrs.map((y) => `<option ${sug && sug.y === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="field"><label>Part</label><select id="mvH"><option value="1" ${sug && sug.half === 1 ? 'selected' : ''}>1st to 15th</option><option value="2" ${sug && sug.half === 2 ? 'selected' : ''}>16th to month end</option></select></div></div>
+    <div id="formError"></div><div class="modal-actions"><button class="btn" id="mvCancel">Cancel</button><button class="btn solid" id="mvGo">Move to this pay run</button></div>`;
+  $('overlay').classList.add('open'); $('mvCancel').onclick = () => $('overlay').classList.remove('open');
+  $('mvGo').onclick = async () => {
+    const x = R.periodsForMonth(+$('mvY').value, +$('mvM').value)[+$('mvH').value === 1 ? 1 : 2]; if (!x) { $('formError').textContent = 'That pay run does not exist.'; return; }
+    if (x.from === e.payStart) { $('formError').textContent = 'That is the pay run it is already in.'; return; }
+    try {
+      const newRef = doc(db, 'timesheet_entries', `${x.from}_${e.personId}`); const there = await getDoc(newRef);
+      if (there.exists() && there.data().status !== 'moved') { $('formError').textContent = `${e.name} already has hours saved in ${dm(x.from)} to ${dm(x.to)}. Open that run, scan the sheet there and choose Add.`; return; }
+      const stamp = new Date().toISOString().slice(0, 10); const { verifiedAt, ...rest } = e;
+      await setDoc(newRef, { ...rest, payStart: x.from, payEnd: x.to, status: 'verified', verifiedBy: me.email, verifiedAt: serverTimestamp(), note: ((e.note ? e.note + ' | ' : '') + `${stamp}: moved here from ${e.payStart} to ${e.payEnd} by ${me.email}`).slice(0, 500) });
+      await updateDoc(doc(db, 'timesheet_entries', `${e.payStart}_${e.personId}`), { status: 'moved', movedTo: x.from, movedBy: me.email, movedAt: serverTimestamp() });
+      $('overlay').classList.remove('open'); await loadSaved(); drawSummary(); toast(`${e.name} moved to ${dm(x.from)} to ${dm(x.to)}. Open that pay run to see it.`);
+    } catch (err) { $('formError').textContent = 'Could not move: ' + (err.code || err.message); }
+  };
+}
 function drawSummary() {
   const el = $('summary'); if (!el) return; const have = new Set(saved.map((s) => s.personId));
   const onRoster = people.filter((p) => { const m = rosterFor(p.id); for (const d of m.keys()) if (d >= win.start && d <= win.end) return true; return false; });
   const missing = onRoster.filter((p) => !have.has(p.id)); const tot = saved.reduce((a, s) => a + s.hours, 0);
   el.innerHTML = `<div class="card">${diffs.length ? `<div class="warnbox" style="margin-bottom:10px"><b>${diffs.length} roster difference(s) still open</b> (${diffs.filter((x) => x.payStart === win.start).length} in this pay run). Sheets that disagree with a roster that already exists stay here until HR adds them to the roster or dismisses them. <button class="btn small" id="diffBtn">Review</button></div>` : ''}<h3>This pay run: ${dm(win.start)} to ${dm(win.end)}</h3><div class="kv"><div>Sheets accepted<b>${saved.length}</b></div><div>Hours accepted<b>${T.money(tot)}</b></div><div>On the roster, no sheet yet<b>${missing.length}</b></div></div>
-   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rankKey || s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
+   ${saved.length ? `<table class="t"><thead><tr><th>Name</th><th>Rank</th><th class="n">Hours</th><th class="n">Amount</th><th>Roster check</th><th>By</th><th></th></tr></thead><tbody>${saved.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.rankKey || s.rank)}</td><td class="n">${s.hours}</td><td class="n">R ${Number(s.amount).toFixed(2)}</td><td>${s.roster ? `${s.roster.match} match${s.roster.workedNotRostered ? ', ' + s.roster.workedNotRostered + ' not rostered' : ''}${s.roster.rosteredNotWorked ? ', ' + s.roster.rosteredNotWorked + ' rostered not worked' : ''}` : '—'}</td><td class="muted">${esc(s.verifiedBy)}</td><td><button class="btn small ghost" data-mv="${esc(s.personId)}">Move</button></td></tr>`).join('')}</tbody></table>` : '<div class="muted">Nothing accepted yet.</div>'}
    ${saved.length && canPreview() ? `<div style="margin-top:12px"><button class="btn small" id="ppBtn">Preview payroll hours</button> <span class="muted">Test only: shows what the payroll app holds and what an export would change. Nothing is sent to payroll.</span></div><div id="ppOut"></div>` : ''}
    ${saved.length && canEditAny() ? `<div style="margin-top:12px"><button class="btn small" id="retroBtn">Build a draft roster from these sheets</button> <span class="muted">Fills only days that have no roster yet, as a draft for HR to check and publish on the Off Duty page.</span></div>` : ''}
    ${missing.length ? `<div class="warnbox" style="margin-top:10px">On the roster in this pay run but no sheet accepted: ${missing.map((p) => esc(p.name)).join(', ')}</div>` : ''}</div>`;
-  const dbn = $('diffBtn'); if (dbn) dbn.onclick = reviewDiffs; const rb = $('retroBtn'); if (rb) rb.onclick = retro; const pb = $('ppBtn'); if (pb) pb.onclick = previewPayroll;
+  document.querySelectorAll('[data-mv]').forEach((b) => { b.onclick = () => moveEntry(b.dataset.mv); }); const dbn = $('diffBtn'); if (dbn) dbn.onclick = reviewDiffs; const rb = $('retroBtn'); if (rb) rb.onclick = retro; const pb = $('ppBtn'); if (pb) pb.onclick = previewPayroll;
 }
 async function previewPayroll() {
   const btn = $('ppBtn'), out = $('ppOut'); btn.disabled = true; btn.textContent = 'Reading the payroll app…'; out.innerHTML = '';

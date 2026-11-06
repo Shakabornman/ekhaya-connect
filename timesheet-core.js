@@ -5,19 +5,50 @@ import { addDays, daysBetween, daysInMonth, iso } from './roster-core.js';
 
 // ---- reading what was written -----------------------------------------------------------------------------
 // "1/7/26", "01/07/2026", "28.6.26", "30,7,26" -> "2026-07-01". Two-digit years are 20xx. Returns null if not a date.
-// Dates as written on the registers: "23.03.26", "17/3/26", "13/03/2026", "2026-03-16", "2026/03/16". Day first is the form's
-// normal order; a 4-digit year first is read year-month-day. A 2-digit year outside 2024-2035 (a misread such as "26.03.16") is
-// tried as year-month-day before giving up.
-export function parseSheetDate(s) {
-  const m = /^\s*(\d{1,4})\s*[\/.,\-\s]\s*(\d{1,2})\s*[\/.,\-\s]\s*(\d{1,4})\s*$/.exec(String(s ?? '')); if (!m) return null;
+// Dates as written on the registers. Staff write them every way: "23.03.26", "17/3/26", "13-03-2026", "2026-03-16", "16/3" (no year),
+// "16 March", "Mon 16/3", "16" (day only), "160326", "16th", with letters for digits ("l6/O3/26") and any separator.
+// South African order is day first; a 4-digit year first is read year-month-day; when only the second number can be a day it is swapped.
+// ctx fills what was left out: { year, month } from the other lines or the sheet's month heading, { win: {start, end} } the pay run.
+const MONTH_NAMES = { jan: 1, feb: 2, mar: 3, mrt: 3, apr: 4, may: 5, mei: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, okt: 10, nov: 11, dec: 12, des: 12 };
+export function monthFromText(t) { const m = /\b(jan|feb|mar|mrt|apr|may|mei|jun|jul|aug|sep|oct|okt|nov|dec|des)[a-z]*\b/i.exec(String(t ?? '')); return m ? MONTH_NAMES[m[1].toLowerCase()] : null; }
+export function parseSheetDate(s, ctx = {}) {
+  let t = String(s ?? '').toLowerCase().trim(); if (!t) return null;
+  t = t.replace(/\b(mon|tues?|wed|thur?s?|fri|sat|sun)(day)?\b\.?/g, ' ').replace(/(\d)\s*(st|nd|rd|th)\b/g, '$1');
+  const monthName = monthFromText(t); if (monthName) t = t.replace(/\b(jan|feb|mar|mrt|apr|may|mei|jun|jul|aug|sep|oct|okt|nov|dec|des)[a-z]*\b/, ' ');
+  t = t.split(/[^0-9a-z]+/).filter(Boolean).map((k) => (/^[0-9oli]+$/.test(k) && /[0-9]/.test(k) ? k.replace(/[o]/g, '0').replace(/[li]/g, '1') : k)).join(' ');   // "l6" "O3" are written digits
+  let nums = t.match(/\d+/g) || []; if (/[a-z]/.test(t.replace(/\d+/g, ''))) return null;
+  if (!monthName && nums.length === 1) { const n = nums[0]; if (n.length === 8) nums = [n.slice(0, 2), n.slice(2, 4), n.slice(4)]; else if (n.length === 6) nums = [n.slice(0, 2), n.slice(2, 4), n.slice(4)]; else if (n.length === 4) nums = [n.slice(0, 2), n.slice(2)]; }
   const ok = (y, mo, d) => mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y >= 2000 && y <= 2099 && d <= daysInMonth(y, mo);
-  const a = m[1], b = +m[2], c = m[3]; const inRange = (y) => y >= 2024 && y <= 2035;
-  if (a.length === 4) { const y = +a, d = +c; return c.length <= 2 && ok(y, b, d) ? iso(y, b, d) : null; }       // 2026-03-16
-  if (a.length > 2) return null;
-  if (c.length === 4) { const d = +a, y = +c; return ok(y, b, d) ? iso(y, b, d) : null; }                          // 13/03/2026
-  if (c.length > 2) return null;
-  const d1 = +a, y1 = +c + 2000; if (!ok(y1, b, d1)) return null; if (inRange(y1)) return iso(y1, b, d1);          // 23.03.26
-  const y2 = +a + 2000, d2 = +c; return ok(y2, b, d2) && inRange(y2) ? iso(y2, b, d2) : iso(y1, b, d1);              // 26.03.16 read as year first
+  const inRange = (y) => y >= 2024 && y <= 2035; const win = ctx.win || null;
+  const fullYear = (k) => (k.length === 4 ? +k : k.length === 2 ? 2000 + +k : null);
+  // pick the year for a day and month written without one: the other lines, then the heading, then the pay run
+  const yearFor = (d, mo) => {
+    const years = [...new Set([ctx.year, win && +win.start.slice(0, 4), win && +win.end.slice(0, 4)].filter(Boolean))];
+    if (win) { const inside = years.filter((y) => ok(y, mo, d) && iso(y, mo, d) >= win.start && iso(y, mo, d) <= win.end); if (inside.length) return inside[0]; }
+    const y = ctx.year || (win && +win.start.slice(0, 4)); return y && ok(y, mo, d) ? y : null;
+  };
+  const finish = (d, mo, yk) => {
+    if (mo > 12 && d <= 12) [d, mo] = [mo, d];                                                              // written month first
+    if (yk != null) { const y = fullYear(yk); return y && ok(y, mo, d) ? iso(y, mo, d) : null; }
+    const y = yearFor(d, mo); return y ? iso(y, mo, d) : null;
+  };
+  if (monthName) { if (!nums.length || nums[0].length > 2) return null; return finish(+nums[0], monthName, nums.length > 1 && [2, 4].includes(nums[nums.length - 1].length) ? nums[nums.length - 1] : null); }                    // 16 March, 16 mar 26
+  if (nums.length === 3) {
+    const [a, b, c] = nums;
+    if (a.length === 4) { const y = +a, mo = +b, d = +c; return c.length <= 2 && ok(y, mo, d) ? iso(y, mo, d) : null; }                  // 2026-03-16
+    if (a.length > 2 || b.length > 2 || (c.length !== 2 && c.length !== 4)) return null;
+    let d = +a, mo = +b; if (mo > 12 && d <= 12) [d, mo] = [mo, d];
+    if (c.length === 4) { const y = +c; return ok(y, mo, d) ? iso(y, mo, d) : null; }                                                 // 13/03/2026
+    const y1 = +c + 2000; if (!ok(y1, mo, d)) return null; if (inRange(y1)) return iso(y1, mo, d);                                     // 23.03.26
+    const y2 = d + 2000, d2 = +c; return ok(y2, mo, d2) && inRange(y2) ? iso(y2, mo, d2) : iso(y1, mo, d);                              // 26.03.16 read as year first
+  }
+  if (nums.length === 2 && nums.every((n) => n.length <= 2)) return finish(+nums[0], +nums[1], null);                                  // 16/3, 16.03
+  if (nums.length === 1 && nums[0].length <= 2) {                                                                                        // 16
+    const d = +nums[0]; const months = [ctx.month, win && +win.start.slice(5, 7), win && +win.end.slice(5, 7)].filter(Boolean);
+    for (const mo of [...new Set(months)]) { const y = yearFor(d, mo); if (!y) continue; const x = iso(y, mo, d); if (!win || (x >= win.start && x <= win.end)) return x; }
+    return ctx.month ? finish(d, ctx.month, null) : null;
+  }
+  return null;
 }
 // "19h00", "19:00", "19.00", "0645", "06h45", "7", "07hoo" -> minutes after midnight, or null
 export function parseSheetTime(s) {
@@ -44,10 +75,19 @@ export const RANK_KEYS = [[/h\s*\/?\s*c\s*\/?\s*w|health\s*care|healthcare|care\
 export function rankKey(rank) { const r = String(rank ?? '').replace(/\./g, ' ').replace(/\s+/g, ' ').trim(); for (const [re, k] of RANK_KEYS) if (re.test(r)) return k; return null; }
 export const money = (n) => Math.round(n * 100) / 100;
 
+// year and month for dates written without them: from the lines that do have them, then the sheet's month heading, then the pay run
+export function sheetDateContext(raw, win) {
+  const live = (raw.shifts || []).filter((x) => !x.struck).map((x) => parseSheetDate(x.date)).filter(Boolean);
+  const mode = (arr) => { const c = new Map(); for (const v of arr) c.set(v, (c.get(v) || 0) + 1); let best = null, n = 0; for (const [k, v] of c) if (v > n) { best = k; n = v; } return best; };
+  const head = String(raw.month ?? ''); const hy = /(20\d{2})/.exec(head); const hm = monthFromText(head);
+  const away = win && live.length && !live.some((d) => d >= win.start && d <= win.end);      // a sheet from another period: its own dates lead, not the pay run
+  return { win: away ? null : (win || null), year: mode(live.map((d) => +d.slice(0, 4))) || (hy ? +hy[1] : null) || (win ? +win.start.slice(0, 4) : null), month: hm || mode(live.map((d) => +d.slice(5, 7))) || null };
+}
 export function normaliseSheet(raw, opts = {}) {
   const flags = []; const rows = [];
+  const dateCtx = sheetDateContext(raw, opts.win);
   for (const s of raw.shifts || []) {
-    const date = parseSheetDate(s.date), inMin = parseSheetTime(s.in), outMin = parseSheetTime(s.out);
+    const date = parseSheetDate(s.date, dateCtx), inMin = parseSheetTime(s.in), outMin = parseSheetTime(s.out);
     const calc = hoursBetween(inMin, outMin); const written = parseHoursWritten(s.hours);
     const row = { rawDate: s.date, date, in: inMin, out: outMin, shift: shiftOfStart(inMin), calcHours: calc, writtenHours: Number.isFinite(written) ? written : null, struck: !!s.struck, notes: [] };
     if (!row.struck) {

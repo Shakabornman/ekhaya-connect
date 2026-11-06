@@ -194,8 +194,9 @@ function wire() {
 let saving = false;
 async function toggle(rowId, date) {
   if (saving) return; const p = period(); const was = R.cellOn(p, rowId, date); const before = (p.cells || {})[rowId] || '0'.repeat(R.periodLength(p)); const after = R.setCellString(p, rowId, date, !was);
-  saving = true; const cells = { ...(p.cells || {}), [rowId]: after };
-  try { await updateDoc(doc(db, 'roster_periods', p.id), { cells, updatedAt: serverTimestamp(), updatedBy: me.email }); p.cells = cells; const row = (config.people || []).find((r) => r.id === rowId);
+  saving = true; let cells = { ...(p.cells || {}), [rowId]: after };
+  try { const ref = doc(db, 'roster_periods', p.id); const stored = ((await getDoc(ref)).data() || {}).cells || {}; cells = { ...stored, [rowId]: after };   // never overwrite rows changed elsewhere
+    await updateDoc(ref, { cells, updatedAt: serverTimestamp(), updatedBy: me.email }); p.cells = cells; const row = (config.people || []).find((r) => r.id === rowId);
     logAudit(p.status === 'published' ? 'edit-published' : 'edit', `${row ? row.name : rowId}: ${R.diffCells(p.start, before, after).map((c) => `${c.date} ${c.from}->${c.to}`).join(', ')}`); render(); }
   catch (e) { toast('Could not save: ' + (e.code || e.message), 'error'); } finally { saving = false; }
 }
@@ -242,9 +243,10 @@ async function peopleDialog() {
     if (ppl.find((r) => r.employeeId === eid && r.sectionId === sid)) return ($('formError').textContent = 'That nurse is already in this section.');
     const row = { id: `${eid}:${sid}`, personId: eid, name: emp.name, rank, sectionId: sid, employeeId: eid, active: true };
     try { const next = [...ppl, row]; await saveConfig({ people: next }); config.people = next;
-      // add an all-off row to every draft period so the grid lines up
-      for (const p of periods) { if (!(p.cells || {})[row.id]) { const cells = { ...(p.cells || {}), [row.id]: '0'.repeat(R.periodLength(p)) }; await updateDoc(doc(db, 'roster_periods', p.id), { cells, updatedAt: serverTimestamp(), updatedBy: me.email }); p.cells = cells; } }
-      logAudit('person-add', `${emp.name} (${rank}) to ${sid}`); render(); peopleDialog(); toast(emp.name + ' added.'); }
+      // add an all-off row to every period, working from the stored copy so nothing a colleague changed is overwritten
+      for (const p of periods) { const ref = doc(db, 'roster_periods', p.id); const fresh = (await getDoc(ref)).data() || {}; const stored = fresh.cells || {};
+        if (!stored[row.id]) await updateDoc(ref, { cells: { ...stored, [row.id]: '0'.repeat(R.periodLength(p)) }, updatedAt: serverTimestamp(), updatedBy: me.email }); }
+      logAudit('person-add', `${emp.name} (${rank}) to ${sid}`); await load(); render(); peopleDialog(); toast(emp.name + ' added.'); }
     catch (e) { $('formError').textContent = 'Could not add: ' + (e.code || e.message); }
   };
 }

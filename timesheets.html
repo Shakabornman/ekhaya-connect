@@ -290,7 +290,8 @@ async function addToRoster(d) {
   const pub = slot.period.status === 'published';
   if (!confirm(`Add ${d.name} to the ${d.shift || 'day'} row on ${dm(d.date)}?\n\nRoster period ${dm(slot.period.start)} to ${dm(slot.period.end)} is ${pub ? 'PUBLISHED: staff will see this change' : 'a draft'}.` + (d.kind === 'different-shift' ? `\n\nThe roster has ${(d.rostered || []).join(', ')} that day. This adds the shift worked and keeps that one: remove it on the Off Duty page if it should not stay.` : '') + '\n\nAn audit entry is recorded.')) return;
   try {
-    const cells = T.cellsWithDay(slot.period.cells, slot.row.id, slot.index, R.periodLength(slot.period));
+    const stored = ((await getDoc(doc(db, 'roster_periods', slot.period.id))).data() || {}).cells || slot.period.cells;     // the stored copy, so nothing changed elsewhere is overwritten
+    const cells = T.cellsWithDay(stored, slot.row.id, slot.index, R.periodLength(slot.period));
     await updateDoc(doc(db, 'roster_periods', slot.period.id), { cells, updatedAt: serverTimestamp(), updatedBy: me.email });
     await addDoc(collection(db, 'roster_audit'), { groupId: slot.groupId, action: pub ? 'edit-published' : 'edit', by: me.email, at: serverTimestamp(), detail: `${d.name}: ${d.date} ${d.shift || ''} 0->1 (added from a signed hours sheet, pay run ${d.payStart} to ${d.payEnd})` });
     await updateDoc(doc(db, 'roster_differences', d.id), { status: 'added', resolvedAt: serverTimestamp(), resolvedBy: me.email, reason: `Added to ${slot.row.sectionId} on the ${pub ? 'published' : 'draft'} roster` });

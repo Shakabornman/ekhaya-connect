@@ -52,9 +52,10 @@ export function parseSheetDate(s, ctx = {}) {
 }
 // "19h00", "19:00", "19.00", "0645", "06h45", "7", "07hoo" -> minutes after midnight, or null
 export function parseSheetTime(s) {
-  let t = String(s ?? '').trim().toLowerCase().replace(/o/g, '0').replace(/[h:.,\s]+/g, ':');
+  let t = String(s ?? '').toLowerCase().trim().replace(/hours?|hrs?|uur|\b(am|pm)\b/g, ' ').replace(/[o]/g, '0').replace(/(\d)\s+(\d)(?=\s*[h:.])/g, '$1$2');   // "19-00", "19 00", "1 9h00", "07:00 hrs"
+  t = t.replace(/[^0-9]+/g, ':').replace(/^:|:$/g, '');
   if (/^\d{3,4}$/.test(t)) t = t.length === 3 ? t[0] + ':' + t.slice(1) : t.slice(0, 2) + ':' + t.slice(2);
-  const m = /^(\d{1,2})(?::(\d{2}))?:?$/.exec(t); if (!m) return null; const h = +m[1], mi = m[2] ? +m[2] : 0;
+  const m = /^(\d{1,2})(?::(\d{2}))?$/.exec(t); if (!m) return null; const h = +m[1], mi = m[2] ? +m[2] : 0;
   return h > 24 || mi > 59 ? null : h * 60 + mi;
 }
 // "12h00", "12hrs", "12.00", "12", "1.5", "73,5" -> number of hours, or null
@@ -111,8 +112,8 @@ export function normaliseSheet(raw, opts = {}) {
   if (total != null && Math.abs(total - sum) > 0.01) flags.push(`Total hours on the sheet is ${total} but the shifts add up to ${sum}`);
   const sheetKey = rankKey(raw.rank); const personKey = rankKey(opts.personRank); const key = sheetKey || personKey; const table = opts.rates || {}; const expected = key && table[key] != null ? table[key] : null;
   const rate = raw.rate == null || raw.rate === '' ? null : Number(raw.rate);
-  if (rate != null && expected != null && Math.abs(rate - expected) > 0.005) flags.push(`Rate written ${rate} but the ${key} rate is ${expected}`);
-  const useRate = rate ?? expected; const amount = useRate != null ? money(sum * useRate) : null; const writtenAmount = raw.totalAmount == null ? null : Number(raw.totalAmount);
+  if (rate != null && expected != null && Math.abs(rate - expected) > 0.005) flags.push(`Rate on the form reads ${rate}; the ${key} rate in the system (${expected}) is used`);
+  /* the system rate for the rank wins: a rate written on the form is often misread (58.80 read as 68.8, R99 as 209) */ const useRate = expected ?? rate; const amount = useRate != null ? money(sum * useRate) : null; const writtenAmount = raw.totalAmount == null ? null : Number(raw.totalAmount);
   if (amount != null && writtenAmount != null && Math.abs(amount - writtenAmount) > 0.5) flags.push(`Total amount written ${writtenAmount} but ${sum} hours at ${useRate} is ${amount}`);
   if (key == null) flags.push('Rank not recognised');
   else if (!sheetKey) flags.push(`Rank on the sheet ("${raw.rank || ''}") not recognised: using ${key} from the roster`);

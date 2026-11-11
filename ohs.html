@@ -159,7 +159,7 @@
     <div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div>
   </header>
   <main>
-    <div id="denied" class="empty" style="display:none"><h3>Executive access only</h3><p>This section is limited to the executive. Ask the COO if you need access.</p></div>
+    <div id="denied" class="empty" style="display:none"><h3>Executive and HR only</h3><p>This section is limited to the executive and HR. Ask the COO if you need access.</p></div>
     <div id="content" style="display:none">
       <div class="tabs" id="tabs"></div>
       <div id="view"></div>
@@ -272,7 +272,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) { me = null; $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
   let levels = [];
   try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn('access_control read failed', e); }
-  me = { uid: user.uid, email: user.email, displayName: user.displayName || user.email, levels, isExec: levels.includes('executive') };
+  me = { uid: user.uid, email: user.email, displayName: user.displayName || user.email, levels, isExec: levels.includes('executive') || levels.includes('hr') };
   $('authScreen').style.display = 'none'; $('app').style.display = 'block'; $('whoName').textContent = me.displayName;
   if (!me.isExec) { $('denied').style.display = 'block'; $('content').style.display = 'none'; return; }
   $('denied').style.display = 'none'; $('content').style.display = 'block';

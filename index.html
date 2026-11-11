@@ -1106,11 +1106,6 @@ body {
             <div class="tool-name">HR Overview</div>
             <div class="tool-desc">Staff records and HR metrics</div>
           </a>
-          <a href="ohs.html" target="_blank" class="tool-card coo-only">
-            <div class="tool-icon" style="background:#FBEFD8">🦺</div>
-            <div class="tool-name">Health and Safety</div>
-            <div class="tool-desc">OHS evidence for the inspection: readiness, documents, training</div>
-          </a>
           <a href="https://shakabornman.github.io/hae-scorecard/risk-review.html" target="_blank" class="tool-card coo-only">
             <div class="tool-icon" style="background:#FEF3C7">⚠️</div>
             <div class="tool-name">Risk Register</div>
@@ -1450,6 +1445,7 @@ function buildToolGrids(isExecutive) {
     document.getElementById('hr-section').style.display = 'flex';
     const hrTools = [
       { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
+      { icon:'🦺', color:'#FBEFD8', name:'Health and Safety', desc:'OHS evidence for the inspection', url:'ohs.html' },
     ];
     renderTools('hr-tools', hrTools);
   }

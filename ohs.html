@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Health and Safety — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2A43; --ink-soft: #4A5C70; --paper: #F7F6F2; --paper-line: #E3DFD4;
+    --gold: #B8912F; --gold-soft: #F1E7CD; --green: #1E6F4C; --green-soft: #E4F2EA;
+    --amber: #9A6B12; --amber-soft: #FBEFD8; --gray: #6B7280; --gray-soft: #EDEDED;
+    --danger: #A6303A; --danger-soft: #F8E4E6; --blue: #1E5F8F; --blue-soft: #E8F1F8; --radius: 3px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px; }
+  h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
+
+  #authScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; }
+  .seal { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 22px; color: var(--gold); }
+  .auth-card { background: #fff; border: 1px solid var(--paper-line); padding: 40px; width: 340px; max-width: 92vw; text-align: center; }
+  .auth-card h1 { font-size: 20px; margin: 12px 0 4px; }
+  .auth-card p { color: var(--ink-soft); margin: 0 0 20px; font-size: 13px; }
+  .auth-card input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--paper-line); border-radius: var(--radius); font-family: inherit; font-size: 14px; }
+  .auth-card button { width: 100%; padding: 10px 12px; background: var(--ink); color: #fff; border: none; border-radius: var(--radius); font-weight: 600; font-size: 13px; cursor: pointer; }
+  #authError { color: var(--danger); font-size: 12px; min-height: 16px; margin-top: 6px; }
+
+  #app { display: none; }
+  header.top { background: var(--ink); color: #fff; padding: 22px 36px; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+  header.top .brand-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-soft); opacity: 0.85; }
+  header.top h1 { color: #fff; font-size: 24px; margin: 2px 0 0; }
+  header.top .who { font-size: 12px; color: #c7d2df; text-align: right; }
+  header.top .who button { background: none; border: 1px solid #3c5a76; color: #dce6ef; padding: 4px 10px; border-radius: var(--radius); font-size: 11px; margin-top: 6px; cursor: pointer; }
+  main { padding: 28px 36px 60px; max-width: 1180px; margin: 0 auto; }
+  .note { background: var(--blue-soft); border: 1px solid #c9dcea; color: #234e6e; padding: 10px 14px; border-radius: var(--radius); font-size: 12px; margin-bottom: 18px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar input[type="search"], .toolbar select { padding: 9px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); font-family: inherit; font-size: 13px; background: #fff; }
+  .toolbar input[type="search"] { width: 260px; max-width: 100%; }
+  .btn { padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink); background: #fff; color: var(--ink); font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid:hover { background: #16385a; }
+  .btn:hover { background: var(--gray-soft); }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn.ghost { border-color: var(--paper-line); color: var(--ink-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--paper-line); border-top: 3px solid var(--gold); padding: 18px 20px; cursor: pointer; }
+  .card:hover { box-shadow: 0 2px 10px rgba(15,42,67,0.08); }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card .meta { color: var(--ink-soft); font-size: 12px; margin-top: 6px; }
+  .card .chair { margin-top: 10px; font-size: 13px; }
+  .card .chair b { font-weight: 600; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .badge.active { background: var(--green-soft); color: var(--green); }
+  .badge.dormant { background: var(--amber-soft); color: var(--amber); }
+  .badge.dissolved { background: var(--gray-soft); color: var(--gray); }
+  .badge.vacant { background: var(--danger-soft); color: var(--danger); }
+  .badge.flag { background: var(--amber-soft); color: var(--amber); }
+  .badge.sup { background: var(--gray-soft); color: var(--gray); }
+  .empty { text-align: center; padding: 48px 24px; color: var(--ink-soft); background: #fff; border: 1px solid var(--paper-line); }
+
+  .back { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 13px; padding: 0; margin-bottom: 14px; font-family: inherit; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-head h2 { margin: 0 0 6px; font-size: 26px; }
+  .section { background: #fff; border: 1px solid var(--paper-line); padding: 20px 22px; margin-bottom: 18px; }
+  .section h3 { margin: 0 0 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; font-size: 13px; }
+  .kv dt { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+  .kv dd { margin: 0; }
+  ul.plain { margin: 0; padding-left: 18px; }
+  table.reg { width: 100%; border-collapse: collapse; }
+  table.reg th { text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); padding: 10px 12px; border-bottom: 2px solid var(--ink); }
+  table.reg td { padding: 11px 12px; border-bottom: 1px solid var(--paper-line); vertical-align: middle; }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--paper-line); flex-wrap: wrap; }
+  .tab { padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; }
+  .tab.active { color: var(--ink); border-bottom-color: var(--gold); }
+  .muted { color: var(--ink-soft); font-size: 12px; }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,42,67,0.45); align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .overlay.open { display: flex; }
+  .modal { background: #fff; width: 560px; max-width: 94vw; max-height: 90vh; overflow-y: auto; border-radius: 4px; padding: 26px 28px; }
+  .modal h2 { font-size: 19px; margin: 0 0 4px; }
+  .modal .sub { color: var(--ink-soft); font-size: 12px; margin-bottom: 16px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input[type=text], .field input[type=date], .field input[type=file], .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--paper-line); border-radius: 3px; font-family: inherit; font-size: 13px; }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field .help { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+  .field .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .field .checks label { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); display: flex; gap: 5px; align-items: center; margin: 0; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  #modalError { color: var(--danger); font-size: 12px; min-height: 16px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 4px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 80; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+  @media (max-width: 720px) { main { padding: 18px 14px 50px; } header.top { padding: 16px; } .kv { grid-template-columns: 1fr; } }
+
+  .tabs { margin-bottom: 18px; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: #fff; border: 1px solid var(--paper-line); padding: 14px 16px; }
+  .stat b { display: block; font-size: 26px; font-family: 'Fraunces', serif; }
+  .stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+  .badge.found { background: var(--green-soft); color: var(--green); }
+  .badge.reconstruct { background: var(--amber-soft); color: var(--amber); }
+  .badge.locate { background: var(--blue-soft); color: var(--blue); }
+  .badge.gap { background: var(--danger-soft); color: var(--danger); }
+  .badge.na { background: var(--gray-soft); color: var(--gray); }
+  .badge.ready { background: var(--green-soft); color: var(--green); }
+  .badge.partial { background: var(--amber-soft); color: var(--amber); }
+  .badge.notready { background: var(--danger-soft); color: var(--danger); }
+  .badge.original { background: var(--green-soft); color: var(--green); }
+  .badge.copy { background: var(--blue-soft); color: var(--blue); }
+  .badge.reconstructed { background: var(--amber-soft); color: var(--amber); }
+  .seg { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--gray-soft); min-width: 120px; }
+  .seg i { display: block; height: 100%; }
+  .layout { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: start; }
+  .side { background: #fff; border: 1px solid var(--paper-line); }
+  .side button { display: flex; justify-content: space-between; width: 100%; text-align: left; padding: 10px 14px; background: none; border: none; border-bottom: 1px solid var(--paper-line); cursor: pointer; font-family: inherit; font-size: 13px; color: var(--ink); }
+  .side button.active { background: var(--gold-soft); font-weight: 600; }
+  .req { border-bottom: 1px solid var(--paper-line); padding: 14px 0; }
+  .req:last-child { border-bottom: none; }
+  .req h4 { margin: 0 0 4px; font-size: 14px; }
+  .req .inc { color: var(--ink-soft); font-size: 12px; margin-bottom: 8px; }
+  .req .top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .docline { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; border-top: 1px dashed var(--paper-line); flex-wrap: wrap; }
+  .grid-insp { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .grid-insp th, .grid-insp td { border: 1px solid var(--paper-line); padding: 8px 6px; text-align: center; }
+  .grid-insp th:first-child, .grid-insp td:first-child { text-align: left; font-weight: 600; white-space: nowrap; }
+  .grid-insp td.has { background: var(--green-soft); color: var(--green); font-weight: 700; }
+  .grid-insp td.no { background: var(--danger-soft); color: var(--danger); }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="seal">HAE</div>
+  <div class="auth-card">
+    <h1>Health and Safety</h1>
+    <p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" />
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+    <button id="loginBtn">Sign in</button>
+    <div id="authError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Hospital at Ekhaya — Occupational Health and Safety</div>
+      <h1>Health and Safety evidence</h1>
+    </div>
+    <div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div>
+  </header>
+  <main>
+    <div id="denied" class="empty" style="display:none"><h3>Executive access only</h3><p>This section is limited to the executive. Ask the COO if you need access.</p></div>
+    <div id="content" style="display:none">
+      <div class="tabs" id="tabs"></div>
+      <div id="view"></div>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain: "hae-vuma-92fca.firebaseapp.com",
+  projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app",
+  messagingSenderId: "1052424261313",
+  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ---------- What the inspector asks for (owner's list, 10 Nov 2026; Annexure E OHS-01 to OHS-08) ----------
+const LINES = {
+  'OHS-01': 'Designated persons, signed appointment letters',
+  'OHS-02': 'Active Health and Safety Committee',
+  'OHS-03': 'Programme and surveillance (inspection) rounds',
+  'OHS-04': 'Disaster plan and drills',
+  'OHS-05': 'Universal precautions, needle-stick reporting',
+  'OHS-06': 'Immunisation offered, post-exposure prophylaxis',
+  'OHS-07': 'Refusal of immunisation procedure',
+  'OHS-08': 'Medical surveillance plan',
+};
+// def = status shown until a document is filed or the status is set by hand
+const SECTIONS = [
+  { key: 'appointments', title: '1. Appointments and legal', reqs: [
+    { key: 's16_2', title: 's.16(2) assignment letter', inc: 'CEO to COO (ADM-F012-OHA_HaE)', ret: 'Term + 5 years', lines: ['OHS-01'], def: 'locate' },
+    { key: 'rep_letter', title: 'H&S Representative designation letter', inc: 'Area covered, duties, 2-year term (ADM-F012-OHA_HaE). Current representative and the previous one.', ret: 'Term + 5 years', lines: ['OHS-01'], def: 'locate' },
+    { key: 'committee_letters', title: 'Committee appointment letters', inc: 'All members with roles, responsibilities and term of office', ret: 'Term + 5 years', lines: ['OHS-01'], def: 'locate' },
+    { key: 'rep_training', title: 'Proof of the representative\'s training', inc: 'Certificate or attendance record, within 3 months of designation', ret: '5 years', lines: ['OHS-01'], def: 'locate' } ] },
+  { key: 'committee', title: '2. Committee governance', reqs: [
+    { key: 'tor', title: 'Committee terms of reference', inc: 'ADM-007-CTR_HaE, current version', ret: 'Current version', lines: ['OHS-02'], def: 'locate' },
+    { key: 'minutes', title: 'Quarterly meeting minutes', inc: 'From 1 October 2025: member reports, inspection reviews, risk progress, incidents and actions. Mark reconstructed records as Reconstructed.', ret: 'Minimum 3 years', lines: ['OHS-02'], def: 'reconstruct' },
+    { key: 'attendance', title: 'Attendance registers', inc: 'Signed, for every meeting', ret: 'With the minutes', lines: ['OHS-02'], def: 'locate' },
+    { key: 'actions', title: 'Action trackers', inc: 'Outstanding actions from each meeting with owners and due dates', ret: 'Current', lines: ['OHS-02'], def: 'gap' } ] },
+  { key: 'programme', title: '3. Annual programme and report', reqs: [
+    { key: 'programme', title: 'Approved Annual OHS Programme', inc: 'Current year, approved each October: activities, frequencies, responsible persons', ret: '5 years', lines: ['OHS-03'], def: 'locate' },
+    { key: 'annual_report', title: 'Annual OHS Report', inc: 'Year-end report to the COO and Board', ret: '5 years', lines: ['OHS-03'], def: 'gap' },
+    { key: 'progress', title: 'Progress updates', inc: 'Mid-year reviews or amendments noted in minutes', ret: 'With the programme', lines: ['OHS-03'], def: 'locate' } ] },
+  { key: 'inspections', title: '4. Monthly inspections', reqs: [
+    { key: 'insp_general', title: 'Completed General OHS Inspection Checklists', inc: 'OPE-F001-OHS_HaE: every area, every month, signed by the H&S Representative and Area Manager', ret: '3 years', lines: ['OHS-03'], def: 'locate', periodic: true },
+    { key: 'insp_nursing', title: 'Completed Nursing OHS Inspection Checklists', inc: 'OPE-F002-NURS_HaE: every clinical unit, every month, signed by the H&S Representative and Unit Manager', ret: '3 years', lines: ['OHS-03'], def: 'locate', periodic: true },
+    { key: 'noncompliance', title: 'Summary of non-compliances', inc: 'Items marked No, action taken, Central Risk Register references', ret: 'With the checklists', lines: ['OHS-03'], def: 'gap' },
+    { key: 'insp_schedule', title: 'Inspection schedule', inc: 'Annual planner: planned against completed', ret: 'Current year', lines: ['OHS-03'], def: 'gap' } ] },
+  { key: 'incidents', title: '5. Risk register and incidents', reqs: [
+    { key: 'rr_extracts', title: 'Extracts from the Central Risk Register', inc: 'OHS-related risks, hazards from inspections, near misses, injuries', ret: '5 years', lines: ['OHS-05'], def: 'locate' },
+    { key: 'investigations', title: 'Incident investigation reports', inc: 'Staff injury, near miss, needle-stick, dangerous occurrence (no patient names)', ret: '5 years', lines: ['OHS-05'], def: 'locate' },
+    { key: 'coida', title: 'COIDA documentation', inc: 'W.Cl.2 and W.Cl.4 with proof of submission (within 7 days)', ret: '5 years', lines: ['OHS-05'], def: 'locate' },
+    { key: 's24', title: 's.24 reports (if any)', inc: 'Notifications to the Department of Employment and Labour. None reported at the 1 Oct 2025 meeting.', ret: '5 years', lines: ['OHS-05'], def: 'na' },
+    { key: 'needlestick', title: 'Needle-stick and blood exposure records', inc: 'Linked to CLI-007-IPC_HaE and HUM-002-HIVW_HaE (counts only, no names)', ret: '5 years', lines: ['OHS-05'], def: 'locate' } ] },
+  { key: 'training', title: '6. Training records', reqs: [
+    { key: 'induction', title: 'OHS Induction and Annual Refresher register', inc: 'Attendance lists, dates, content covered. Use the Training tab for the register; file the signed acknowledgement sheets here.', ret: '5 years', lines: ['OHS-02', 'OHS-03'], def: 'reconstruct' },
+    { key: 'specific_training', title: 'Specific training records', inc: 'Electrical compliance, N95 fit-testing, first aider and similar', ret: '5 years', lines: ['OHS-03'], def: 'locate' },
+    { key: 'training_matrix', title: 'Training plan / matrix', inc: 'Outstanding training and completion status', ret: 'Current', lines: ['OHS-03'], def: 'gap' } ] },
+  { key: 'emergency', title: '7. Emergency, fire and building compliance', reqs: [
+    { key: 'edp', title: 'Emergency / Disaster Plan', inc: 'Current OPE-011-EDP_HaE', ret: 'Current', lines: ['OHS-04'], def: 'locate' },
+    { key: 'drills', title: 'Drill records', inc: 'Fire, medical emergency, disease outbreak, natural disaster: attendance, debriefs, actions (at least one of each per year)', ret: '3 to 5 years', lines: ['OHS-04'], def: 'locate' },
+    { key: 'fire_certs', title: 'Fire equipment service certificates', inc: 'Monthly checks and annual service by an accredited provider', ret: 'Current + 3 years', lines: ['OHS-04'], def: 'locate' },
+    { key: 'electrical', title: 'Electrical installation certificate', inc: 'Current Certificate of Compliance', ret: 'Until superseded', lines: ['OHS-04'], def: 'locate' },
+    { key: 'gas', title: 'Gas installation and pressure equipment certificates', inc: 'Current', ret: 'Until superseded', lines: ['OHS-04'], def: 'locate' } ] },
+  { key: 'health', title: '8. Staff health and surveillance (summary only)', reqs: [
+    { key: 'immunisation', title: 'Immunisation and medical surveillance summary', inc: 'From OPE-012-SIM_HaE, or confirmation of where the detailed file is held. No individual records here.', ret: 'As per policy', lines: ['OHS-06'], def: 'locate' },
+    { key: 'surveillance_plan', title: 'Medical surveillance plan and health risk assessments', inc: 'Plan for at-risk staff based on the health risk assessment; high-risk hazards monitored (OPE-012-SIM_HaE)', ret: 'As per policy', lines: ['OHS-08'], def: 'locate' },
+    { key: 'refusals', title: 'Refusal of immunisation: procedure and signed refusals', inc: 'The procedure, and a count or confirmation that each refusal is signed by the worker and the health professional and filed in the HR record (no individual records here)', ret: 'As per policy', lines: ['OHS-07'], def: 'locate' },
+    { key: 'preplacement', title: 'Pre-placement medicals and PEP records', inc: 'Confirmation of compliance (no individual records here)', ret: 'As per policy', lines: ['OHS-06', 'OHS-08'], def: 'locate' },
+    { key: 'n95', title: 'N95 respirator fit-testing register', inc: 'Annual', ret: 'Current + 3 years', lines: ['OHS-06'], def: 'locate' } ] },
+  { key: 'related', title: '9. Supporting and related documents', reqs: [
+    { key: 'policies', title: 'Current policies', inc: 'OPE-001-OHS, ADM-007-CTR, ADM-009-RMP, OPE-010-BPM, OPE-011-EDP, OPE-012-SIM, CLI-007-IPC (copies or links to Drive)', ret: 'Current', lines: ['OHS-01', 'OHS-02'], def: 'locate' },
+    { key: 'firstaid', title: 'First-aid box check registers', inc: 'Monthly', ret: '3 years', lines: ['OHS-03'], def: 'locate' },
+    { key: 'ppe', title: 'PPE issue and inspection records', inc: 'If gaps arise. None reported at the 1 Oct 2025 meeting.', ret: 'Per policy', lines: ['OHS-03'], def: 'na' },
+    { key: 'comm_plan', title: 'Communication plan for hazards and lessons learned', inc: 'To be developed (1 Oct 2025 meeting); file the draft, then the final version', ret: 'Current', lines: ['OHS-03'], def: 'gap' } ] },
+];
+const REQS = SECTIONS.flatMap((s) => s.reqs.map((r) => ({ ...r, sectionKey: s.key, sectionTitle: s.title })));
+const STAT = { found: 'Found', reconstruct: 'Reconstruct', locate: 'To locate', gap: 'Gap', na: 'Not applicable' };
+const KINDS = { original: 'Original', copy: 'Copy of the original', reconstructed: 'Reconstructed record' };
+const SOURCES = { ack: 'Signed acknowledgement', hr: 'HR list', register: 'Boardroom visitors register', mixed: 'More than one source' };
+
+let me = null, docs = [], statuses = {}, training = [];
+let state = { tab: 'readiness', section: 'appointments' };
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+function toast(msg, type) { const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (type === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { t.className = 'toast'; }, 3800); }
+
+// ---------- Auth ----------
+$('loginBtn').addEventListener('click', async () => {
+  $('authError').textContent = '';
+  try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); }
+  catch (e) { console.error('Sign-in error:', e); $('authError').textContent = 'Sign-in failed: ' + (e.code || e.message || 'unknown error'); }
+});
+$('signOutBtn').addEventListener('click', () => signOut(auth));
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { me = null; $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  let levels = [];
+  try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn('access_control read failed', e); }
+  me = { uid: user.uid, email: user.email, displayName: user.displayName || user.email, levels, isExec: levels.includes('executive') };
+  $('authScreen').style.display = 'none'; $('app').style.display = 'block'; $('whoName').textContent = me.displayName;
+  if (!me.isExec) { $('denied').style.display = 'block'; $('content').style.display = 'none'; return; }
+  $('denied').style.display = 'none'; $('content').style.display = 'block';
+  await loadAll(); render();
+});
+
+// ---------- Data ----------
+async function loadAll() {
+  try {
+    const [d, s, t] = await Promise.all([getDocs(collection(db, 'ohs_documents')), getDocs(collection(db, 'ohs_status')), getDocs(collection(db, 'ohs_training'))]);
+    docs = d.docs.map((x) => ({ id: x.id, ...x.data() }));
+    statuses = {}; s.docs.forEach((x) => { statuses[x.id] = x.data(); });
+    training = t.docs.map((x) => ({ id: x.id, ...x.data() }));
+  } catch (e) { console.error(e); toast('Could not load: ' + (e.code || e.message), 'error'); }
+}
+async function audit(action, detail) {
+  try { await addDoc(collection(db, 'ohs_audit'), { action, detail: detail ?? null, by: me.uid, byName: me.displayName, at: serverTimestamp() }); } catch (e) { console.warn('audit failed', e); }
+}
+const currentDocs = (reqKey) => docs.filter((d) => d.reqKey === reqKey && d.status === 'current');
+function effective(r) { return currentDocs(r.key).length ? 'found' : (statuses[r.key]?.status || r.def); }
+function lineSummary(line) {
+  const rs = REQS.filter((r) => r.lines.includes(line)); const c = { found: 0, reconstruct: 0, locate: 0, gap: 0, na: 0 };
+  rs.forEach((r) => { c[effective(r)]++; });
+  const open = rs.length - c.found - c.na;
+  return { rs, c, total: rs.length, state: open === 0 ? 'ready' : (c.found + c.na === 0 ? 'notready' : 'partial') };
+}
+
+// ---------- Rendering ----------
+function renderTabs() {
+  const tabs = [['readiness', 'Readiness'], ['sections', 'Documents'], ['inspections', 'Inspections'], ['training', 'Training register'], ['history', 'History']];
+  $('tabs').innerHTML = tabs.map(([k, t]) => `<button class="tab ${state.tab === k ? 'active' : ''}" data-tab="${k}">${t}</button>`).join('');
+  $('tabs').querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => { state.tab = b.dataset.tab; render(); }));
+}
+function render() {
+  renderTabs();
+  const f = { readiness: renderReadiness, sections: renderSections, inspections: renderInspections, training: renderTraining, history: renderHistory }[state.tab];
+  f();
+}
+function segBar(c, total) {
+  const col = { found: '#1E6F4C', reconstruct: '#9A6B12', locate: '#1E5F8F', gap: '#A6303A', na: '#9CA3AF' };
+  return `<div class="seg" title="Found ${c.found}, reconstruct ${c.reconstruct}, to locate ${c.locate}, gap ${c.gap}, n/a ${c.na}">${Object.keys(col).map((k) => c[k] ? `<i style="width:${c[k] / total * 100}%;background:${col[k]}"></i>` : '').join('')}</div>`;
+}
+function renderReadiness() {
+  const tot = { found: 0, reconstruct: 0, locate: 0, gap: 0, na: 0 }; REQS.forEach((r) => { tot[effective(r)]++; });
+  const rows = Object.entries(LINES).map(([k, t]) => { const s = lineSummary(k); return `<tr style="cursor:pointer" data-line="${k}"><td><b>${k}</b></td><td>${esc(t)}</td><td>${segBar(s.c, s.total)}</td><td class="muted">${s.c.found} of ${s.total} found${s.c.reconstruct ? `, ${s.c.reconstruct} to reconstruct` : ''}${s.c.locate ? `, ${s.c.locate} to locate` : ''}${s.c.gap ? `, ${s.c.gap} gap` : ''}</td><td><span class="badge ${s.state}">${{ ready: 'Ready', partial: 'Partly ready', notready: 'Not ready' }[s.state]}</span></td></tr>`; }).join('');
+  $('view').innerHTML = `
+    <div class="note">Inspection: 20 November 2026, 09:00. Each line below is what the Department of Health asks for under Annexure E. A requirement counts as <b>Found</b> once a document is filed against it. Reconstructed records are filed as <b>Reconstructed</b> and are never shown as originals.</div>
+    <div class="stat-row">${[['found', 'Found'], ['reconstruct', 'To reconstruct'], ['locate', 'To locate'], ['gap', 'Gaps'], ['na', 'Not applicable']].map(([k, t]) => `<div class="stat"><b>${tot[k]}</b><span>${t}</span></div>`).join('')}<div class="stat"><b>${docs.filter((d) => d.status === 'current').length}</b><span>Documents filed</span></div></div>
+    <div class="section"><h3>Annexure E lines</h3><table class="reg"><thead><tr><th>Line</th><th>What the inspector asks for</th><th>Progress</th><th>Detail</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+      <p class="muted">UM-09 (patient environment safe: monthly unit inspections) is covered by the Monthly inspections section.</p></div>`;
+  $('view').querySelectorAll('[data-line]').forEach((tr) => tr.addEventListener('click', () => {
+    const r = REQS.find((x) => x.lines.includes(tr.dataset.line)); state.tab = 'sections'; state.section = r.sectionKey; render();
+  }));
+}
+function renderSections() {
+  const sec = SECTIONS.find((s) => s.key === state.section) || SECTIONS[0];
+  const side = SECTIONS.map((s) => { const open = s.reqs.filter((r) => !['found', 'na'].includes(effective(r))).length; return `<button class="${s.key === sec.key ? 'active' : ''}" data-sec="${s.key}"><span>${esc(s.title)}</span><span class="badge ${open ? 'locate' : 'found'}">${open ? open + ' open' : 'done'}</span></button>`; }).join('');
+  const reqs = sec.reqs.map((r) => {
+    const st = effective(r), cd = currentDocs(r.key).sort((a, b) => String(b.docDate || '').localeCompare(String(a.docDate || '')));
+    return `<div class="req"><div class="top"><div><h4>${esc(r.title)} <span class="badge ${st}">${STAT[st]}</span></h4><div class="inc">${esc(r.inc)} Keep: ${esc(r.ret)}. Annexure E: ${r.lines.join(', ')}.</div></div>
+      <div class="row-actions"><button class="btn small" data-up="${r.key}">+ File a document</button>${cd.length ? '' : `<button class="btn small ghost" data-st="${r.key}">Set status</button>`}</div></div>
+      ${statuses[r.key]?.note && !cd.length ? `<div class="muted">Note: ${esc(statuses[r.key].note)}</div>` : ''}
+      ${cd.map((d) => `<div class="docline"><div><span class="badge ${esc(d.kind)}">${esc(KINDS[d.kind] || d.kind)}</span> <b>${esc(d.title)}</b> <span class="muted">${esc(d.docDate || '')}${d.period ? ' · ' + esc(d.period) : ''}${d.unit ? ' · ' + esc(d.unit) : ''}${d.note ? ' · ' + esc(d.note) : ''}</span></div>
+        <div class="row-actions"><button class="btn small" data-open="${d.id}">View</button><button class="btn small ghost" data-rep="${d.id}">Replace</button></div></div>`).join('')}</div>`;
+  }).join('');
+  $('view').innerHTML = `<div class="layout"><div class="side">${side}</div><div class="section"><h3>${esc(sec.title)}</h3>${reqs}</div></div>`;
+  $('view').querySelectorAll('[data-sec]').forEach((b) => b.addEventListener('click', () => { state.section = b.dataset.sec; render(); }));
+  $('view').querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => uploadDoc(REQS.find((r) => r.key === b.dataset.up))));
+  $('view').querySelectorAll('[data-st]').forEach((b) => b.addEventListener('click', () => setStatus(REQS.find((r) => r.key === b.dataset.st))));
+  $('view').querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openDoc(docs.find((d) => d.id === b.dataset.open))));
+  $('view').querySelectorAll('[data-rep]').forEach((b) => b.addEventListener('click', () => { const d = docs.find((x) => x.id === b.dataset.rep); uploadDoc(REQS.find((r) => r.key === d.reqKey), d); }));
+}
+function monthsFrom(start) { const out = []; const n = new Date(); let y = +start.slice(0, 4), m = +start.slice(5, 7); while (y < n.getFullYear() || (y === n.getFullYear() && m <= n.getMonth() + 1)) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } } return out; }
+function renderInspections() {
+  const months = monthsFrom('2025-10'); const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const row = (key, label) => `<tr><td>${label}</td>${months.map((m) => { const n = currentDocs(key).filter((d) => d.period === m).length; return `<td class="${n ? 'has' : 'no'}">${n || '–'}</td>`; }).join('')}</tr>`;
+  $('view').innerHTML = `<div class="note">Monthly inspection sheets (OPE-F001-OHS_HaE and OPE-F002-NURS_HaE) filed against the month they cover. A red dash means no sheet is filed for that month yet. The number is the count of sheets filed (one per area or unit).</div>
+    <div class="section"><h3>Sheets filed per month <span><button class="btn small" id="upG">+ General sheet</button> <button class="btn small" id="upN">+ Nursing sheet</button></span></h3>
+    <div style="overflow-x:auto"><table class="grid-insp"><thead><tr><th></th>${months.map((m) => `<th>${MN[+m.slice(5, 7) - 1]}<br>${m.slice(2, 4)}</th>`).join('')}</tr></thead><tbody>${row('insp_general', 'General (OPE-F001)')}${row('insp_nursing', 'Nursing (OPE-F002)')}</tbody></table></div></div>`;
+  $('upG').addEventListener('click', () => uploadDoc(REQS.find((r) => r.key === 'insp_general')));
+  $('upN').addEventListener('click', () => uploadDoc(REQS.find((r) => r.key === 'insp_nursing')));
+}
+function renderTraining() {
+  const rows = [...training].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  const people = new Set(training.map((t) => String(t.name).trim().toLowerCase())).size, ack = training.filter((t) => t.ackOnFile).length;
+  $('view').innerHTML = `<div class="note">Induction and annual refresher training. A person counts as trained when the signed acknowledgement is on file. Source shows where each date comes from. No certificates were issued for past sessions.</div>
+    <div class="stat-row"><div class="stat"><b>${people}</b><span>People on the register</span></div><div class="stat"><b>${training.length}</b><span>Sessions recorded</span></div><div class="stat"><b>${ack}</b><span>Signed acknowledgement on file</span></div><div class="stat"><b>${training.length - ack}</b><span>Not yet confirmed by a signed sheet</span></div></div>
+    <div class="section"><h3>Training register <span><button class="btn small" id="trAdd">+ Add</button> <button class="btn small ghost" id="trCsv">Download CSV</button></span></h3>
+    ${rows.length ? `<table class="reg"><thead><tr><th>Name</th><th>Department</th><th>Date attended</th><th>Topic</th><th>Source</th><th>Signed sheet</th><th></th></tr></thead><tbody>${rows.map((t) => `<tr><td>${esc(t.name)}</td><td>${esc(t.department || '')}</td><td>${esc(t.date)}</td><td>${esc(t.topic || '')}</td><td>${esc(SOURCES[t.source] || t.source || '')}</td><td>${t.ackOnFile ? '<span class="badge found">On file</span>' : '<span class="badge locate">Not yet</span>'}</td><td><button class="btn small ghost" data-tr="${t.id}">Edit</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No training recorded yet. Add a row, or ask Claude to load the HR list.</div>'}</div>`;
+  $('trAdd').addEventListener('click', () => editTraining(null));
+  $('trCsv').addEventListener('click', exportCsv);
+  $('view').querySelectorAll('[data-tr]').forEach((b) => b.addEventListener('click', () => editTraining(training.find((x) => x.id === b.dataset.tr))));
+}
+async function renderHistory() {
+  $('view').innerHTML = '<div class="section"><h3>History</h3><div id="hist"><span class="muted">Loading…</span></div></div>';
+  try {
+    const s = await getDocs(collection(db, 'ohs_audit'));
+    const rows = s.docs.map((x) => x.data()).sort((a, b) => (b.at?.seconds || 0) - (a.at?.seconds || 0)).slice(0, 100);
+    $('hist').innerHTML = rows.length ? `<table class="reg"><thead><tr><th>When</th><th>Who</th><th>What</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${r.at?.seconds ? new Date(r.at.seconds * 1000).toLocaleString('en-ZA') : ''}</td><td>${esc(r.byName)}</td><td>${esc(r.action)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Nothing yet.</div>';
+  } catch (e) { $('hist').textContent = 'Could not load: ' + (e.code || e.message); }
+}
+
+// ---------- Forms ----------
+function fieldHtml(f) {
+  const v = f.value ?? '';
+  let input;
+  if (f.type === 'textarea') input = `<textarea id="f_${f.id}">${esc(v)}</textarea>`;
+  else if (f.type === 'select') input = `<select id="f_${f.id}">${f.options.map((o) => `<option value="${esc(o.v)}" ${String(o.v) === String(v) ? 'selected' : ''}>${esc(o.t)}</option>`).join('')}</select>`;
+  else if (f.type === 'check') input = `<label style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);display:flex;gap:6px;align-items:center"><input type="checkbox" id="f_${f.id}" ${v ? 'checked' : ''}/> ${esc(f.label)}</label>`;
+  else if (f.type === 'files') input = `<input type="file" id="f_${f.id}" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.png,.jpg,.jpeg" />`;
+  else input = `<input type="${f.type || 'text'}" id="f_${f.id}" value="${esc(v)}" ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ''}/>`;
+  return `<div class="field">${f.type === 'check' ? '' : `<label for="f_${f.id}">${esc(f.label)}</label>`}${input}${f.help ? `<div class="help">${esc(f.help)}</div>` : ''}</div>`;
+}
+function form({ title, sub, fields, submitLabel }) {
+  return new Promise((resolve) => {
+    const m = $('modal');
+    m.innerHTML = `<h2>${esc(title)}</h2>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}<form id="mf">${fields.map(fieldHtml).join('')}<div id="modalError"></div><div class="modal-actions"><button type="button" class="btn" id="mCancel">Cancel</button><button type="submit" class="btn solid" id="mOk">${esc(submitLabel || 'Save')}</button></div></form>`;
+    $('overlay').classList.add('open');
+    const close = (v) => { $('overlay').classList.remove('open'); m.innerHTML = ''; resolve(v); };
+    $('mCancel').addEventListener('click', () => close(null));
+    $('mf').addEventListener('submit', (e) => {
+      e.preventDefault(); const vals = {};
+      for (const f of fields) {
+        if (f.type === 'check') vals[f.id] = $('f_' + f.id).checked;
+        else if (f.type === 'files') vals[f.id] = [...$('f_' + f.id).files];
+        else vals[f.id] = $('f_' + f.id).value;
+      }
+      for (const f of fields) if (f.required && (f.type === 'files' ? !vals[f.id].length : !vals[f.id])) { $('modalError').textContent = f.label + ' is required.'; return; }
+      close({ vals });
+    });
+  });
+}
+
+// ---------- Actions ----------
+async function uploadDoc(req, replacing) {
+  const r = await form({ title: replacing ? 'Replace: ' + replacing.title : 'File a document', sub: req.title + ' (' + req.sectionTitle + ')',
+    fields: [
+      { id: 'files', label: replacing ? 'New file' : 'File(s)', type: 'files', required: true, help: 'PDF, Word, Excel, ODT/ODS or a photo. Up to 25 MB each. You can pick several; each is filed separately.' },
+      { id: 'title', label: 'Title (leave empty to use the file name)', value: replacing?.title || '' },
+      { id: 'kind', label: 'This is', type: 'select', value: replacing?.kind || 'original', options: Object.entries(KINDS).map(([v, t]) => ({ v, t })) },
+      { id: 'docDate', label: 'Date of the document itself', type: 'date', value: replacing?.docDate || '', help: 'The date written on it (not today). Leave empty if it has none.' },
+      ...(req.periodic ? [{ id: 'period', label: 'Month covered', type: 'month', value: replacing?.period || '', required: true }, { id: 'unit', label: 'Area or unit', value: replacing?.unit || '', placeholder: 'e.g. the unit or area name' }] : []),
+      { id: 'note', label: 'Note (optional)', value: '' },
+    ], submitLabel: 'File it' });
+  if (!r) return;
+  const v = r.vals; let done = 0;
+  for (const file of v.files) {
+    if (file.size > 25 * 1024 * 1024) { toast(file.name + ' is over 25 MB and was skipped.', 'error'); continue; }
+    try {
+      toast('Uploading ' + file.name + '…');
+      const safe = file.name.replace(/[^A-Za-z0-9._-]+/g, '_');
+      const storagePath = `ohs/${req.sectionKey}/${Date.now()}_${safe}`;
+      await uploadBytes(ref(storage, storagePath), file);
+      const rec = { sectionKey: req.sectionKey, reqKey: req.key, title: (v.title || '').trim() || file.name, docDate: v.docDate || '', period: v.period || '', unit: (v.unit || '').trim(), kind: v.kind, note: (v.note || '').trim(),
+        fileName: file.name, contentType: file.type || '', size: file.size, storagePath, status: 'current', uploadedBy: me.uid, uploadedByName: me.displayName, uploadedAt: serverTimestamp(), supersedes: replacing ? replacing.id : null };
+      const nd = await addDoc(collection(db, 'ohs_documents'), rec);
+      if (replacing) await updateDoc(doc(db, 'ohs_documents', replacing.id), { status: 'superseded', supersededBy: nd.id, supersededAt: serverTimestamp() });
+      await audit((replacing ? 'Replaced: ' : 'Filed: ') + rec.title + ' (' + req.title + ', ' + KINDS[rec.kind] + ')', { id: nd.id, storagePath });
+      done++;
+    } catch (e) { console.error(e); toast('Could not file ' + file.name + ': ' + (e.code || e.message), 'error'); }
+  }
+  if (done) { toast(done + ' document' + (done > 1 ? 's' : '') + ' filed.'); await loadAll(); render(); }
+}
+async function setStatus(req) {
+  const cur = statuses[req.key]?.status || req.def;
+  const r = await form({ title: 'Status: ' + req.title, sub: 'Used until a document is filed. Once a document is filed the status shows Found automatically.',
+    fields: [{ id: 'status', label: 'Status', type: 'select', value: cur, options: Object.entries(STAT).filter(([k]) => k !== 'found').map(([v, t]) => ({ v, t })) }, { id: 'note', label: 'Note', type: 'textarea', value: statuses[req.key]?.note || '' }] });
+  if (!r) return;
+  try {
+    await setDoc(doc(db, 'ohs_status', req.key), { status: r.vals.status, note: r.vals.note.trim(), updatedBy: me.uid, updatedAt: serverTimestamp() });
+    await audit('Status set: ' + req.title + ' = ' + STAT[r.vals.status]);
+    await loadAll(); render();
+  } catch (e) { console.error(e); toast('Could not save: ' + (e.code || e.message), 'error'); }
+}
+async function openDoc(d) {
+  try { const url = await getDownloadURL(ref(storage, d.storagePath)); window.open(url, '_blank', 'noopener'); }
+  catch (e) { console.error(e); toast('Could not open the file: ' + (e.code || e.message), 'error'); }
+}
+async function editTraining(t) {
+  const r = await form({ title: t ? 'Edit training record' : 'Add training record', fields: [
+    { id: 'name', label: 'Name', value: t?.name || '', required: true },
+    { id: 'department', label: 'Department / unit', value: t?.department || '' },
+    { id: 'date', label: 'Date attended', type: 'date', value: t?.date || '', required: true },
+    { id: 'topic', label: 'Topic', value: t?.topic || 'OHS induction / annual refresher' },
+    { id: 'source', label: 'Where this date comes from', type: 'select', value: t?.source || 'ack', options: Object.entries(SOURCES).map(([v, x]) => ({ v, t: x })) },
+    { id: 'ackOnFile', label: 'Signed acknowledgement is on file', type: 'check', value: t?.ackOnFile || false },
+    { id: 'note', label: 'Note', value: t?.note || '' } ] });
+  if (!r) return;
+  const v = r.vals, rec = { name: v.name.trim(), department: v.department.trim(), date: v.date, topic: v.topic.trim(), source: v.source, ackOnFile: v.ackOnFile, note: v.note.trim() };
+  try {
+    if (t) await updateDoc(doc(db, 'ohs_training', t.id), { ...rec, updatedBy: me.uid, updatedAt: serverTimestamp() });
+    else await addDoc(collection(db, 'ohs_training'), { ...rec, createdBy: me.uid, createdAt: serverTimestamp() });
+    await audit((t ? 'Training record edited: ' : 'Training record added: ') + rec.name + ', ' + rec.date);
+    await loadAll(); render();
+  } catch (e) { console.error(e); toast('Could not save: ' + (e.code || e.message), 'error'); }
+}
+function exportCsv() {
+  const q = (x) => '"' + String(x ?? '').replace(/"/g, '""') + '"';
+  const lines = [['Name', 'Department', 'Date attended', 'Topic', 'Source', 'Signed acknowledgement on file', 'Note'].map(q).join(',')];
+  [...training].sort((a, b) => String(a.name).localeCompare(String(b.name))).forEach((t) => lines.push([t.name, t.department, t.date, t.topic, SOURCES[t.source] || t.source, t.ackOnFile ? 'Yes' : 'No', t.note].map(q).join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' })); a.download = 'OHS_training_register_' + today() + '.csv'; a.click();
+}
+</script>
+</body>
+</html>

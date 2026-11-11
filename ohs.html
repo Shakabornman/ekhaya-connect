@@ -209,7 +209,7 @@ const SECTIONS = [
     { key: 'rep_training', title: 'Proof of the representative\'s training', inc: 'Certificate or attendance record, within 3 months of designation', ret: '5 years', lines: ['OHS-01'], def: 'locate' } ] },
   { key: 'committee', title: '2. Committee governance', reqs: [
     { key: 'tor', title: 'Committee terms of reference', inc: 'ADM-007-CTR_HaE, current version', ret: 'Current version', lines: ['OHS-02'], def: 'locate' },
-    { key: 'minutes', title: 'Quarterly meeting minutes', inc: 'From 1 October 2025: member reports, inspection reviews, risk progress, incidents and actions. Mark reconstructed records as Reconstructed.', ret: 'Minimum 3 years', lines: ['OHS-02'], def: 'reconstruct' },
+    { key: 'minutes', title: 'Quarterly meeting minutes', inc: 'From 1 October 2025: member reports, inspection reviews, risk progress, incidents and actions. Scan the signed minutes of each meeting and file them against the meeting date.', ret: 'Minimum 3 years', lines: ['OHS-02'], def: 'reconstruct' },
     { key: 'attendance', title: 'Attendance registers', inc: 'Signed, for every meeting', ret: 'With the minutes', lines: ['OHS-02'], def: 'locate' },
     { key: 'actions', title: 'Action trackers', inc: 'Outstanding actions from each meeting with owners and due dates', ret: 'Current', lines: ['OHS-02'], def: 'gap' } ] },
   { key: 'programme', title: '3. Annual programme and report', reqs: [
@@ -250,7 +250,7 @@ const SECTIONS = [
     { key: 'comm_plan', title: 'Communication plan for hazards and lessons learned', inc: 'To be developed (1 Oct 2025 meeting); file the draft, then the final version', ret: 'Current', lines: ['OHS-03'], def: 'gap' } ] },
 ];
 const REQS = SECTIONS.flatMap((s) => s.reqs.map((r) => ({ ...r, sectionKey: s.key, sectionTitle: s.title })));
-const STAT = { found: 'Found', reconstruct: 'Reconstruct', locate: 'To locate', gap: 'Gap', na: 'Not applicable' };
+const STAT = { found: 'Found', reconstruct: 'To scan', locate: 'To locate', gap: 'Gap', na: 'Not applicable' };
 const KINDS = { original: 'Original', copy: 'Copy of the original', reconstructed: 'Reconstructed record' };
 const SOURCES = { ack: 'Signed acknowledgement', hr: 'HR list', register: 'Boardroom visitors register', mixed: 'More than one source' };
 
@@ -313,14 +313,14 @@ function render() {
 }
 function segBar(c, total) {
   const col = { found: '#1E6F4C', reconstruct: '#9A6B12', locate: '#1E5F8F', gap: '#A6303A', na: '#9CA3AF' };
-  return `<div class="seg" title="Found ${c.found}, reconstruct ${c.reconstruct}, to locate ${c.locate}, gap ${c.gap}, n/a ${c.na}">${Object.keys(col).map((k) => c[k] ? `<i style="width:${c[k] / total * 100}%;background:${col[k]}"></i>` : '').join('')}</div>`;
+  return `<div class="seg" title="Found ${c.found}, to scan ${c.reconstruct}, to locate ${c.locate}, gap ${c.gap}, n/a ${c.na}">${Object.keys(col).map((k) => c[k] ? `<i style="width:${c[k] / total * 100}%;background:${col[k]}"></i>` : '').join('')}</div>`;
 }
 function renderReadiness() {
   const tot = { found: 0, reconstruct: 0, locate: 0, gap: 0, na: 0 }; REQS.forEach((r) => { tot[effective(r)]++; });
-  const rows = Object.entries(LINES).map(([k, t]) => { const s = lineSummary(k); return `<tr style="cursor:pointer" data-line="${k}"><td><b>${k}</b></td><td>${esc(t)}</td><td>${segBar(s.c, s.total)}</td><td class="muted">${s.c.found} of ${s.total} found${s.c.reconstruct ? `, ${s.c.reconstruct} to reconstruct` : ''}${s.c.locate ? `, ${s.c.locate} to locate` : ''}${s.c.gap ? `, ${s.c.gap} gap` : ''}</td><td><span class="badge ${s.state}">${{ ready: 'Ready', partial: 'Partly ready', notready: 'Not ready' }[s.state]}</span></td></tr>`; }).join('');
+  const rows = Object.entries(LINES).map(([k, t]) => { const s = lineSummary(k); return `<tr style="cursor:pointer" data-line="${k}"><td><b>${k}</b></td><td>${esc(t)}</td><td>${segBar(s.c, s.total)}</td><td class="muted">${s.c.found} of ${s.total} found${s.c.reconstruct ? `, ${s.c.reconstruct} to scan` : ''}${s.c.locate ? `, ${s.c.locate} to locate` : ''}${s.c.gap ? `, ${s.c.gap} gap` : ''}</td><td><span class="badge ${s.state}">${{ ready: 'Ready', partial: 'Partly ready', notready: 'Not ready' }[s.state]}</span></td></tr>`; }).join('');
   $('view').innerHTML = `
-    <div class="note">Inspection: 20 November 2026, 09:00. Each line below is what the Department of Health asks for under Annexure E. A requirement counts as <b>Found</b> once a document is filed against it. Reconstructed records are filed as <b>Reconstructed</b> and are never shown as originals.</div>
-    <div class="stat-row">${[['found', 'Found'], ['reconstruct', 'To reconstruct'], ['locate', 'To locate'], ['gap', 'Gaps'], ['na', 'Not applicable']].map(([k, t]) => `<div class="stat"><b>${tot[k]}</b><span>${t}</span></div>`).join('')}<div class="stat"><b>${docs.filter((d) => d.status === 'current').length}</b><span>Documents filed</span></div></div>
+    <div class="note">Inspection: 20 November 2026, 09:00. Each line below is what the Department of Health asks for under Annexure E. A requirement counts as <b>Found</b> once a document is filed against it. <b>To scan</b> means the paper original exists and still has to be scanned and filed. A scanned copy is filed as a <b>Copy of the original</b>.</div>
+    <div class="stat-row">${[['found', 'Found'], ['reconstruct', 'To scan'], ['locate', 'To locate'], ['gap', 'Gaps'], ['na', 'Not applicable']].map(([k, t]) => `<div class="stat"><b>${tot[k]}</b><span>${t}</span></div>`).join('')}<div class="stat"><b>${docs.filter((d) => d.status === 'current').length}</b><span>Documents filed</span></div></div>
     <div class="section"><h3>Annexure E lines</h3><table class="reg"><thead><tr><th>Line</th><th>What the inspector asks for</th><th>Progress</th><th>Detail</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
       <p class="muted">UM-09 (patient environment safe: monthly unit inspections) is covered by the Monthly inspections section.</p></div>`;
   $('view').querySelectorAll('[data-line]').forEach((tr) => tr.addEventListener('click', () => {
@@ -412,7 +412,7 @@ async function uploadDoc(req, replacing) {
     fields: [
       { id: 'files', label: replacing ? 'New file' : 'File(s)', type: 'files', required: true, help: 'PDF, Word, Excel, ODT/ODS or a photo. Up to 25 MB each. You can pick several; each is filed separately.' },
       { id: 'title', label: 'Title (leave empty to use the file name)', value: replacing?.title || '' },
-      { id: 'kind', label: 'This is', type: 'select', value: replacing?.kind || 'original', options: Object.entries(KINDS).map(([v, t]) => ({ v, t })) },
+      { id: 'kind', label: 'This is', type: 'select', value: replacing?.kind || 'original', options: Object.entries(KINDS).filter(([v]) => v !== 'reconstructed').map(([v, t]) => ({ v, t })) },
       { id: 'docDate', label: 'Date of the document itself', type: 'date', value: replacing?.docDate || '', help: 'The date written on it (not today). Leave empty if it has none.' },
       ...(req.periodic ? [{ id: 'period', label: 'Month covered', type: 'month', value: replacing?.period || '', required: true }, { id: 'unit', label: 'Area or unit', value: replacing?.unit || '', placeholder: 'e.g. the unit or area name' }] : []),
       { id: 'note', label: 'Note (optional)', value: '' },

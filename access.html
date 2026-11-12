@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connect access — Hospital at Ekhaya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2A43; --ink-soft: #4A5C70; --paper: #F7F6F2; --paper-line: #E3DFD4;
+    --gold: #B8912F; --gold-soft: #F1E7CD; --green: #1E6F4C; --green-soft: #E4F2EA;
+    --amber: #9A6B12; --amber-soft: #FBEFD8; --gray: #6B7280; --gray-soft: #EDEDED;
+    --danger: #A6303A; --danger-soft: #F8E4E6; --blue: #1E5F8F; --blue-soft: #E8F1F8; --radius: 3px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px; }
+  h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
+
+  #authScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; }
+  .seal { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 22px; color: var(--gold); }
+  .auth-card { background: #fff; border: 1px solid var(--paper-line); padding: 40px; width: 340px; max-width: 92vw; text-align: center; }
+  .auth-card h1 { font-size: 20px; margin: 12px 0 4px; }
+  .auth-card p { color: var(--ink-soft); margin: 0 0 20px; font-size: 13px; }
+  .auth-card input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--paper-line); border-radius: var(--radius); font-family: inherit; font-size: 14px; }
+  .auth-card button { width: 100%; padding: 10px 12px; background: var(--ink); color: #fff; border: none; border-radius: var(--radius); font-weight: 600; font-size: 13px; cursor: pointer; }
+  #authError { color: var(--danger); font-size: 12px; min-height: 16px; margin-top: 6px; }
+
+  #app { display: none; }
+  header.top { background: var(--ink); color: #fff; padding: 22px 36px; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+  header.top .brand-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-soft); opacity: 0.85; }
+  header.top h1 { color: #fff; font-size: 24px; margin: 2px 0 0; }
+  header.top .who { font-size: 12px; color: #c7d2df; text-align: right; }
+  header.top .who button { background: none; border: 1px solid #3c5a76; color: #dce6ef; padding: 4px 10px; border-radius: var(--radius); font-size: 11px; margin-top: 6px; cursor: pointer; }
+  main { padding: 28px 36px 60px; max-width: 1180px; margin: 0 auto; }
+  .note { background: var(--blue-soft); border: 1px solid #c9dcea; color: #234e6e; padding: 10px 14px; border-radius: var(--radius); font-size: 12px; margin-bottom: 18px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar input[type="search"], .toolbar select { padding: 9px 12px; border: 1px solid var(--paper-line); border-radius: var(--radius); font-family: inherit; font-size: 13px; background: #fff; }
+  .toolbar input[type="search"] { width: 260px; max-width: 100%; }
+  .btn { padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--ink); background: #fff; color: var(--ink); font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid:hover { background: #16385a; }
+  .btn:hover { background: var(--gray-soft); }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn.ghost { border-color: var(--paper-line); color: var(--ink-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: #fff; border: 1px solid var(--paper-line); border-top: 3px solid var(--gold); padding: 18px 20px; cursor: pointer; }
+  .card:hover { box-shadow: 0 2px 10px rgba(15,42,67,0.08); }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card .meta { color: var(--ink-soft); font-size: 12px; margin-top: 6px; }
+  .card .chair { margin-top: 10px; font-size: 13px; }
+  .card .chair b { font-weight: 600; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .badge.active { background: var(--green-soft); color: var(--green); }
+  .badge.dormant { background: var(--amber-soft); color: var(--amber); }
+  .badge.dissolved { background: var(--gray-soft); color: var(--gray); }
+  .badge.vacant { background: var(--danger-soft); color: var(--danger); }
+  .badge.flag { background: var(--amber-soft); color: var(--amber); }
+  .badge.sup { background: var(--gray-soft); color: var(--gray); }
+  .empty { text-align: center; padding: 48px 24px; color: var(--ink-soft); background: #fff; border: 1px solid var(--paper-line); }
+
+  .back { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 13px; padding: 0; margin-bottom: 14px; font-family: inherit; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-head h2 { margin: 0 0 6px; font-size: 26px; }
+  .section { background: #fff; border: 1px solid var(--paper-line); padding: 20px 22px; margin-bottom: 18px; }
+  .section h3 { margin: 0 0 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; font-size: 13px; }
+  .kv dt { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+  .kv dd { margin: 0; }
+  ul.plain { margin: 0; padding-left: 18px; }
+  table.reg { width: 100%; border-collapse: collapse; }
+  table.reg th { text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); padding: 10px 12px; border-bottom: 2px solid var(--ink); }
+  table.reg td { padding: 11px 12px; border-bottom: 1px solid var(--paper-line); vertical-align: middle; }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--paper-line); flex-wrap: wrap; }
+  .tab { padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; }
+  .tab.active { color: var(--ink); border-bottom-color: var(--gold); }
+  .muted { color: var(--ink-soft); font-size: 12px; }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(15,42,67,0.45); align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .overlay.open { display: flex; }
+  .modal { background: #fff; width: 560px; max-width: 94vw; max-height: 90vh; overflow-y: auto; border-radius: 4px; padding: 26px 28px; }
+  .modal h2 { font-size: 19px; margin: 0 0 4px; }
+  .modal .sub { color: var(--ink-soft); font-size: 12px; margin-bottom: 16px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 5px; }
+  .field input[type=text], .field input[type=date], .field input[type=file], .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--paper-line); border-radius: 3px; font-family: inherit; font-size: 13px; }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field .help { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+  .field .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .field .checks label { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); display: flex; gap: 5px; align-items: center; margin: 0; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  #modalError { color: var(--danger); font-size: 12px; min-height: 16px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 4px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 80; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+  @media (max-width: 720px) { main { padding: 18px 14px 50px; } header.top { padding: 16px; } .kv { grid-template-columns: 1fr; } }
+
+  .tabs { margin-bottom: 18px; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: #fff; border: 1px solid var(--paper-line); padding: 14px 16px; }
+  .stat b { display: block; font-size: 26px; font-family: 'Fraunces', serif; }
+  .stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+  .badge.found { background: var(--green-soft); color: var(--green); }
+  .badge.reconstruct { background: var(--amber-soft); color: var(--amber); }
+  .badge.locate { background: var(--blue-soft); color: var(--blue); }
+  .badge.gap { background: var(--danger-soft); color: var(--danger); }
+  .badge.na { background: var(--gray-soft); color: var(--gray); }
+  .badge.ready { background: var(--green-soft); color: var(--green); }
+  .badge.partial { background: var(--amber-soft); color: var(--amber); }
+  .badge.notready { background: var(--danger-soft); color: var(--danger); }
+  .badge.original { background: var(--green-soft); color: var(--green); }
+  .badge.copy { background: var(--blue-soft); color: var(--blue); }
+  .badge.reconstructed { background: var(--amber-soft); color: var(--amber); }
+  .seg { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--gray-soft); min-width: 120px; }
+  .seg i { display: block; height: 100%; }
+  .layout { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: start; }
+  .side { background: #fff; border: 1px solid var(--paper-line); }
+  .side button { display: flex; justify-content: space-between; width: 100%; text-align: left; padding: 10px 14px; background: none; border: none; border-bottom: 1px solid var(--paper-line); cursor: pointer; font-family: inherit; font-size: 13px; color: var(--ink); }
+  .side button.active { background: var(--gold-soft); font-weight: 600; }
+  .req { border-bottom: 1px solid var(--paper-line); padding: 14px 0; }
+  .req:last-child { border-bottom: none; }
+  .req h4 { margin: 0 0 4px; font-size: 14px; }
+  .req .inc { color: var(--ink-soft); font-size: 12px; margin-bottom: 8px; }
+  .req .top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .docline { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; border-top: 1px dashed var(--paper-line); flex-wrap: wrap; }
+  .grid-insp { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .grid-insp th, .grid-insp td { border: 1px solid var(--paper-line); padding: 8px 6px; text-align: center; }
+  .grid-insp th:first-child, .grid-insp td:first-child { text-align: left; font-weight: 600; white-space: nowrap; }
+  .grid-insp td.has { background: var(--green-soft); color: var(--green); font-weight: 700; }
+  .grid-insp td.no { background: var(--danger-soft); color: var(--danger); }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+  .badge.ok{background:var(--green-soft);color:var(--green)} .badge.warn{background:var(--amber-soft);color:var(--amber)} .badge.off{background:var(--gray-soft);color:var(--gray)} .badge.lv{background:var(--blue-soft);color:var(--blue);margin:1px 2px 1px 0}
+  .lvgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:10px 0} .lvgrid label{font-size:13px;display:flex;gap:8px;align-items:flex-start} .lvgrid small{color:var(--ink-soft);display:block;font-size:11px}
+  h2.sec{font-size:17px;margin:26px 0 10px} .muted{color:var(--ink-soft);font-size:12px}
+  @media (max-width:640px){main{padding:18px 14px 50px}.lvgrid{grid-template-columns:1fr}table.reg thead{display:none}table.reg,table.reg tbody{display:block}table.reg tr{display:block;border-bottom:1px solid var(--paper-line);padding:10px 0}table.reg td{display:block;border:none;padding:4px 0}table.reg td[style*='text-align:right']{text-align:left!important;white-space:normal!important}}
+  #reqBox{margin-bottom:22px}
+</style>
+</head>
+<body>
+<div id="authScreen">
+  <div class="seal">HAE</div>
+  <div class="auth-card">
+    <h1>Connect access</h1>
+    <p>Hospital at Ekhaya — sign in with your Ekhaya Connect account</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" />
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" />
+    <button id="loginBtn">Sign in</button>
+    <div id="authError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Hospital at Ekhaya — Ekhaya Connect</div>
+      <h1>Connect access</h1>
+    </div>
+    <div class="who"><div id="whoName">—</div><button id="signOutBtn">Sign out</button></div>
+  </header>
+  <main>
+    <div id="denied" class="empty" style="display:none"><h3>Executive and HR only</h3><p>This page is limited to the executive and HR. Ask the COO if you need access.</p></div>
+    <div id="content" style="display:none">
+      <div class="note" id="roleNote"></div>
+      <div id="reqBox"></div>
+      <div class="toolbar"><div class="toolbar-left">
+        <input type="search" id="q" placeholder="Search name or email" />
+        <select id="flt"><option value="all">All staff</option><option value="attn">Needs attention</option><option value="nologin">No Connect login</option><option value="login">Has Connect login</option></select>
+      </div><div class="muted" id="count"></div></div>
+      <div id="tbl"></div>
+      <div id="orphans"></div>
+    </div>
+  </main>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBla6UBluNcWVKPSU8U30IuTSubLb7R2Kc",
+  authDomain: "hae-vuma-92fca.firebaseapp.com",
+  projectId: "hae-vuma-92fca",
+  storageBucket: "hae-vuma-92fca.firebasestorage.app",
+  messagingSenderId: "1052424261313",
+  appId: "1:1052424261313:web:a4bebe68d6f9ba14fa0e40",
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const manage = httpsCallable(getFunctions(app, 'europe-west1'), 'manageAccess');
+const LV = { staff: ['Staff login only', 'Ordinary staff sign-in, no extra tools'], executive: ['Executive', 'Everything'], hr: ['HR', 'Staff records and HR tools'], finance: ['Finance', 'Finance tools and staff records'], payroll_admin: ['Payroll', 'Payroll administration'],
+  nursing: ['Nursing', 'Nursing tools and rosters'], billing: ['Billing', 'Billing tools'], casem: ['Case management', 'Case management'], support: ['Support', 'Support services'],
+  cosec: ['Company Secretary', 'Board documents, read and upload'], board: ['Board member', 'Board documents, read only'], 'ohsc-support': ['OHSC Support Services', 'Support Services assessment'],
+  'ohsc-kitchen': ['OHSC Kitchen', 'Kitchen assessment'], 'website-admin': ['Website admin', 'Website content'] };
+let me = null, data = { rows: [], unlinked: [], requests: [], levels: [] };
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const lvName = (k) => (LV[k] ? LV[k][0] : k);
+function toast(msg, type) { const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (type === 'error' ? ' error' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => { t.className = 'toast'; }, 4500); }
+const closeModal = () => $('overlay').classList.remove('open');
+const openModal = (h) => { $('modal').innerHTML = h; $('overlay').classList.add('open'); };
+$('overlay').addEventListener('mousedown', (e) => { if (e.target === $('overlay')) closeModal(); });
+
+$('loginBtn').addEventListener('click', async () => {
+  $('authError').textContent = '';
+  try { await signInWithEmailAndPassword(auth, $('loginEmail').value.trim(), $('loginPassword').value); } catch (e) { $('authError').textContent = 'Sign in failed. Check your email and password.'; }
+});
+$('signOutBtn').addEventListener('click', () => signOut(auth));
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { me = null; $('authScreen').style.display = 'flex'; $('app').style.display = 'none'; return; }
+  let levels = [];
+  try { const s = await getDoc(doc(db, 'access_control', user.uid)); levels = s.exists() ? (s.data().accessLevels || []) : []; } catch (e) { console.warn('access_control read failed', e); }
+  me = { uid: user.uid, email: user.email, levels, isExec: levels.includes('executive'), canView: levels.includes('executive') || levels.includes('hr') };
+  $('authScreen').style.display = 'none'; $('app').style.display = 'block'; $('whoName').textContent = user.displayName || user.email;
+  if (!me.canView) { $('denied').style.display = 'block'; $('content').style.display = 'none'; return; }
+  $('denied').style.display = 'none'; $('content').style.display = 'block';
+  $('roleNote').textContent = me.isExec ? 'You can give, change and remove Connect access. A new person gets an email to set their own password; nobody ever sees or sends a password.' : 'You can see who has Connect access. To ask for access for someone, save their email on their staff record and use "Request access" below. Only the COO gives access.';
+  await load();
+});
+
+async function load() {
+  $('tbl').innerHTML = '<div class="empty">Loading…</div>';
+  try { const r = await manage({ action: 'list' }); data = r.data; } catch (e) { $('tbl').innerHTML = '<div class="empty">Could not load the list: ' + esc(e.message) + '</div>'; return; }
+  render();
+}
+const sorted = (a) => a.slice().sort((x, y) => x.name.localeCompare(y.name));
+function attn(r) { return r.mismatch || r.duplicateLogins || r.disabled; }
+function render() {
+  const rq = data.requests;
+  $('reqBox').innerHTML = rq.length ? `<h2 class="sec">Requests waiting (${rq.length})</h2><table class="reg"><thead><tr><th>Staff member</th><th>Asked for</th><th></th></tr></thead><tbody>${rq.map((r) => {
+    const e = data.rows.find((x) => x.employeeNumber === r.employeeNumber) || { name: r.employeeNumber };
+    return `<tr><td>${esc(e.name)} <span class="muted">${esc(e.email || 'no email on file')}</span></td><td>${r.requestedLevels.map((l) => `<span class="badge lv">${esc(lvName(l))}</span>`).join('')}${r.note ? '<div class="muted">' + esc(r.note) + '</div>' : ''}</td><td style="text-align:right">${me.isExec ? `<button class="btn small solid" data-act="grant" data-no="${esc(r.employeeNumber)}" data-pre="${esc(r.requestedLevels.join(','))}">Review</button> <button class="btn small ghost" data-act="decline" data-no="${esc(r.employeeNumber)}">Decline</button>` : ''}</td></tr>`; }).join('')}</tbody></table>` : '';
+  const q = $('q').value.trim().toLowerCase(), f = $('flt').value;
+  let rows = sorted(data.rows).filter((r) => (!q || (r.name + ' ' + r.email + ' ' + r.loginEmail).toLowerCase().includes(q)) &&
+    (f === 'all' || (f === 'attn' && attn(r)) || (f === 'nologin' && !r.hasLogin) || (f === 'login' && r.hasLogin)));
+  $('count').textContent = rows.length + ' of ' + data.rows.length + ' staff';
+  $('tbl').innerHTML = rows.length ? `<table class="reg"><thead><tr><th>Staff member</th><th>Connect login</th><th>Levels</th><th></th></tr></thead><tbody>${rows.map((r) => {
+    const login = !r.hasLogin ? '<span class="badge off">No login</span>' : (r.loginWithoutAccess ? '<span class="badge off">Staff login</span>' : (r.disabled ? '<span class="badge warn">Switched off</span>' : '<span class="badge ok">Has access</span>'));
+    const flags = [r.mismatch ? `<div class="muted" style="color:var(--amber)">Login email (${esc(r.loginEmail)}) differs from the staff email.</div>` : '', r.duplicateLogins ? '<div class="muted" style="color:var(--amber)">More than one login holds this employee number.</div>' : ''].join('');
+    const btn = !me.isExec ? (r.hasLogin ? '' : `<button class="btn small" data-act="request" data-no="${esc(r.employeeNumber)}">Request access</button>`) :
+      (r.hasLogin && !r.loginWithoutAccess ? `<button class="btn small" data-act="grant" data-no="${esc(r.employeeNumber)}" data-pre="${esc(r.levels.join(','))}">Change</button> <button class="btn small ghost" data-act="mail" data-email="${esc(r.loginEmail || r.email)}">Send sign-in email</button> <button class="btn small ghost" data-act="revoke" data-no="${esc(r.employeeNumber)}">Remove</button>` : `<button class="btn small solid" data-act="grant" data-no="${esc(r.employeeNumber)}" data-pre="">Give access</button>`);
+    return `<tr><td>${esc(r.name)}<div class="muted">${esc(r.email || 'no email on the staff record')}</div></td><td>${login}${flags}</td><td>${r.levels.map((l) => `<span class="badge lv">${esc(lvName(l))}</span>`).join('') || '<span class="muted">None</span>'}</td><td style="text-align:right;white-space:nowrap">${btn}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No staff match.</div>';
+  $('orphans').innerHTML = data.unlinked.length ? `<h2 class="sec">Logins not linked to a staff record (${data.unlinked.length})</h2><div class="muted">These people can sign in but no staff record carries their employee number. Check them.</div><table class="reg"><tbody>${data.unlinked.map((u) => `<tr><td>${esc(u.loginEmail || u.uid)}</td><td>${u.levels.map((l) => `<span class="badge lv">${esc(lvName(l))}</span>`).join('')}</td></tr>`).join('')}</tbody></table>` : '';
+}
+$('q').addEventListener('input', render); $('flt').addEventListener('change', render);
+
+function levelModal(row, pre, isRequest) {
+  const set = new Set(pre);
+  const ls = ['staff', ...data.levels.filter((l) => me.isExec || l !== 'executive')];
+  openModal(`<h2>${isRequest ? 'Request access' : (row.hasLogin ? 'Change access' : 'Give access')}: ${esc(row.name)}</h2>
+    <div class="sub">${esc(row.email || '')}${isRequest ? '' : (row.hasLogin ? '' : ' · a login will be created and an email sent so they set their own password')}</div>
+    <div class="lvgrid">${ls.map((l) => `<label><input type="checkbox" value="${l}" ${set.has(l) ? 'checked' : ''}><span>${esc(lvName(l))}<small>${esc(LV[l] ? LV[l][1] : '')}</small></span></label>`).join('')}</div>
+    ${isRequest ? '<div class="field"><label>Note (optional)</label><input id="mnote" style="width:100%;padding:8px;border:1px solid var(--paper-line)"></div>' : ''}
+    <div class="modal-actions"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn solid" id="mok">${isRequest ? 'Send request' : 'Save'}</button></div>`);
+  $('mcancel').onclick = closeModal;
+  return () => [...document.querySelectorAll('#modal .lvgrid input:checked')].map((i) => i.value);
+}
+document.addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, no = b.dataset.no, row = data.rows.find((r) => r.employeeNumber === no);
+  try {
+    if (act === 'grant') {
+      if (!row || !row.email) return toast('This person has no email on their staff record. Add it in the HR Portal first.', 'error');
+      const get = levelModal(row, b.dataset.pre ? b.dataset.pre.split(',') : [], false);
+      $('mok').onclick = async () => {
+        const levels = get(); if (!levels.length) return toast('Choose at least one level.', 'error');
+        $('mok').disabled = true;
+        try { const r = (await manage({ action: 'grant', employeeNumber: no, levels })).data;
+          closeModal();
+          if (r.created) { try { await sendPasswordResetEmail(auth, r.email); toast('Login created. An email was sent to ' + r.email + ' to set a password.'); } catch (e) { toast('Login created, but the email could not be sent. Use "Send sign-in email".', 'error'); } }
+          else toast('Access saved.');
+          await load();
+        } catch (e) { toast(e.message, 'error'); $('mok').disabled = false; }
+      };
+    } else if (act === 'request') {
+      const get = levelModal(row, [], true);
+      $('mok').onclick = async () => {
+        const levels = get(); if (!levels.length) return toast('Choose at least one level.', 'error');
+        const { setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        try { await setDoc(doc(db, 'access_requests', no), { employeeNumber: no, requestedLevels: levels, requestedBy: me.uid, note: ($('mnote').value || '').slice(0, 200), status: 'pending', requestedAt: serverTimestamp() }); closeModal(); toast('Request sent to the COO.'); await load(); }
+        catch (e) { toast('Could not send: ' + e.message, 'error'); }
+      };
+    } else if (act === 'revoke') {
+      openModal(`<h2>Remove access: ${esc(row.name)}</h2><div class="sub">They will no longer be able to sign in to Ekhaya Connect. Their staff record is not touched.</div><div class="modal-actions"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn solid" id="mok" style="background:var(--danger);border-color:var(--danger)">Remove access</button></div>`);
+      $('mcancel').onclick = closeModal;
+      $('mok').onclick = async () => { try { await manage({ action: 'revoke', employeeNumber: no }); closeModal(); toast('Access removed.'); await load(); } catch (e) { toast(e.message, 'error'); } };
+    } else if (act === 'decline') { await manage({ action: 'decline', employeeNumber: no }); toast('Request declined.'); await load();
+    } else if (act === 'mail') { await sendPasswordResetEmail(auth, b.dataset.email); toast('Email sent to ' + b.dataset.email + '.'); }
+  } catch (e) { toast(e.message || 'Something went wrong.', 'error'); }
+});
+</script>
+</body>
+</html>

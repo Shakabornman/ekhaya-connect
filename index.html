@@ -1145,6 +1145,11 @@ body {
             <div class="tool-name">Policy Sync</div>
             <div class="tool-desc">Drive to portal: status, preview and switch</div>
           </a>
+          <a href="access.html" target="_blank" class="tool-card coo-only">
+            <div class="tool-icon" style="background:#E6F4EE">🔑</div>
+            <div class="tool-name">Connect Access</div>
+            <div class="tool-desc">Who can sign in, and at what level</div>
+          </a>
           <div class="tool-card coo-only" onclick="forceRollup()">
             <div class="tool-icon" style="background:#FEF3C7">🔄</div>
             <div class="tool-name">Force Rollup</div>
@@ -1293,7 +1298,10 @@ async function checkAccess(user) {
       where('email', '==', user.email)
     ));
     console.log('Access check:', user.email, 'found:', !snap.empty, 'docs:', snap.size);
-    return !snap.empty;
+    if (!snap.empty) return true;
+    // EC-057: a person who has an access record is admitted even if their staff email differs from their login email
+    try { const ac = await getDoc(doc(db, 'access_control', user.uid)); return ac.exists() && (ac.data().accessLevels || []).length > 0; }
+    catch (e2) { return false; }
   } catch(e) {
     console.error('Access check failed:', e.code, e.message);
     return false;
@@ -1472,6 +1480,8 @@ function buildToolGrids(isExecutive) {
       { icon:'👤', color:'#E6F4EE', name:'HR Portal', desc:'Staff records & HR admin', url:'https://shakabornman.github.io/hae-hr-portal' },
       { icon:'🦺', color:'#FBEFD8', name:'Health and Safety', desc:'OHS evidence for the inspection', url:'ohs.html' },
     ];
+    // EC-057: HR sees who has access and can ask for it; the executive has the same page under Administration
+    if (!accessLevels.includes('executive')) hrTools.push({ icon:'🔑', color:'#E6F4EE', name:'Connect Access', desc:'Who can sign in; ask for access', url:'access.html' });
     renderTools('hr-tools', hrTools);
   }
 

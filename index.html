@@ -377,6 +377,22 @@ body {
   margin-top: 2px;
 }
 
+
+/* HOME: certificates beside the greeting */
+.home-top { display:grid; grid-template-columns:130px 1fr 130px; gap:20px; align-items:center; margin-bottom:28px; }
+.home-top .home-greeting { margin-bottom:0; text-align:center; }
+.cert-thumb { text-decoration:none; display:block; background:var(--white); border:1px solid var(--rule); border-radius:var(--radius); padding:4px; cursor:zoom-in; text-align:center; }
+.cert-thumb img { display:block; width:100%; height:auto; border-radius:4px; }
+.cert-thumb span { display:block; font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--mid); padding:4px 2px 2px; }
+#cert-lightbox { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.82); align-items:center; justify-content:center; padding:16px; cursor:zoom-out; }
+#cert-lightbox.open { display:flex; }
+#cert-lightbox img { max-width:100%; max-height:100%; border-radius:6px; background:#fff; }
+@media (max-width: 640px) {
+  .home-top { grid-template-columns:1fr 1fr; gap:12px; }
+  .home-top .home-greeting { grid-column:1 / -1; order:-1; }
+  .cert-thumb { max-width:150px; justify-self:center; }
+}
+
 /* NOTICE BOARD */
 .notice-board {
   background: linear-gradient(135deg, var(--navy) 0%, var(--navy-l) 100%);
@@ -821,11 +837,20 @@ body {
 
     <!-- HOME PAGE -->
     <div class="page active" id="page-home">
-      <div class="home-greeting">
-        <div class="time-label" id="time-label">Good morning</div>
-        <h2 id="greeting-name">Welcome to Ekhaya Connect</h2>
-        <div class="sub" id="greeting-sub">HOSPITAL AT EKHAYA · Kimberley</div>
+      <div class="home-top">
+        <a class="cert-thumb" href="cert-nhn-membership.webp" onclick="return openCert(this)" title="National Hospital Network certificate of membership">
+          <img src="cert-nhn-membership.webp" alt="National Hospital Network certificate of membership" loading="lazy"><span>NHN membership</span>
+        </a>
+        <div class="home-greeting">
+          <div class="time-label" id="time-label">Good morning</div>
+          <h2 id="greeting-name">Welcome to Ekhaya Connect</h2>
+          <div class="sub" id="greeting-sub">HOSPITAL AT EKHAYA · Kimberley</div>
+        </div>
+        <a class="cert-thumb" href="cert-doh-licence.webp" onclick="return openCert(this)" title="Northern Cape Department of Health hospital licence">
+          <img src="cert-doh-licence.webp" alt="Northern Cape Department of Health hospital licence" loading="lazy"><span>DoH licence</span>
+        </a>
       </div>
+      <div id="cert-lightbox" onclick="this.classList.remove('open')"><img alt=""></div>
 
       <!-- NOTICE BOARD -->
       <div class="notice-board">
@@ -1760,6 +1785,10 @@ window.forceRollup = function() {
   showToast(trimmed ? `Rolling up week ending ${trimmed}…` : 'Rolling up current week…');
 };
 
+</script>
+<script>
+function openCert(a){var l=document.getElementById('cert-lightbox');l.querySelector('img').src=a.getAttribute('href');l.querySelector('img').alt=a.title;l.classList.add('open');return false;}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var l=document.getElementById('cert-lightbox');if(l)l.classList.remove('open');}});
 </script>
 </body>
 </html>

@@ -170,6 +170,7 @@
       <div class="toolbar"><div class="toolbar-left">
         <input type="search" id="q" placeholder="Search name or email" />
         <select id="flt"><option value="all">All staff</option><option value="attn">Needs attention</option><option value="nologin">No Connect login</option><option value="login">Has Connect login</option></select>
+        <button class="btn solid" id="addExt" style="display:none">Add external person</button>
       </div><div class="muted" id="count"></div></div>
       <div id="tbl"></div>
       <div id="orphans"></div>
@@ -247,7 +248,8 @@ function render() {
     const btn = !me.isExec ? (r.hasLogin ? '' : `<button class="btn small" data-act="request" data-no="${esc(r.employeeNumber)}">Request access</button>`) :
       (r.hasLogin && !r.loginWithoutAccess ? `<button class="btn small" data-act="grant" data-no="${esc(r.employeeNumber)}" data-pre="${esc(r.levels.join(','))}">Change</button> <button class="btn small ghost" data-act="mail" data-email="${esc(r.loginEmail || r.email)}">Send sign-in email</button> <button class="btn small ghost" data-act="revoke" data-no="${esc(r.employeeNumber)}">Remove</button>` : `<button class="btn small solid" data-act="grant" data-no="${esc(r.employeeNumber)}" data-pre="">Give access</button>`);
     return `<tr><td>${esc(r.name)}<div class="muted">${esc(r.email || 'no email on the staff record')}</div></td><td>${login}${flags}</td><td>${r.levels.map((l) => `<span class="badge lv">${esc(lvName(l))}</span>`).join('') || '<span class="muted">None</span>'}</td><td style="text-align:right;white-space:nowrap">${btn}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No staff match.</div>';
-  $('orphans').innerHTML = data.unlinked.length ? `<h2 class="sec">Logins not linked to a staff record (${data.unlinked.length})</h2><div class="muted">These people can sign in but no staff record carries their employee number. Check them.</div><table class="reg"><tbody>${data.unlinked.map((u) => `<tr><td>${esc(u.loginEmail || u.uid)}</td><td>${u.levels.map((l) => `<span class="badge lv">${esc(lvName(l))}</span>`).join('')}</td></tr>`).join('')}</tbody></table>` : '';
+  $('addExt').style.display = me.isExec ? '' : 'none';
+  $('orphans').innerHTML = data.unlinked.length ? `<h2 class="sec">People who are not on the staff list (${data.unlinked.length})</h2><div class="muted">Board members, advisers and other outside people with a Connect login. Entries marked "Check" have no staff record and were not added with Add external person.</div><table class="reg"><tbody>${data.unlinked.map((u) => `<tr><td>${esc(u.displayName || u.loginEmail || u.uid)}<div class="muted">${esc(u.loginEmail || '')}</div></td><td>${u.external ? '<span class="badge ok">External</span>' : '<span class="badge warn">Check</span>'}${u.disabled ? ' <span class="badge warn">Switched off</span>' : ''}</td><td>${u.levels.map((l) => `<span class="badge lv">${esc(lvName(l))}</span>`).join('') || '<span class="muted">None</span>'}</td><td style="text-align:right;white-space:nowrap">${me.isExec ? `<button class="btn small" data-act="xgrant" data-name="${esc(u.displayName || '')}" data-email="${esc(u.loginEmail || '')}" data-pre="${esc(u.levels.join(','))}">${u.external ? 'Change' : 'Replace'}</button>${u.external ? ` <button class="btn small ghost" data-act="mail" data-email="${esc(u.loginEmail)}">Send sign-in email</button> <button class="btn small ghost" data-act="xrevoke" data-no="${esc(u.employeeNumber)}" data-name="${esc(u.displayName || u.loginEmail)}">Remove</button>` : ''}` : ''}</td></tr>`).join('')}</tbody></table>` : '';
 }
 $('q').addEventListener('input', render); $('flt').addEventListener('change', render);
 
@@ -262,6 +264,32 @@ function levelModal(row, pre, isRequest) {
   $('mcancel').onclick = closeModal;
   return () => [...document.querySelectorAll('#modal .lvgrid input:checked')].map((i) => i.value);
 }
+
+function externalModal(name, email, pre) {
+  const set = new Set(pre), editing = !!email;
+  const ls = data.levels;
+  openModal(`<h2>${editing ? 'Change access' : 'Add external person'}</h2>
+    <div class="sub">For someone who is not on the staff list, such as a board member. Choose exactly what they can open.</div>
+    <div class="field"><label>Full name</label><input id="xname" value="${esc(name)}" style="width:100%;padding:8px;border:1px solid var(--paper-line)"></div>
+    <div class="field"><label>Email they sign in with</label><input id="xemail" type="email" value="${esc(email)}" ${editing ? 'readonly' : ''} style="width:100%;padding:8px;border:1px solid var(--paper-line)"></div>
+    <div class="lvgrid">${ls.map((l) => `<label><input type="checkbox" value="${l}" ${set.has(l) ? 'checked' : ''}><span>${esc(lvName(l))}<small>${esc(LV[l] ? LV[l][1] : '')}</small></span></label>`).join('')}</div>
+    <div class="modal-actions"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn solid" id="mok">Save</button></div>`);
+  $('mcancel').onclick = closeModal;
+  $('mok').onclick = async () => {
+    const levels = [...document.querySelectorAll('#modal .lvgrid input:checked')].map((i) => i.value);
+    const nm = $('xname').value.trim(), em = $('xemail').value.trim();
+    if (!nm || !em) return toast('Enter the name and the email.', 'error');
+    if (!levels.length) return toast('Choose at least one level.', 'error');
+    $('mok').disabled = true;
+    try {
+      const r = (await manage({ action: 'grantExternal', name: nm, email: em, levels })).data; closeModal();
+      if (r.created) { try { await sendPasswordResetEmail(auth, r.email); toast('Login created. An email was sent to ' + r.email + ' to set a password.'); } catch (e) { toast('Login created, but the email could not be sent. Use "Send sign-in email".', 'error'); } }
+      else toast('Access saved. ' + r.email + ' already had a login and keeps their existing password.');
+      await load();
+    } catch (e) { toast(e.message, 'error'); $('mok').disabled = false; }
+  };
+}
+$('addExt').addEventListener('click', () => externalModal('', '', []));
 document.addEventListener('click', async (ev) => {
   const b = ev.target.closest('[data-act]'); if (!b) return;
   const act = b.dataset.act, no = b.dataset.no, row = data.rows.find((r) => r.employeeNumber === no);
@@ -289,6 +317,11 @@ document.addEventListener('click', async (ev) => {
       };
     } else if (act === 'revoke') {
       openModal(`<h2>Remove access: ${esc(row.name)}</h2><div class="sub">They will no longer be able to sign in to Ekhaya Connect. Their staff record is not touched.</div><div class="modal-actions"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn solid" id="mok" style="background:var(--danger);border-color:var(--danger)">Remove access</button></div>`);
+      $('mcancel').onclick = closeModal;
+      $('mok').onclick = async () => { try { await manage({ action: 'revoke', employeeNumber: no }); closeModal(); toast('Access removed.'); await load(); } catch (e) { toast(e.message, 'error'); } };
+    } else if (act === 'xgrant') { externalModal(b.dataset.name, b.dataset.email, b.dataset.pre ? b.dataset.pre.split(',') : []);
+    } else if (act === 'xrevoke') {
+      openModal(`<h2>Remove access: ${esc(b.dataset.name)}</h2><div class="sub">They will no longer be able to sign in to Ekhaya Connect.</div><div class="modal-actions"><button class="btn ghost" id="mcancel">Cancel</button><button class="btn solid" id="mok" style="background:var(--danger);border-color:var(--danger)">Remove access</button></div>`);
       $('mcancel').onclick = closeModal;
       $('mok').onclick = async () => { try { await manage({ action: 'revoke', employeeNumber: no }); closeModal(); toast('Access removed.'); await load(); } catch (e) { toast(e.message, 'error'); } };
     } else if (act === 'decline') { await manage({ action: 'decline', employeeNumber: no }); toast('Request declined.'); await load();

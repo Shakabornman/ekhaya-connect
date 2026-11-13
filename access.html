@@ -228,7 +228,7 @@ onAuthStateChanged(auth, async (user) => {
 
 async function load() {
   $('tbl').innerHTML = '<div class="empty">Loading…</div>';
-  try { const r = await manage({ action: 'list' }); data = r.data; } catch (e) { $('tbl').innerHTML = '<div class="empty">Could not load the list: ' + esc(e.message) + '</div>'; return; }
+  try { const r = await manage({ action: 'list' }); data = r.data; data.unlinked = (data.unlinked || []).map((u) => ({ ...u, levels: [].concat(u.levels || []) })); data.rows = (data.rows || []).map((r) => ({ ...r, levels: [].concat(r.levels || []) })); } catch (e) { $('tbl').innerHTML = '<div class="empty">Could not load the list: ' + esc(e.message) + '</div>'; return; }
   render();
 }
 const sorted = (a) => a.slice().sort((x, y) => x.name.localeCompare(y.name));

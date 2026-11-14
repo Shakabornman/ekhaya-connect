@@ -1179,7 +1179,7 @@ body {
       </div>
 
       <div class="tool-grid">
-        <a href="https://shakabornman.github.io/ekhaya-connect/share-register.html" target="_blank" class="tool-card">
+        <a href="share-register.html" target="_blank" class="tool-card">
           <div class="tool-icon" style="background:#EBF1F7">📑</div>
           <div class="tool-name">Share Register</div>
           <div class="tool-desc">Shareholding record</div>
@@ -1439,7 +1439,7 @@ function buildToolGrids(isExecutive) {
   const quickTools = [
     { icon:'📋', color:'#F0EAF8', name:'Policies', desc:'Find procedures and policies', page:'info', badge:null },
     { icon:'👤', color:'#E6F4EE', name:'My Profile', desc:'Your account and details', page:'profile', badge:null },
-    { icon:'🗓', color:'#FFF3E0', name:'Events & Calendar', desc:'Health days, campaigns, meetings and events', url:'https://shakabornman.github.io/ekhaya-connect/calendar.html', badge:null },
+    { icon:'🗓', color:'#FFF3E0', name:'Events & Calendar', desc:'Health days, campaigns, meetings and events', url:'calendar.html', badge:null },
   ];
   renderTools('quick-tools', quickTools);
 
@@ -1456,8 +1456,8 @@ function buildToolGrids(isExecutive) {
 
   const clinicalTools = [
     { icon:'📝', color:'#F0EAF8', name:'Motivation Letters', desc:'Medical aid motivation generator', url:'https://shakabornman.github.io/hae-motivation-tool/', badge:null },
-    { icon:'📘', color:'#EBF1F7', name:'PMB Guide for Billing', desc:'PMB coding and billing reference', url:'https://shakabornman.github.io/ekhaya-connect/PMB_Guide_for_Billing_standalone.html', badge:null },
-    { icon:'🔎', color:'#E6F4EE', name:'HAE ICD10 Finder', desc:'ICD-10 code lookup', url:'https://shakabornman.github.io/ekhaya-connect/HAE_ICD10_Finder_standalone.html', badge:null },
+    { icon:'📘', color:'#EBF1F7', name:'PMB Guide for Billing', desc:'PMB coding and billing reference', url:'PMB_Guide_for_Billing_standalone.html', badge:null },
+    { icon:'🔎', color:'#E6F4EE', name:'HAE ICD10 Finder', desc:'ICD-10 code lookup', url:'HAE_ICD10_Finder_standalone.html', badge:null },
   ];
   if (clinicalTools.length) {
     document.getElementById('clinical-column').style.display = 'block';

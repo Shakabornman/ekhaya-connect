@@ -2,7 +2,7 @@
   "name": "Ekhaya Connect",
   "short_name": "Ekhaya",
   "description": "HOSPITAL AT EKHAYA staff portal",
-  "start_url": "/ekhaya-connect/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#1F3A5F",
   "theme_color": "#1F3A5F",

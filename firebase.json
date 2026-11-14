@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "hae-connect",
+    "public": ".",
+    "ignore": [
+      "firebase.json", ".firebaserc", "firebase-debug.log", "README.md",
+      ".git", ".git/**", ".github", ".github/**", "**/.*", "**/node_modules/**"
+    ]
+  }
+}

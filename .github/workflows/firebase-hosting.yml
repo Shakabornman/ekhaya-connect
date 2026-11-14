@@ -1,0 +1,21 @@
+# Publishes Ekhaya Connect to Firebase Hosting (site hae-connect, project hae-vuma-92fca).
+# Needs the repository secret FIREBASE_SERVICE_ACCOUNT_HAE_VUMA_92FCA (a hosting-only key).
+name: Deploy to Firebase Hosting
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: firebase-hosting
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_HAE_VUMA_92FCA }}
+          projectId: hae-vuma-92fca
+          channelId: live
